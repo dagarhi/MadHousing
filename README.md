@@ -22,3 +22,21 @@ Ahora tendrás toda la configuración hecha, salvo los datos del .env, los cuale
     IDEALISTA_SECRET=aEQynWzhFo13
     DATABASE_URL=sqlite:///./pisos.db
 
+
+A razón de que mi app usa una versión limitada de la API de idealista, hay que generar a mano los datos para no llenar las peticiones, se usa este comando:
+
+    # 1. Vallecas alquiler
+    Invoke-WebRequest -Uri "http://127.0.0.1:8000/seed-idealista?zona=vallecas&operation=rent" -Method POST | Select-Object -Expand Content
+    
+    # 2. Vallecas venta
+    Invoke-WebRequest -Uri "http://127.0.0.1:8000/seed-idealista?zona=vallecas&operation=sale" -Method POST | Select-Object -Expand Content
+    
+    # 3. Alcorcón alquiler
+    Invoke-WebRequest -Uri "http://127.0.0.1:8000/seed-idealista?zona=alcorcon&operation=rent" -Method POST | Select-Object -Expand Content
+    
+    # 4. Alcorcón venta
+    Invoke-WebRequest -Uri "http://127.0.0.1:8000/seed-idealista?zona=alcorcon&operation=sale" -Method POST | Select-Object -Expand Content
+
+
+para comprobar que hay datos se usa: 
+    Invoke-WebRequest -Uri "http://127.0.0.1:8000/buscar?ciudad=vallecas&operation=rent" | Select-Object -Expand Content
