@@ -11,3 +11,6 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+.custom-marker img {
+  filter: hue-rotate(calc(var(--score) * 1.8deg)) saturate(1.5);
+}

@@ -1,19 +1,17 @@
 from fastapi import FastAPI, Depends, HTTPException, Query, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
 from database import get_db, init_db
-from math import radians, cos, sin, asin, sqrt
-from datetime import datetime
 from models import Propiedad
 from config.sites import ZONAS_PREDETERMINADAS
 from services.idealista_api import IdealistaAPI
 from services.scoring import valoracion_intrinseca, generar_huella_digital
-import itertools
+from datetime import datetime
+from math import radians, cos, sin, asin, sqrt
 
-app = FastAPI(title="Buscador de Pisos API", version="2.0.0")
+app = FastAPI(title="Buscador de Pisos API", version="3.0.1")
 
-# CORS para React
+# --- Configuración CORS para el frontend React ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -22,8 +20,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- Función auxiliar ---
 def distancia_km(lat1, lon1, lat2, lon2):
-    """Calcula la distancia entre dos coordenadas."""
     R = 6371
     dlat = radians(lat2 - lat1)
     dlon = radians(lon2 - lon1)
@@ -35,242 +33,198 @@ def db_from_request(
     x_data_source: str = Header(default=None),
     source: str = Query(default=None)
 ):
-    """Detecta si se está usando modo prod o test."""
+    """Determina si usar la base de datos prod o test según el header/source."""
     mode = (x_data_source or source or "prod").lower()
     mode = "test" if mode == "test" else "prod"
     yield from get_db(mode)
 
-
 @app.on_event("startup")
 def on_startup():
+    """Inicializa las tablas si no existen."""
     init_db()
-    print("✅ Bases de datos inicializadas (prod y test)")
-
+    print("✅ Base de datos lista")
 
 @app.get("/")
 def read_root():
-    return {"message": "🏠 API Buscador de Pisos - TFG", "status": "active"}
-
-
-@app.get("/propiedades")
-def get_propiedades(operation: str, db: Session = Depends(db_from_request)):
-    try:
-        props = db.query(Propiedad).filter(Propiedad.operation == operation).all()
-        return {"total": len(props), "propiedades": [p.as_dict() for p in props]}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error obteniendo propiedades: {str(e)}")
-
+    return {"message": "🏠 API Buscador de Pisos (modo local)", "status": "active"}
 
 @app.get("/buscar")
 def buscar_propiedades(
-    ciudad: str = Query(..., description="Ciudad o zona"),
-    operation: str = Query("rent", description="Tipo de operación"),
-    request: Request = None,
-    db: Session = Depends(db_from_request)
+    ciudad: str = Query(...),
+    operation: str = Query("rent"),
+    min_price: float = Query(None),
+    max_price: float = Query(None),
+    min_size: float = Query(None),
+    max_size: float = Query(None),
+    rooms: int = Query(None),
+    hasLift: bool = Query(None),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, le=100),
+    db: Session = Depends(db_from_request),
 ):
-    from services.scoring import valoracion_intrinseca
-
+    """Busca propiedades locales aplicando filtro por radio geográfico."""
+    ciudad_original = ciudad
     ciudad = ciudad.lower()
+
+    # --- Validación flexible con alias ---
     if ciudad not in ZONAS_PREDETERMINADAS:
-        return {"error": f"La ciudad '{ciudad}' no está disponible"}
+        for key, zona in ZONAS_PREDETERMINADAS.items():
+            for alias in zona.get("alias", []):
+                if alias.lower() in ciudad or ciudad in alias.lower():
+                    ciudad = key
+                    break
+            else:
+                continue
+            break
+        else:
+            raise HTTPException(status_code=400, detail=f"Zona '{ciudad_original}' no disponible")
 
-    mode = (request.headers.get("x-data-source") or request.query_params.get("source") or "prod").lower()
-    is_test = mode == "test"
+    # --- Carga de datos de la zona ---
+    zona_actual = ZONAS_PREDETERMINADAS[ciudad]
+    lat_centro, lon_centro = map(float, zona_actual["center"].split(","))
+    radio_km = zona_actual["distance"] / 1000  # convertir metros a km
 
-    props_locales = db.query(Propiedad).filter(
-        Propiedad.operation == operation,
-        or_(
-            Propiedad.district.ilike(f"%{ciudad}%"),
-            Propiedad.neighborhood.ilike(f"%{ciudad}%")
-        )
-    ).all()
+    # --- Filtro base ---
+    filtros = [Propiedad.operation == operation]
 
-    if not props_locales:
-        zona = ZONAS_PREDETERMINADAS[ciudad]
-        center_lat, center_lon = map(float, zona["center"].split(","))
-        max_dist_km = zona["distance"] / 1000
+    # --- Filtros adicionales ---
+    if min_price:
+        filtros.append(Propiedad.price >= min_price)
+    if max_price:
+        filtros.append(Propiedad.price <= max_price)
+    if min_size:
+        filtros.append(Propiedad.size >= min_size)
+    if max_size:
+        filtros.append(Propiedad.size <= max_size)
+    if rooms:
+        filtros.append(Propiedad.rooms >= rooms)
+    if hasLift is not None:
+        filtros.append(Propiedad.hasLift == hasLift)
 
-        props_locales = [
-            p for p in db.query(Propiedad).filter(Propiedad.operation == operation).all()
-            if p.latitude and p.longitude and
-               distancia_km(center_lat, center_lon, p.latitude, p.longitude) <= max_dist_km
-        ]
-    if not props_locales:
-        return {
-            "ciudad": ciudad,
-            "operation": operation,
-            "total": 0,
-            "propiedades": [],
-            "origen": f"base_de_datos_{'test' if is_test else 'prod'}",
-            "aviso": "No hay datos locales aún para esta zona/operación. Carga datos con /seed-idealista."
-        }
+    # --- Obtener todas las propiedades y filtrar por distancia geográfica ---
+    props_all = db.query(Propiedad).filter(*filtros).all()
+    props_filtradas = []
+
+    for p in props_all:
+        if not (p.latitude and p.longitude):
+            continue
+        d = distancia_km(lat_centro, lon_centro, p.latitude, p.longitude)
+        if d <= radio_km:
+            props_filtradas.append(p)
+
+    total = len(props_filtradas)
+    inicio = (page - 1) * per_page
+    fin = inicio + per_page
+    props_page = props_filtradas[inicio:fin]
+
+    # --- Calcular estadísticas ---
+    precios = [p.price for p in props_filtradas if p.price]
+    tamanios = [p.size for p in props_filtradas if p.size]
+    scores = [p.score_intrinseco for p in props_filtradas if p.score_intrinseco]
+
+    stats = {
+        "price": {"min": min(precios) if precios else 0, "max": max(precios) if precios else 0},
+        "size": {"min": min(tamanios) if tamanios else 0, "max": max(tamanios) if tamanios else 0},
+        "score": {"min": min(scores) if scores else 0, "max": max(scores) if scores else 100},
+    }
+
     return {
         "ciudad": ciudad,
         "operation": operation,
-        "total": len(props_locales),
-        "propiedades": [
-            {
-                "propertyCode": p.propertyCode,
-                "price": p.price,
-                "size": p.size,
-                "latitude": p.latitude,
-                "longitude": p.longitude,
-                "address": p.address,
-                "url": p.url,
-                "score": p.score_intrinseco or valoracion_intrinseca(p.as_dict())
-            }
-            for p in props_locales
-        ],
-        "origen": f"base_de_datos_{'test' if is_test else 'prod'}"
+        "total": total,
+        "pagina": page,
+        "por_pagina": per_page,
+        "propiedades": [p.as_dict() for p in props_page],
+        "origen": "base_local",
+        "stats": stats,
     }
-
-
-
-@app.post("/seed-test")
-def seed_test_data():
-    """Llena la base de datos de PRUEBA (pisos_test.db) con propiedades simuladas."""
-    from database import get_db
-    from services.scoring import generar_huella_digital, valoracion_intrinseca
-    from models import Propiedad
-
-    gen = get_db("test")
-    db = next(gen)
-    try:
-        datos_prueba = [
-            # Vallecas (alquiler)
-            {"propertyCode": "tv1", "price": 850, "size": 70, "rooms": 2, "bathrooms": 1,
-            "address": "Calle de Peña Prieta", "district": "Puente de Vallecas",
-            "latitude": 40.3895, "longitude": -3.6570, "operation": "rent",
-            "score_intrinseco": 0.65},
-            {"propertyCode": "tv2", "price": 950, "size": 80, "rooms": 3, "bathrooms": 2,
-            "address": "Avenida de la Albufera", "district": "Vallecas",
-            "latitude": 40.3875, "longitude": -3.6620, "operation": "rent",
-            "score_intrinseco": 0.82},
-            # Alcorcón (venta)
-            {"propertyCode": "ta1", "price": 175000, "size": 90, "rooms": 3, "bathrooms": 2,
-            "address": "Calle Mayor", "district": "Centro",
-            "latitude": 40.3494, "longitude": -3.8283, "operation": "sale",
-            "score_intrinseco": 0.77},
-            {"propertyCode": "ta2", "price": 145000, "size": 75, "rooms": 2, "bathrooms": 1,
-            "address": "Avenida de Lisboa", "district": "Norte",
-            "latitude": 40.3501, "longitude": -3.8300, "operation": "sale",
-            "score_intrinseco": 0.54},
-        ]
-
-        # Más mocks variados
-        counter = itertools.count(3)
-        for i in range(20):
-            idx = next(counter)
-            datos_prueba.append({
-                "propertyCode": f"tm{idx}",
-                "price": 700 + 25 * idx,
-                "size": 55 + 2 * idx,
-                "rooms": 1 + (idx % 3),
-                "bathrooms": 1 + (idx % 2),
-                "address": f"Calle Ficticia {idx}",
-                "district": "MockDistrict",
-                "latitude": 40.38 + (idx * 0.001),
-                "longitude": -3.66 - (idx * 0.001),
-                "operation": "rent" if idx % 2 == 0 else "sale",
-                "hasLift": (idx % 2 == 0),
-                "exterior": (idx % 3 == 0),
-            })
-
-        for d in datos_prueba:
-            d["huella_digital"] = generar_huella_digital(d)
-            d["score_intrinseco"] = valoracion_intrinseca(d)
-            db.merge(Propiedad(**d))
-        db.commit()
-        return {"mensaje": "Base de PRUEBAS sembrada correctamente", "total": len(datos_prueba)}
-    finally:
-        try:
-            next(gen)
-        except StopIteration:
-            pass
 
 @app.post("/seed-idealista")
 def cargar_datos_idealista(
-    zona: str = Query("vallecas", description="Zona definida en ZONAS_PREDETERMINADAS"),
+    zona: str = Query(..., description="Nombre de la zona, ej: 'madrid_centro'"),
     operation: str = Query("rent", description="Tipo de operación: rent o sale"),
 ):
+    """Carga o actualiza datos desde Idealista manualmente."""
     from database import get_db
-    from services.scoring import generar_huella_digital, valoracion_intrinseca
     from models import Propiedad
-    from services.idealista_api import IdealistaAPI
-    from datetime import datetime
+    from services.scoring import valoracion_intrinseca, generar_huella_digital
 
-    # 🔒 forzar prod
     gen = get_db("prod")
     db = next(gen)
 
     try:
-        api = IdealistaAPI()
-        z = ZONAS_PREDETERMINADAS.get(zona)
-        if not z:
-            return {"error": f"Zona '{zona}' no definida"}
+        if zona not in ZONAS_PREDETERMINADAS:
+            raise HTTPException(status_code=400, detail=f"Zona '{zona}' no está definida en ZONAS_PREDETERMINADAS")
 
+        z = ZONAS_PREDETERMINADAS[zona]
+        lat, lon = map(float, z["center"].split(","))
+        distance = z["distance"] / 1000
+
+        api = IdealistaAPI()
         datos = api.search_by_area(
-            center=z["center"],
-            distance=z["distance"],
+            center=f"{lat},{lon}",
+            distance=distance,
             operation=operation,
-            num_pages=3
+            num_pages=3,
         )
 
         if "error" in datos:
-            return {"error": datos["error"]}
+            raise HTTPException(status_code=502, detail=f"Error en la API de Idealista: {datos['error']}")
 
-        propiedades_nuevas = 0
-        propiedades_actualizadas = 0
+        nuevas, actualizadas = 0, 0
+        for e in datos.get("elementList", []):
+            lat_p = e.get("latitude")
+            lon_p = e.get("longitude")
 
-        for elemento in datos.get("elementList", []):
-            propiedad_data = {
-                'propertyCode': str(elemento.get('propertyCode', '')),
-                'price': elemento.get('price', 0),
-                'size': elemento.get('size', 0),
-                'rooms': elemento.get('rooms', 0),
-                'bathrooms': elemento.get('bathrooms', 0),
-                'floor': elemento.get('floor', ''),
-                'address': elemento.get('address', ''),
-                'district': elemento.get('district', ''),
-                'neighborhood': elemento.get('neighborhood', ''),
-                'latitude': elemento.get('latitude', 0),
-                'longitude': elemento.get('longitude', 0),
-                'hasLift': elemento.get('hasLift', False),
-                'exterior': elemento.get('exterior', False),
-                'url': elemento.get('url', ''),
-                'operation': operation
+            if lat_p and lon_p:
+                d = distancia_km(lat, lon, lat_p, lon_p)
+                if d > distance:
+                    continue
+
+            payload = {
+                "propertyCode": str(e.get("propertyCode", "")),
+                "price": e.get("price", 0),
+                "size": e.get("size", 0),
+                "rooms": e.get("rooms", 0),
+                "bathrooms": e.get("bathrooms", 0),
+                "floor": e.get("floor", ""),
+                "address": e.get("address", ""),
+                "district": e.get("district", ""),
+                "neighborhood": e.get("neighborhood", ""),
+                "latitude": lat_p,
+                "longitude": lon_p,
+                "hasLift": e.get("hasLift", False),
+                "exterior": e.get("exterior", False),
+                "url": e.get("url", ""),
+                "operation": operation,
             }
 
-            existente = db.query(Propiedad).filter(
-                Propiedad.propertyCode == propiedad_data['propertyCode']
-            ).first()
+            payload["huella_digital"] = generar_huella_digital(payload)
+            payload["score_intrinseco"] = valoracion_intrinseca(payload)
+            payload["fecha_actualizacion"] = datetime.now()
+            payload["fecha_obtencion"] = datetime.now()
 
-            if existente:
-                for key, value in propiedad_data.items():
-                    setattr(existente, key, value)
-                existente.huella_digital = generar_huella_digital(propiedad_data)
-                existente.score_intrinseco = valoracion_intrinseca(propiedad_data)
-                existente.fecha_actualizacion = datetime.now()
-                propiedades_actualizadas += 1
+            existe = db.query(Propiedad).filter(Propiedad.propertyCode == payload["propertyCode"]).first()
+            db.merge(Propiedad(**payload))
+            if existe:
+                actualizadas += 1
             else:
-                propiedad_data['huella_digital'] = generar_huella_digital(propiedad_data)
-                propiedad_data['score_intrinseco'] = valoracion_intrinseca(propiedad_data)
-                propiedad_data['fecha_actualizacion'] = datetime.now()
-                nueva = Propiedad(**propiedad_data)
-                db.add(nueva)
-                propiedades_nuevas += 1
+                nuevas += 1
 
         db.commit()
 
         return {
             "zona": zona,
             "operation": operation,
-            "propiedades_nuevas": propiedades_nuevas,
-            "propiedades_actualizadas": propiedades_actualizadas,
-            "total_api": len(datos.get('elementList', [])),
-            "mensaje": "Datos cargados/actualizados en base local"
+            "propiedades_nuevas": nuevas,
+            "propiedades_actualizadas": actualizadas,
+            "total_guardadas": nuevas + actualizadas,
+            "total_recibidas_api": len(datos.get("elementList", [])),
+            "mensaje": f"Datos cargados localmente para zona '{zona}' ✅",
         }
 
+    except HTTPException as e:
+        raise e
     except Exception as e:
         db.rollback()
         return {"error": f"Error cargando datos desde Idealista: {str(e)}"}
@@ -281,7 +235,29 @@ def cargar_datos_idealista(
             pass
 
 
+@app.get("/buscar-todo")
+def buscar_todo(
+    operation: str = Query(None),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(100, le=500),
+    db: Session = Depends(db_from_request),
+):
+    """Devuelve todas las propiedades sin filtrar por ciudad."""
+    query = db.query(Propiedad)
+    if operation:
+        query = query.filter(Propiedad.operation == operation)
+
+    total = query.count()
+    props = query.offset((page - 1) * per_page).limit(per_page).all()
+
+    return {
+        "total": total,
+        "pagina": page,
+        "por_pagina": per_page,
+        "propiedades": [p.as_dict() for p in props],
+        "origen": "base_local",
+    }
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="localhost", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)

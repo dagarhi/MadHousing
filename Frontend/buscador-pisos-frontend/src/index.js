@@ -1,18 +1,34 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { MantineProvider, ColorSchemeScript } from "@mantine/core";
+import { useLocalStorage } from "@mantine/hooks";
 import App from "./App";
 import "leaflet/dist/leaflet.css";
 import "@mantine/core/styles.css";
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
+// 🌓 Componente envoltorio para manejar el tema manualmente
+function Root() {
+  const [colorScheme, setColorScheme] = useLocalStorage({
+    key: "app-color-scheme",
+    defaultValue: "auto",
+  });
 
-root.render(
+  return (
+    <>
+      <ColorSchemeScript defaultColorScheme="auto" />
+      <MantineProvider
+        defaultColorScheme={colorScheme}
+        withGlobalStyles
+        withNormalizeCSS
+      >
+        <App />
+      </MantineProvider>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    {/* Soporte para color scheme automático */}
-    <ColorSchemeScript defaultColorScheme="auto" />
-    <MantineProvider defaultColorScheme="auto" withGlobalStyles withNormalizeCSS>
-      <App />
-    </MantineProvider>
+    <Root />
   </React.StrictMode>
 );

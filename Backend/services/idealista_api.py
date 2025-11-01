@@ -6,40 +6,50 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class IdealistaAPI:
+    """Cliente para la API de Idealista."""
+
     def __init__(self):
         self.api_key = os.getenv("IDEALISTA_API_KEY")
         self.secret = os.getenv("IDEALISTA_SECRET")
         self.token = None
-    
+
     def get_access_token(self):
         try:
             auth = requests.auth.HTTPBasicAuth(self.api_key, self.secret)
             response = requests.post(
                 "https://api.idealista.com/oauth/token",
-                data={'grant_type': 'client_credentials'},
-                auth=auth
+                data={"grant_type": "client_credentials"},
+                auth=auth,
+                timeout=10
             )
             response.raise_for_status()
-            self.token = response.json()['access_token']
+            self.token = response.json().get("access_token")
             return self.token
         except Exception as e:
-            print(f"Error obteniendo token: {e}")
+            print(f"[Idealista] ❌ Error obteniendo token: {e}")
             return None
-    
-    def search_by_area(self, locationId=None, center=None, distance=None,
-                   operation="rent", property_type="homes",
-                   max_items=50, num_pages=2):
-        if not self.token:
-            if not self.get_access_token():
-                return {"error": "No se pudo obtener token de acceso"}
 
-        headers = {'Authorization': f'Bearer {self.token}'}
+    def search_by_area(
+        self,
+        locationId=None,
+        center=None,
+        distance=None,
+        operation="rent",
+        property_type="homes",
+        max_items=50,
+        num_pages=3,
+    ):
+        """Busca propiedades por coordenadas o locationId."""
+        if not (self.token or self.get_access_token()):
+            return {"error": "No se pudo obtener token de acceso"}
+
+        headers = {"Authorization": f"Bearer {self.token}"}
         params_base = {
             "country": "es",
             "operation": operation,
             "propertyType": property_type,
             "maxItems": max_items,
-            "locale": "es"
+            "locale": "es",
         }
 
         if locationId:
@@ -54,20 +64,21 @@ class IdealistaAPI:
         for page in range(1, num_pages + 1):
             params = {**params_base, "numPage": page}
             try:
-                response = requests.post(
+                resp = requests.post(
                     "https://api.idealista.com/3.5/es/search",
                     headers=headers,
-                    data=params
+                    data=params,
+                    timeout=20,
                 )
-                response.raise_for_status()
-                data = response.json()
-                element_list = data.get("elementList", [])
-                if not element_list:
+                resp.raise_for_status()
+                batch = resp.json().get("elementList", [])
+                if not batch:
                     break
-                all_results.extend(element_list)
+                all_results.extend(batch)
+                time.sleep(0.5)
             except Exception as e:
-                print(f"Error en página {page}: {e}")
+                print(f"[Idealista] ⚠️ Error en página {page}: {e}")
                 break
-            time.sleep(0.5)  # evitar límites de tasa
 
+        print(f"[Idealista] ✅ Total resultados obtenidos: {len(all_results)}")
         return {"elementList": all_results, "total": len(all_results)}

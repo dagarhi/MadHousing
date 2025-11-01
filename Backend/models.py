@@ -20,10 +20,6 @@ class Propiedad(Base):
     latitude = Column(Float)
     longitude = Column(Float)
     hasLift = Column(Boolean, default=False)
-    garage = Column(Boolean, default=False)
-    terrace = Column(Boolean, default=False)
-    swimmingPool = Column(Boolean, default=False)
-    airConditioning = Column(Boolean, default=False)
     exterior = Column(Boolean, default=False)
     operation = Column(String(10))
     huella_digital = Column(String(32))
@@ -52,10 +48,6 @@ class Propiedad(Base):
             "latitude": self.latitude,
             "longitude": self.longitude,
             "hasLift": self.hasLift,
-            "garage": self.garage,
-            "terrace": self.terrace,
-            "swimmingPool": self.swimmingPool,
-            "airConditioning": self.airConditioning,
             "exterior": self.exterior,
             "huella_digital": self.huella_digital,
             "es_duplicado": self.es_duplicado,
