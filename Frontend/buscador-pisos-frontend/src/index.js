@@ -8,7 +8,7 @@ import "@mantine/core/styles.css";
 
 // 🌓 Componente envoltorio para manejar el tema manualmente
 function Root() {
-  const [colorScheme, setColorScheme] = useLocalStorage({
+  const [colorScheme] = useLocalStorage({
     key: "app-color-scheme",
     defaultValue: "auto",
   });

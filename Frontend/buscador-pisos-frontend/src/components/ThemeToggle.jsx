@@ -12,7 +12,7 @@ export default function ThemeToggle() {
   const dark = computed === "dark";
 
   return (
-    <Tooltip label={dark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"} withArrow>
+    <Tooltip label={dark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"} withArrow withinPortal={false} zIndex={99999}>
       <ActionIcon
         variant="filled"
         color={dark ? "yellow" : "blue"}

@@ -31,6 +31,8 @@ class Propiedad(Base):
     score_final = Column(Float)
     fecha_obtencion = Column(DateTime, default=datetime.now)
     fecha_actualizacion = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    city = Column(String(100))
+    address = Column(String(255))
 
     def as_dict(self):
         return {
@@ -58,4 +60,5 @@ class Propiedad(Base):
             "score_final": self.score_final,
             "fecha_obtencion": self.fecha_obtencion.isoformat() if self.fecha_obtencion else None,
             "fecha_actualizacion": self.fecha_actualizacion.isoformat() if self.fecha_actualizacion else None,
+            "city": self.city,
         }

@@ -27,10 +27,10 @@ function FixMapResize() {
   return null;
 }
 
-// 🔴🟢 Escala de color rojo → verde (usando HSL)
+// Escala de color rojo → verde (usando HSL)
 function getColorByScore(score) {
-  const t = Math.max(0, Math.min(1, score / 100)); // normaliza 0–1
-  const hue = 120 * t; // 0 = rojo, 120 = verde
+  const t = Math.max(0, Math.min(1, score / 100));
+  const hue = 120 * t;
   return `hsl(${hue}, 80%, 45%)`;
 }
 
@@ -50,17 +50,15 @@ function crearIcono(score) {
   });
 }
 
-export default function MapaPisos({ pisos = [] }) {
+export default function MapaPisos({ pisos = [], favoritos = [], setFavoritos }) {
   const { colorScheme } = useMantineColorScheme();
   const dark = colorScheme === "dark";
 
-  const tileLayerUrl = dark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+  const tileLayerUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
 
   return (
     <Box w="100%" h="100%">
-      {/* Limpieza visual del popup */}
       <style>{`
         .popup-clean.leaflet-popup,
         .popup-clean .leaflet-popup-content-wrapper,
@@ -83,20 +81,19 @@ export default function MapaPisos({ pisos = [] }) {
         }
       `}</style>
 
-      <MapContainer
-        center={[40.4, -3.7]}
-        zoom={12}
-        style={{ height: "100%", width: "100%" }}
-      >
+      <MapContainer center={[40.4, -3.7]} zoom={12} style={{ height: "100%", width: "100%" }}>
         <FixMapResize />
         <TileLayer url={tileLayerUrl} />
 
-        {pisos.map((p, i) => {
+        {pisos.map((p) => {
           const score = p.score_intrinseco ?? 0;
           const icono = crearIcono(score);
 
+          // ✅ Usamos propertyCode como identificador único
+          const code = p.propertyCode;
+
           return (
-            <Marker key={i} position={[p.latitude, p.longitude]} icon={icono}>
+            <Marker key={code} position={[p.latitude, p.longitude]} icon={icono}>
               <Popup className="popup-clean" maxWidth={380} minWidth={260}>
                 <div
                   style={{
@@ -154,6 +151,44 @@ export default function MapaPisos({ pisos = [] }) {
                       <Text size="sm">
                         Score: {Number.isFinite(p.score_intrinseco) ? p.score_intrinseco.toFixed(1) : "N/D"}
                       </Text>
+                    </Group>
+
+                    {/* Botón Favorito */}
+                    <Group justify="center" mt={6}>
+                      <button
+                        onClick={() => {
+                          const existe = favoritos.some((f) => f.propertyCode === code);
+                          const nuevos = existe
+                            ? favoritos.filter((f) => f.propertyCode !== code)
+                            : [...favoritos, p];
+                          setFavoritos(nuevos);
+                        }}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: favoritos.some((f) => f.propertyCode === code)
+                            ? (dark ? "#f783ac" : "#d6336c")
+                            : (dark ? "#aaa" : "#555"),
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                      >
+                        <Star
+                          fill={
+                            favoritos.some((f) => f.propertyCode === code)
+                              ? (dark ? "#f783ac" : "#d6336c")
+                              : "none"
+                          }
+                          size={18}
+                        />
+                        <span style={{ fontSize: "0.9em" }}>
+                          {favoritos.some((f) => f.propertyCode === code)
+                            ? "Quitar de favoritos"
+                            : "Añadir a favoritos"}
+                        </span>
+                      </button>
                     </Group>
 
                     {/* Enlace */}

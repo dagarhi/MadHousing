@@ -17,9 +17,11 @@ import {
 import { Coins, Ruler, Star, Settings2 } from "lucide-react";
 
 export default function Buscador({ onResultados, opened, onClose }) {
+  const [zonas, setZonas] = useState({});
   const [ciudad, setCiudad] = useState("");
+  const [distrito, setDistrito] = useState("");
+  const [barrio, setBarrio] = useState("");
   const [operation, setOperation] = useState("rent");
-
   const [stats, setStats] = useState(null);
   const [priceRange, setPriceRange] = useState([0, 0]);
   const [sizeRange, setSizeRange] = useState([0, 0]);
@@ -28,72 +30,119 @@ export default function Buscador({ onResultados, opened, onClose }) {
   const [floor, setFloor] = useState(null);
   const [hasLift, setHasLift] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [noData, setNoData] = useState(false);
+  const [loadingZonas, setLoadingZonas] = useState(true);
 
-  // ================================================================
-  // 🧠 Cargar estadísticas dinámicamente al elegir zona y operación
-  // ================================================================
+  // 📦 Cargar jerarquía de zonas desde el backend
+  useEffect(() => {
+    const cargarZonas = async () => {
+      try {
+        const res = await axios.get("http://localhost:8000/zonas-jerarquicas");
+        console.log("Zonas recibidas:", res.data);
+        setZonas(res.data || {});
+      } catch (err) {
+        console.error("Error cargando zonas:", err);
+      } finally {
+        setLoadingZonas(false);
+      }
+    };
+    cargarZonas();
+  }, []);
+
+  // 🔄 Reset dependientes
+  useEffect(() => {
+    setDistrito("");
+    setBarrio("");
+  }, [ciudad]);
+  useEffect(() => setBarrio(""), [distrito]);
+
+  // 🔍 Generar selects dinámicos
+  const ciudadesOptions =
+    Object.keys(zonas || {}).length > 0
+      ? Object.keys(zonas).map((c) => ({ value: c, label: c }))
+      : [];
+
+  const distritosOptions = ciudad
+    ? Object.keys(zonas[ciudad] || {}).map((d) => ({
+        value: d,
+        label: d,
+      }))
+    : [];
+
+  const barriosOptions =
+    ciudad && distrito
+      ? (zonas[ciudad][distrito] || []).map((b) => ({ value: b, label: b }))
+      : [];
+
+  // 📊 Cargar estadísticas cuando cambian ciudad/distrito/barrio
   useEffect(() => {
     const cargarStats = async () => {
-      if (!ciudad || ciudad === "todas" || !operation) return;
+      const zonaSeleccionada = barrio || distrito || ciudad;
+      if (!zonaSeleccionada) return;
       setLoading(true);
       try {
         const res = await axios.get("http://localhost:8000/buscar", {
-          params: { ciudad, operation },
+          params: { ciudad: zonaSeleccionada, operation },
         });
-        const s = res.data.stats;
-        if (s) {
+        const props = res.data?.propiedades ?? [];
+        const s = res.data?.stats ?? {};
+        const rangosValidos =
+          s.price &&
+          s.size &&
+          s.score &&
+          (s.price.max > s.price.min ||
+            s.size.max > s.size.min ||
+            s.score.max > s.score.min);
+
+        if (props.length > 0 && rangosValidos) {
           setStats(s);
+          setNoData(false);
           setPriceRange([s.price.min, s.price.max]);
           setSizeRange([s.size.min, s.size.max]);
           setScoreRange([s.score.min, s.score.max]);
+        } else {
+          setStats(null);
+          setNoData(true);
         }
       } catch (err) {
         console.error("Error cargando stats:", err);
+        setStats(null);
+        setNoData(true);
       } finally {
         setLoading(false);
       }
     };
     cargarStats();
-  }, [ciudad, operation]);
+  }, [ciudad, distrito, barrio, operation]);
 
-  // ================================================================
-  // 🔍 Buscar pisos con los filtros aplicados
-  // ================================================================
+  // 🔎 Buscar pisos
   const buscarPisos = async () => {
-    if (!ciudad) return alert("Selecciona una zona");
+    const zonaSeleccionada = barrio || distrito || ciudad;
+    if (!zonaSeleccionada) return alert("Selecciona una zona válida");
+    if (noData) return alert("No hay datos disponibles para esta zona");
 
     try {
       setLoading(true);
-      let res;
+      const params = { ciudad: zonaSeleccionada, operation };
 
-      if (ciudad === "todas") {
-        res = await axios.get("http://localhost:8000/buscar-todo", {
-          params: { operation },
-        });
-      } else {
-        const params = { ciudad, operation };
-
-        if (stats?.price) {
-          params.min_price = priceRange[0];
-          params.max_price = priceRange[1];
-        }
-        if (stats?.size) {
-          params.min_size = sizeRange[0];
-          params.max_size = sizeRange[1];
-        }
-        if (stats?.score) {
-          params.min_score = scoreRange[0];
-          params.max_score = scoreRange[1];
-        }
-
-        if (rooms != null) params.rooms = rooms;
-        if (floor != null) params.floor = floor;
-        if (hasLift) params.hasLift = true;
-
-        res = await axios.get("http://localhost:8000/buscar", { params });
+      if (stats?.price) {
+        params.min_price = priceRange[0];
+        params.max_price = priceRange[1];
       }
+      if (stats?.size) {
+        params.min_size = sizeRange[0];
+        params.max_size = sizeRange[1];
+      }
+      if (stats?.score) {
+        params.min_score = scoreRange[0];
+        params.max_score = scoreRange[1];
+      }
+      if (rooms != null) params.rooms = rooms;
+      if (floor != null) params.floor = floor;
+      if (hasLift) params.hasLift = true;
 
-      onResultados(res.data.propiedades || []);
+      const res = await axios.get("http://localhost:8000/buscar", { params });
+      onResultados(res.data?.propiedades || [], params);
       onClose();
     } catch (err) {
       alert("Error al buscar pisos: " + err.message);
@@ -113,25 +162,53 @@ export default function Buscador({ onResultados, opened, onClose }) {
       zIndex={3000}
     >
       <Stack gap="md" mt="sm">
-        {/* Zona */}
-        <Select
-          label="Zona"
-          placeholder="Selecciona zona"
-          data={[
-            { value: "todas", label: "Todas las zonas" },
-            { value: "madrid_centro", label: "Centro de Madrid" },
-            { value: "retiro", label: "Retiro" },
-            { value: "arganzuela", label: "Arganzuela" },
-            { value: "moratalaz", label: "Moratalaz" },
-            { value: "vallecas", label: "Vallecas" },
-            { value: "alcorcon", label: "Alcorcón" },
-          ]}
-          value={ciudad}
-          onChange={setCiudad}
-          comboboxProps={{ withinPortal: false }}
-        />
+        {/* Si aún no cargaron las zonas */}
+        {loadingZonas ? (
+          <Loader color="teal" mt="md" />
+        ) : Object.keys(zonas).length === 0 ? (
+          <Text c="dimmed" ta="center">
+            No hay zonas disponibles.
+          </Text>
+        ) : (
+          <>
+            {/* Ciudad */}
+            <Select
+              label="Ciudad / Municipio"
+              placeholder="Selecciona ciudad"
+              data={ciudadesOptions}
+              value={ciudad}
+              onChange={setCiudad}
+              searchable
+              comboboxProps={{ withinPortal: false }}
+            />
 
-        {/* Operación */}
+            {/* Distrito */}
+            <Select
+              label="Distrito"
+              placeholder="Selecciona distrito"
+              data={distritosOptions}
+              value={distrito}
+              onChange={setDistrito}
+              disabled={!ciudad}
+              searchable
+              comboboxProps={{ withinPortal: false }}
+            />
+
+            {/* Barrio */}
+            <Select
+              label="Barrio"
+              placeholder="Selecciona barrio"
+              data={barriosOptions}
+              value={barrio}
+              onChange={setBarrio}
+              disabled={!distrito || barriosOptions.length === 0}
+              searchable
+              comboboxProps={{ withinPortal: false }}
+            />
+          </>
+        )}
+
+        {/* Tipo de operación */}
         <Select
           label="Tipo de operación"
           data={[
@@ -140,14 +217,21 @@ export default function Buscador({ onResultados, opened, onClose }) {
           ]}
           value={operation}
           onChange={setOperation}
+          searchable
           comboboxProps={{ withinPortal: false }}
         />
 
         <Divider />
 
         {loading && <Loader color="teal" size="sm" />}
+        {!loading && noData && (
+          <Text c="dimmed" ta="center" mt="md">
+            No hay datos disponibles para esta zona en{" "}
+            {operation === "rent" ? "alquiler" : "venta"}.
+          </Text>
+        )}
 
-        {stats && ciudad !== "todas" ? (
+        {!loading && stats && !noData && (
           <>
             <Group justify="center" gap={6}>
               <Coins size={18} />
@@ -185,7 +269,6 @@ export default function Buscador({ onResultados, opened, onClose }) {
               onChange={setScoreRange}
             />
 
-            {/* Filtros avanzados */}
             <Accordion mt="md" variant="separated" radius="md">
               <Accordion.Item value="advanced">
                 <Accordion.Control icon={<Settings2 size={18} />}>
@@ -195,14 +278,12 @@ export default function Buscador({ onResultados, opened, onClose }) {
                   <Stack gap="sm" mt="xs">
                     <NumberInput
                       label="Habitaciones mínimas"
-                      placeholder="Ej. 2"
                       value={rooms}
                       onChange={setRooms}
                       min={0}
                     />
                     <NumberInput
                       label="Planta"
-                      placeholder="Ej. 3"
                       value={floor}
                       onChange={setFloor}
                       min={0}
@@ -211,20 +292,16 @@ export default function Buscador({ onResultados, opened, onClose }) {
                     <Checkbox
                       label="Ascensor"
                       checked={hasLift}
-                      onChange={(e) => setHasLift(e.currentTarget.checked)}
+                      onChange={(e) =>
+                        setHasLift(e.currentTarget.checked)
+                      }
                     />
                   </Stack>
                 </Accordion.Panel>
               </Accordion.Item>
             </Accordion>
           </>
-        ) : ciudad !== "todas" && !loading ? (
-          <Text c="dimmed" size="sm" ta="center">
-            No hay estadísticas disponibles para esta zona/operación.
-            <br />
-            Ejecuta <b>/seed-idealista</b> si necesitas más datos.
-          </Text>
-        ) : null}
+        )}
 
         <Divider />
 
@@ -232,7 +309,11 @@ export default function Buscador({ onResultados, opened, onClose }) {
           <Button variant="light" color="gray" onClick={onClose}>
             Cancelar
           </Button>
-          <Button color="teal" onClick={buscarPisos} disabled={loading || !ciudad || !operation}>
+          <Button
+            color="teal"
+            onClick={buscarPisos}
+            disabled={loading || !ciudad || noData}
+          >
             {loading ? "Buscando..." : "Buscar"}
           </Button>
         </Group>
