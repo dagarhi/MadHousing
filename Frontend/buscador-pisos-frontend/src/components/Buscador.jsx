@@ -151,6 +151,22 @@ export default function Buscador({ onResultados, opened, onClose }) {
     }
   };
 
+  // 🧭 Mostrar todos los datos de una operación
+  const mostrarTodos = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get("http://localhost:8000/buscar-todo", {
+        params: { operation },
+      });
+      onResultados(res.data?.propiedades || [], { operation, mostrarTodo: true });
+      onClose();
+    } catch (err) {
+      alert("Error al cargar todos los datos: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Drawer
       opened={opened}
@@ -162,7 +178,6 @@ export default function Buscador({ onResultados, opened, onClose }) {
       zIndex={3000}
     >
       <Stack gap="md" mt="sm">
-        {/* Si aún no cargaron las zonas */}
         {loadingZonas ? (
           <Loader color="teal" mt="md" />
         ) : Object.keys(zonas).length === 0 ? (
@@ -171,7 +186,6 @@ export default function Buscador({ onResultados, opened, onClose }) {
           </Text>
         ) : (
           <>
-            {/* Ciudad */}
             <Select
               label="Ciudad / Municipio"
               placeholder="Selecciona ciudad"
@@ -182,7 +196,6 @@ export default function Buscador({ onResultados, opened, onClose }) {
               comboboxProps={{ withinPortal: false }}
             />
 
-            {/* Distrito */}
             <Select
               label="Distrito"
               placeholder="Selecciona distrito"
@@ -194,7 +207,6 @@ export default function Buscador({ onResultados, opened, onClose }) {
               comboboxProps={{ withinPortal: false }}
             />
 
-            {/* Barrio */}
             <Select
               label="Barrio"
               placeholder="Selecciona barrio"
@@ -208,7 +220,6 @@ export default function Buscador({ onResultados, opened, onClose }) {
           </>
         )}
 
-        {/* Tipo de operación */}
         <Select
           label="Tipo de operación"
           data={[
@@ -292,9 +303,7 @@ export default function Buscador({ onResultados, opened, onClose }) {
                     <Checkbox
                       label="Ascensor"
                       checked={hasLift}
-                      onChange={(e) =>
-                        setHasLift(e.currentTarget.checked)
-                      }
+                      onChange={(e) => setHasLift(e.currentTarget.checked)}
                     />
                   </Stack>
                 </Accordion.Panel>
@@ -305,17 +314,29 @@ export default function Buscador({ onResultados, opened, onClose }) {
 
         <Divider />
 
-        <Group justify="flex-end" mt="md">
+        <Group justify="space-between" mt="md">
           <Button variant="light" color="gray" onClick={onClose}>
             Cancelar
           </Button>
-          <Button
-            color="teal"
-            onClick={buscarPisos}
-            disabled={loading || !ciudad || noData}
-          >
-            {loading ? "Buscando..." : "Buscar"}
-          </Button>
+
+          <Group>
+            <Button
+              variant="light"
+              color="blue"
+              onClick={mostrarTodos}
+              disabled={loading}
+            >
+              Mostrar todos los datos
+            </Button>
+
+            <Button
+              color="teal"
+              onClick={buscarPisos}
+              disabled={loading || !ciudad || noData}
+            >
+              {loading ? "Buscando..." : "Buscar"}
+            </Button>
+          </Group>
         </Group>
       </Stack>
     </Drawer>
