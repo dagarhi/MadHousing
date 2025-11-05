@@ -225,7 +225,28 @@ def cargar_datos_idealista(
     db = next(gen)
     try:
         api = IdealistaAPI()
-        datos = api.search_by_area_name(zona, operation=operation, num_pages=3)
+        # --- Coordenadas predefinidas para zonas comunes ---
+        centros = {
+            "madrid": ("40.4168,-3.7038", 10000),
+            "alcorcon": ("40.3459,-3.8249", 5000),
+            "vallecas": ("40.3895,-3.6570", 4000),
+            "retiro": ("40.4113,-3.6833", 3000),
+            "arganzuela": ("40.3982,-3.6956", 3000),
+            "moratalaz": ("40.4075,-3.6520", 3000),
+            "usera": ("40.3855,-3.7050", 3000),
+            "bellasvistas": ("40.4489,-3.7088", 3000),
+        }
+
+        center, distance = centros.get(zona.lower(), ("40.4168,-3.7038", 8000))
+
+        # --- Buscar propiedades con coordenadas ---
+        datos = api.search_by_area(
+            center=center,
+            distance=distance / 1000,  # Idealista usa km
+            operation=operation,
+            num_pages=3,
+        )
+
 
         if "error" in datos:
             raise HTTPException(status_code=502, detail=f"Error en la API de Idealista: {datos['error']}")
