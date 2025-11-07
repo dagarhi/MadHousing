@@ -12,12 +12,13 @@ for i, z in enumerate(zonas, start=1):
         url = f"http://127.0.0.1:8000/seed-idealista?zona={z}&operation={op}"
         print(f"[{i}/{len(zonas)}] ⏳ Actualizando {z.upper()} ({op})...")
         try:
-            r = requests.post(url, timeout=60)
+            r = requests.post(url, timeout=300)
             if r.status_code == 200:
                 data = r.json()
                 print(f"✅ {z} ({op}): {data.get('total_guardadas', 0)} guardadas "
-                      f"| {data.get('propiedades_nuevas', 0)} nuevas "
-                      f"| {data.get('propiedades_actualizadas', 0)} actualizadas")
+                    f"| {data.get('nuevas', 0)} nuevas "
+                    f"| {data.get('actualizadas', 0)} actualizadas")
+
             else:
                 print(f"⚠️ Error HTTP {r.status_code} en {z} ({op})")
         except Exception as e:

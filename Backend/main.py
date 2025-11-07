@@ -9,9 +9,10 @@ from datetime import datetime
 from math import radians, cos, sin, asin, sqrt
 from collections import defaultdict
 from statistics import mean
+from routers.heatmap_router import router as heatmap_router
 
 app = FastAPI(title="Buscador de Pisos API", version="4.0.0")
-
+app.include_router(heatmap_router)
 # --- Configuración CORS para frontend React ---
 app.add_middleware(
     CORSMiddleware,
@@ -247,7 +248,6 @@ def cargar_datos_idealista(
             num_pages=3,
         )
 
-
         if "error" in datos:
             raise HTTPException(status_code=502, detail=f"Error en la API de Idealista: {datos['error']}")
 
@@ -255,6 +255,46 @@ def cargar_datos_idealista(
         for e in datos.get("elementList", []):
             lat = e.get("latitude")
             lon = e.get("longitude")
+
+            # --- Corrección del municipio ---
+            city_val = e.get("municipality") or ""
+            district_val = e.get("district") or ""
+            neigh_val = e.get("neighborhood") or ""
+
+            # Si Idealista marca "Madrid" pero los campos secundarios indican otra localidad, usamos esos
+            if city_val.lower() == "madrid":
+                txt = f"{district_val} {neigh_val}".lower()
+                if "mostol" in txt:
+                    city_val = "mostoles"
+                elif "alcorcon" in txt:
+                    city_val = "alcorcon"
+                elif "fuenlabrad" in txt:
+                    city_val = "fuenlabrada"
+                elif "getafe" in txt:
+                    city_val = "getafe"
+                elif "leganes" in txt:
+                    city_val = "leganes"
+                elif "pozuelo" in txt:
+                    city_val = "pozuelo de alarcon"
+                elif "roz" in txt:
+                    city_val = "las rozas de madrid"
+                elif "torrejon" in txt:
+                    city_val = "torrejon de ardoz"
+                elif "san sebastian" in txt:
+                    city_val = "san sebastian de los reyes"
+                elif "alcala" in txt:
+                    city_val = "alcala de henares"
+                elif "rivas" in txt:
+                    city_val = "rivas vaciamadrid"
+                elif "majadahonda" in txt:
+                    city_val = "majadahonda"
+                elif "boadilla" in txt:
+                    city_val = "boadilla del monte"
+                elif "arroyomolinos" in txt:
+                    city_val = "arroyomolinos"
+                elif "villaviciosa" in txt:
+                    city_val = "villaviciosa de odon"
+
             payload = {
                 "propertyCode": str(e.get("propertyCode", "")),
                 "price": e.get("price", 0),
@@ -263,9 +303,9 @@ def cargar_datos_idealista(
                 "bathrooms": e.get("bathrooms", 0),
                 "floor": e.get("floor", ""),
                 "address": e.get("address", ""),
-                "district": e.get("district", ""),
-                "neighborhood": e.get("neighborhood", ""),
-                "city": e.get("municipality", ""),
+                "district": district_val,
+                "neighborhood": neigh_val,
+                "city": city_val,
                 "latitude": lat,
                 "longitude": lon,
                 "hasLift": e.get("hasLift", False),
@@ -273,6 +313,7 @@ def cargar_datos_idealista(
                 "url": e.get("url", ""),
                 "operation": operation,
             }
+
             payload["huella_digital"] = generar_huella_digital(payload)
             payload["score_intrinseco"] = valoracion_intrinseca(payload)
             payload["fecha_actualizacion"] = datetime.now()
@@ -294,6 +335,7 @@ def cargar_datos_idealista(
             "total_guardadas": nuevas + actualizadas,
             "mensaje": f"Datos cargados correctamente para '{zona}' ✅",
         }
+
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error cargando datos: {str(e)}")
@@ -302,6 +344,7 @@ def cargar_datos_idealista(
             next(gen)
         except StopIteration:
             pass
+
 
 
 if __name__ == "__main__":

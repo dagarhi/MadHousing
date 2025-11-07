@@ -16,6 +16,28 @@ import {
 } from "@mantine/core";
 import { Coins, Ruler, Star, Settings2 } from "lucide-react";
 
+// 🔁 Trae TODAS las páginas respetando el límite del backend (per_page <= 100)
+async function fetchTodasLasPaginasBuscar(paramsBase) {
+  const per_page = 100; // ← el backend limita a 100 en /buscar
+  let page = 1;
+  let acumulado = [];
+
+  while (true) {
+    const res = await axios.get("http://localhost:8000/buscar", {
+      params: { ...paramsBase, page, per_page },
+    });
+    const data = res.data;
+    const chunk = Array.isArray(data?.propiedades) ? data.propiedades : [];
+    acumulado = acumulado.concat(chunk);
+
+    const total = data?.total ?? chunk.length;
+    const porPagina = data?.por_pagina ?? per_page;
+    if (page * porPagina >= total || chunk.length === 0) break;
+    page += 1;
+  }
+  return acumulado;
+}
+
 export default function Buscador({ onResultados, opened, onClose }) {
   const [zonas, setZonas] = useState({});
   const [ciudad, setCiudad] = useState("");
@@ -33,12 +55,11 @@ export default function Buscador({ onResultados, opened, onClose }) {
   const [noData, setNoData] = useState(false);
   const [loadingZonas, setLoadingZonas] = useState(true);
 
-  // 📦 Cargar jerarquía de zonas desde el backend
+  // 📦 Jerarquía de zonas
   useEffect(() => {
     const cargarZonas = async () => {
       try {
         const res = await axios.get("http://localhost:8000/zonas-jerarquicas");
-        console.log("Zonas recibidas:", res.data);
         setZonas(res.data || {});
       } catch (err) {
         console.error("Error cargando zonas:", err);
@@ -56,17 +77,14 @@ export default function Buscador({ onResultados, opened, onClose }) {
   }, [ciudad]);
   useEffect(() => setBarrio(""), [distrito]);
 
-  // 🔍 Generar selects dinámicos
+  // 🔍 Selects dinámicos
   const ciudadesOptions =
     Object.keys(zonas || {}).length > 0
       ? Object.keys(zonas).map((c) => ({ value: c, label: c }))
       : [];
 
   const distritosOptions = ciudad
-    ? Object.keys(zonas[ciudad] || {}).map((d) => ({
-        value: d,
-        label: d,
-      }))
+    ? Object.keys(zonas[ciudad] || {}).map((d) => ({ value: d, label: d }))
     : [];
 
   const barriosOptions =
@@ -74,18 +92,20 @@ export default function Buscador({ onResultados, opened, onClose }) {
       ? (zonas[ciudad][distrito] || []).map((b) => ({ value: b, label: b }))
       : [];
 
-  // 📊 Cargar estadísticas cuando cambian ciudad/distrito/barrio
+  // 📊 Cargar estadísticas cuando cambian zona/operación
   useEffect(() => {
     const cargarStats = async () => {
       const zonaSeleccionada = barrio || distrito || ciudad;
       if (!zonaSeleccionada) return;
       setLoading(true);
       try {
+        // 👇 per_page = 100 (el backend limita a 100 en /buscar)
         const res = await axios.get("http://localhost:8000/buscar", {
-          params: { ciudad: zonaSeleccionada, operation },
+          params: { ciudad: zonaSeleccionada, operation, page: 1, per_page: 100 },
         });
         const props = res.data?.propiedades ?? [];
         const s = res.data?.stats ?? {};
+
         const rangosValidos =
           s.price &&
           s.size &&
@@ -115,7 +135,7 @@ export default function Buscador({ onResultados, opened, onClose }) {
     cargarStats();
   }, [ciudad, distrito, barrio, operation]);
 
-  // 🔎 Buscar pisos
+  // 🔎 Buscar pisos (todas las páginas)
   const buscarPisos = async () => {
     const zonaSeleccionada = barrio || distrito || ciudad;
     if (!zonaSeleccionada) return alert("Selecciona una zona válida");
@@ -141,8 +161,8 @@ export default function Buscador({ onResultados, opened, onClose }) {
       if (floor != null) params.floor = floor;
       if (hasLift) params.hasLift = true;
 
-      const res = await axios.get("http://localhost:8000/buscar", { params });
-      onResultados(res.data?.propiedades || [], params);
+      const todas = await fetchTodasLasPaginasBuscar(params);
+      onResultados(todas, params);
       onClose();
     } catch (err) {
       alert("Error al buscar pisos: " + err.message);
@@ -151,14 +171,25 @@ export default function Buscador({ onResultados, opened, onClose }) {
     }
   };
 
-  // 🧭 Mostrar todos los datos de una operación
+  // 🧭 Mostrar todos los datos de una operación (usa /buscar-todo, allí sí permiten 1000)
   const mostrarTodos = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:8000/buscar-todo", {
-        params: { operation },
-      });
-      onResultados(res.data?.propiedades || [], { operation, mostrarTodo: true });
+      const per_page = 1000; // /buscar-todo permite hasta 1000 (backend)
+      let page = 1;
+      let out = [];
+      while (true) {
+        const res = await axios.get("http://localhost:8000/buscar-todo", {
+          params: { operation, page, per_page },
+        });
+        const data = res.data;
+        const chunk = Array.isArray(data?.propiedades) ? data.propiedades : [];
+        out = out.concat(chunk);
+        const total = data?.total ?? chunk.length;
+        if (page * per_page >= total || chunk.length === 0) break;
+        page += 1;
+      }
+      onResultados(out, { operation, mostrarTodo: true });
       onClose();
     } catch (err) {
       alert("Error al cargar todos los datos: " + err.message);
@@ -181,9 +212,7 @@ export default function Buscador({ onResultados, opened, onClose }) {
         {loadingZonas ? (
           <Loader color="teal" mt="md" />
         ) : Object.keys(zonas).length === 0 ? (
-          <Text c="dimmed" ta="center">
-            No hay zonas disponibles.
-          </Text>
+          <Text c="dimmed" ta="center">No hay zonas disponibles.</Text>
         ) : (
           <>
             <Select
@@ -237,8 +266,7 @@ export default function Buscador({ onResultados, opened, onClose }) {
         {loading && <Loader color="teal" size="sm" />}
         {!loading && noData && (
           <Text c="dimmed" ta="center" mt="md">
-            No hay datos disponibles para esta zona en{" "}
-            {operation === "rent" ? "alquiler" : "venta"}.
+            No hay datos disponibles para esta zona en {operation === "rent" ? "alquiler" : "venta"}.
           </Text>
         )}
 
@@ -320,20 +348,11 @@ export default function Buscador({ onResultados, opened, onClose }) {
           </Button>
 
           <Group>
-            <Button
-              variant="light"
-              color="blue"
-              onClick={mostrarTodos}
-              disabled={loading}
-            >
+            <Button variant="light" color="blue" onClick={mostrarTodos} disabled={loading}>
               Mostrar todos los datos
             </Button>
 
-            <Button
-              color="teal"
-              onClick={buscarPisos}
-              disabled={loading || !ciudad || noData}
-            >
+            <Button color="teal" onClick={buscarPisos} disabled={loading || !ciudad || noData}>
               {loading ? "Buscando..." : "Buscar"}
             </Button>
           </Group>

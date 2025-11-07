@@ -1,55 +1,29 @@
-import {
-  Drawer,
-  ScrollArea,
-  Stack,
-  Box,
-  Text,
-  Divider,
-  Group,
-  Button,
-} from "@mantine/core";
-import { useEffect, useState } from "react";
+import { Drawer, ScrollArea, Stack, Box, Text, Group, Button, Divider } from "@mantine/core";
+import { useFavoritos } from "../context/FavoritosContext";
 
-export default function DrawerFavoritos({ opened, onClose, favoritos, setFavoritos }) {
-  const [lista, setLista] = useState(favoritos || []);
 
-  // 🔁 Sincroniza al abrir o cambiar favoritos
-  useEffect(() => {
-    setLista(favoritos || []);
-  }, [favoritos, opened]);
-
-  // ❌ Eliminar un solo favorito por propertyCode
-  const eliminar = (propertyCode) => {
-    const nueva = lista.filter((f) => f.propertyCode !== propertyCode);
-    setLista(nueva);
-    setFavoritos(nueva);
-  };
-
-  // 🧹 Eliminar todos
-  const borrarTodos = () => {
-    setLista([]);
-    setFavoritos([]);
-  };
+export default function DrawerFavoritos({ opened, onClose }) {
+  const { favoritos, toggleFavorito, borrarTodos } = useFavoritos();
 
   return (
     <Drawer
       opened={opened}
       onClose={onClose}
-      title={<Text fw={600}>Mis pisos favoritos</Text>}
+      title={<Text fw={600}>Mis pisos favoritos ❤️</Text>}
       position="right"
       size="md"
       overlayProps={{ opacity: 0.4, blur: 3 }}
       withinPortal={false}
       zIndex={99999}
     >
-      {lista.length === 0 ? (
+      {favoritos.length === 0 ? (
         <Text c="dimmed" ta="center" mt="lg">
           No tienes pisos guardados aún.
         </Text>
       ) : (
         <ScrollArea h="calc(100vh - 140px)">
           <Stack gap="sm">
-            {lista.map((p) => (
+            {favoritos.map((p) => (
               <Box
                 key={p.propertyCode}
                 p="sm"
@@ -59,7 +33,7 @@ export default function DrawerFavoritos({ opened, onClose, favoritos, setFavorit
                   background: "var(--mantine-color-body)",
                 }}
               >
-                <Group justify="space-between" align="flex-start">
+                <Group justify="space-between">
                   <div>
                     <Text fw={500}>{p.address || "Dirección desconocida"}</Text>
                     <Text size="sm" c="dimmed">
@@ -82,7 +56,7 @@ export default function DrawerFavoritos({ opened, onClose, favoritos, setFavorit
                     color="red"
                     size="xs"
                     variant="light"
-                    onClick={() => eliminar(p.propertyCode)}
+                    onClick={() => toggleFavorito(p)}
                   >
                     Quitar
                   </Button>

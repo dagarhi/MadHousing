@@ -1,12 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { MantineProvider, ColorSchemeScript } from "@mantine/core";
+import { FavoritosProvider } from "./context/FavoritosContext";
 import { useLocalStorage } from "@mantine/hooks";
 import App from "./App";
 import "leaflet/dist/leaflet.css";
 import "@mantine/core/styles.css";
 
-// 🌓 Componente envoltorio para manejar el tema manualmente
 function Root() {
   const [colorScheme] = useLocalStorage({
     key: "app-color-scheme",
@@ -14,21 +14,24 @@ function Root() {
   });
 
   return (
-    <>
-      <ColorSchemeScript defaultColorScheme="auto" />
-      <MantineProvider
-        defaultColorScheme={colorScheme}
-        withGlobalStyles
-        withNormalizeCSS
-      >
+    <MantineProvider
+      defaultColorScheme={colorScheme}
+      withGlobalStyles
+      withNormalizeCSS
+    >
+      <FavoritosProvider>
         <App />
-      </MantineProvider>
-    </>
+      </FavoritosProvider>
+    </MantineProvider>
   );
 }
 
+// 👉 Este script se ejecuta antes del render
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <Root />
-  </React.StrictMode>
+  <>
+    <ColorSchemeScript defaultColorScheme="auto" />
+    <React.StrictMode>
+      <Root />
+    </React.StrictMode>
+  </>
 );
