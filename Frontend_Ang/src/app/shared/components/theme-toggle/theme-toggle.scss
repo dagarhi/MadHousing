@@ -1,0 +1,45 @@
+/* ======================================================
+   🎨 THEME-TOGGLE.SCSS FINAL
+   Icono visible y adaptativo en modo claro/oscuro
+   ====================================================== */
+
+:host {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === Botón principal === */
+button[mat-icon-button] {
+  border-radius: 50%;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  width: 40px;
+  height: 40px;
+}
+
+/* === Icono (Lucide) === */
+lucide-icon {
+  width: 22px;
+  height: 22px;
+  transition: color 0.3s ease;
+}
+
+/* Modo claro (por defecto) */
+body:not(.dark-theme) button[mat-icon-button] {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #222 !important;
+}
+
+body:not(.dark-theme) lucide-icon {
+  color: #222 !important;
+}
+
+/* Modo oscuro */
+body.dark-theme button[mat-icon-button] {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff !important;
+}
+
+body.dark-theme lucide-icon {
+  color: #fff !important;
+}

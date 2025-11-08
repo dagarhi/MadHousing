@@ -1,0 +1,32 @@
+<div class="drawer-estadisticas">
+  <div class="drawer-header">
+    <h3>Estadísticas</h3>
+    <button mat-icon-button (click)="cargarDatos()" [disabled]="cargando">
+      <lucide-icon name="refresh-cw"></lucide-icon>
+    </button>
+  </div>
+
+  <div *ngIf="cargando" class="loading">Cargando datos...</div>
+
+  <div *ngIf="!cargando && data">
+    <mat-nav-list>
+      <mat-list-item *ngFor="let zona of zonas()">
+        <div class="zona-block">
+          <h4>{{ zona }}</h4>
+
+          <div class="datos">
+            <p><strong>Venta:</strong></p>
+            <p>Precio medio: {{ data[zona].sale.precio_medio | number:'1.0-0' }} €</p>
+            <p>Tamaño medio: {{ data[zona].sale.tamano_medio | number:'1.0-0' }} m²</p>
+            <p>Score medio: {{ data[zona].sale.score_medio | number:'1.1-1' }}</p>
+
+            <p><strong>Alquiler:</strong></p>
+            <p>Precio medio: {{ data[zona].rent.precio_medio | number:'1.0-0' }} €</p>
+            <p>Tamaño medio: {{ data[zona].rent.tamano_medio | number:'1.0-0' }} m²</p>
+            <p>Score medio: {{ data[zona].rent.score_medio | number:'1.1-1' }}</p>
+          </div>
+        </div>
+      </mat-list-item>
+    </mat-nav-list>
+  </div>
+</div>

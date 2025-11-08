@@ -1,0 +1,61 @@
+<mat-sidenav-container class="layout">
+  <!-- 🔹 Menú lateral -->
+  <mat-sidenav #drawer mode="side" class="side" [opened]="false">
+    <div class="drawer-header">
+      <h3>Menú</h3>
+      <button mat-icon-button (click)="drawer.close()">
+        <lucide-icon name="x"></lucide-icon>
+      </button>
+    </div>
+
+    <button mat-button (click)="mostrarFavoritos = !mostrarFavoritos">
+      <lucide-icon name="heart"></lucide-icon>
+      <span>Favoritos</span>
+    </button>
+
+    <button mat-button (click)="abrirEstadisticas()">
+      <lucide-icon name="bar-chart-3"></lucide-icon>
+      <span>Estadísticas</span>
+    </button>
+    
+    <button mat-button (click)="toggleBuscador()">
+      <lucide-icon name="search"></lucide-icon>
+      <span>Buscador</span>
+    </button>
+
+    <!-- Drawer Favoritos -->
+    <app-drawer-favoritos *ngIf="mostrarFavoritos"></app-drawer-favoritos>
+  </mat-sidenav>
+
+  <!-- 🔹 Contenido principal -->
+  <mat-sidenav-content>
+    <!-- Barra superior -->
+    <mat-toolbar color="primary">
+      <button mat-icon-button (click)="drawer.toggle()">
+        <lucide-icon name="menu"></lucide-icon>
+      </button>
+      <span class="title">CarMad</span>
+      <span class="spacer"></span>
+      <app-theme-toggle></app-theme-toggle>
+    </mat-toolbar>
+
+    <!-- Contenedor del mapa -->
+    <section class="map-section">
+      <ng-container *ngIf="!propiedades?.length; else mapa">
+        <div style="text-align:center; margin-top:30vh;">
+          <p>Cargando propiedades o sin resultados...</p>
+        </div>
+      </ng-container>
+
+      <ng-template #mapa>
+        <app-mapa-principal [propiedades]="propiedades"></app-mapa-principal>
+
+        <app-drawer-estadisticas *ngIf="mostrarEstadisticas"></app-drawer-estadisticas>
+        <app-drawer-buscador
+          *ngIf="mostrarBuscador"
+          (resultadosBusqueda)="actualizarPropiedades($event)">
+        </app-drawer-buscador>
+      </ng-template>
+    </section>
+  </mat-sidenav-content>
+</mat-sidenav-container>
