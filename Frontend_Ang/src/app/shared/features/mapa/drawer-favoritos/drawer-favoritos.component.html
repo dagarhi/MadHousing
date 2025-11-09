@@ -1,0 +1,46 @@
+<app-drawer-shell
+  [(opened)]="opened"
+  (openedChange)="onOpenedChange($event)"
+  [title]="'Mis pisos favoritos ❤️'"
+  position="right"
+  [width]="'460px'"
+>
+  <!-- Contenido -->
+  <div drawer-content>
+    <ng-container *ngIf="(favoritos.favoritos$ | async) as lista">
+      <p *ngIf="lista.length === 0" class="empty-msg">
+        No tienes pisos guardados aún.
+      </p>
+
+      <div *ngFor="let p of lista" class="favorito-item">
+        <div class="info">
+          <h4>{{ p.address || 'Dirección desconocida' }}</h4>
+          <p class="detalle">
+            {{ p.price ? (p.price | number) + ' €' : 'Sin precio' }} —
+            {{ p.size ? p.size + ' m²' : 'Sin tamaño' }}
+          </p>
+          <a
+            *ngIf="p.url"
+            [href]="p.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Ver en Idealista</a
+          >
+        </div>
+
+        <button class="remove-btn" (click)="quitarFavorito(p)">
+          <lucide-icon name="trash-2"></lucide-icon>
+          Quitar
+        </button>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Footer -->
+  <div drawer-footer>
+    <button class="clear-btn" (click)="borrarTodos()">
+      <lucide-icon name="trash"></lucide-icon>
+      Borrar todos
+    </button>
+  </div>
+</app-drawer-shell>

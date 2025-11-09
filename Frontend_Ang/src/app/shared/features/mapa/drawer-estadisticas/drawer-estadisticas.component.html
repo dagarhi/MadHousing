@@ -1,0 +1,33 @@
+<app-drawer-shell
+  [(opened)]="opened"
+  (openedChange)="onOpenedChange($event)"
+  [title]="'📊 Estadísticas por zona'"
+  position="right"
+  [width]="'600px'"
+  [loading]="loading"
+>
+  <div drawer-content>
+    <div class="controls">
+      <div class="group">
+        <label>Tipo de operación</label>
+        <select [(ngModel)]="tipoOperacion" (change)="actualizarGrafico()">
+          <option value="sale">🏠 Venta</option>
+          <option value="rent">🔑 Alquiler</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <label>Métrica</label>
+        <select [(ngModel)]="metrica" (change)="actualizarGrafico()">
+          <option value="precio_medio">💶 Precio medio (€)</option>
+          <option value="tamano_medio">📏 Tamaño medio (m²)</option>
+          <option value="score_medio">⭐ Score medio</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="chart-container" *ngIf="!loading && stats">
+      <canvas baseChart [data]="chartData" [options]="chartOptions" chartType="bar"></canvas>
+    </div>
+  </div>
+</app-drawer-shell>

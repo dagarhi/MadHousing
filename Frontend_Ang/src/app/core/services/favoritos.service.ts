@@ -1,61 +1,37 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { Propiedad } from '../../models/propiedad.model';
+import { Propiedad } from '../models/propiedad.model';
 
 @Injectable({ providedIn: 'root' })
 export class FavoritosService {
-  private readonly STORAGE_KEY = 'favoritos';
-  private favoritosSubject: BehaviorSubject<Propiedad[]>;
+  private favoritosSubject = new BehaviorSubject<Propiedad[]>(this.cargar());
+  favoritos$ = this.favoritosSubject.asObservable();
 
-  favoritos$ = new BehaviorSubject<Propiedad[]>([]);
-
-  constructor() {
-    const inicial = this.cargarFavoritos();
-    this.favoritosSubject = new BehaviorSubject<Propiedad[]>(inicial);
-    this.favoritos$ = this.favoritosSubject;
+  private cargar(): Propiedad[] {
+    const data = localStorage.getItem('favoritos');
+    return data ? JSON.parse(data) : [];
   }
 
-  /** Carga inicial desde localStorage */
-  private cargarFavoritos(): Propiedad[] {
-    const data = localStorage.getItem(this.STORAGE_KEY);
-    try {
-      return data ? JSON.parse(data) : [];
-    } catch {
-      return [];
-    }
+  private guardar(favs: Propiedad[]) {
+    localStorage.setItem('favoritos', JSON.stringify(favs));
   }
 
-  /** Guarda lista actual en localStorage */
-  private guardar(favoritos: Propiedad[]) {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(favoritos));
+  toggleFavorito(piso: Propiedad) {
+    const actual = this.favoritosSubject.value;
+    const existe = actual.some(f => f.propertyCode === piso.propertyCode);
+    const nuevos = existe
+      ? actual.filter(f => f.propertyCode !== piso.propertyCode)
+      : [...actual, piso];
+    this.guardar(nuevos);
+    this.favoritosSubject.next(nuevos);
   }
 
-  /** Devuelve la lista actual de favoritos */
-  getFavoritos(): Propiedad[] {
-    return this.favoritosSubject.getValue();
-  }
-
-  /** Añade o quita una propiedad de favoritos */
-  toggleFavorito(propiedad: Propiedad) {
-    const lista = this.getFavoritos();
-    const existe = lista.some(p => p.propertyCode === propiedad.propertyCode);
-
-    const nuevaLista = existe
-      ? lista.filter(p => p.propertyCode !== propiedad.propertyCode)
-      : [...lista, propiedad];
-
-    this.guardar(nuevaLista);
-    this.favoritosSubject.next(nuevaLista);
-  }
-
-  /** Limpia toda la lista */
-  clearFavoritos() {
-    this.guardar([]);
+  borrarTodos() {
+    localStorage.removeItem('favoritos');
     this.favoritosSubject.next([]);
   }
-
-  /** Verifica si una propiedad está marcada */
-  esFavorito(code: string): boolean {
-    return this.getFavoritos().some(p => p.propertyCode === code);
+  get currentFavoritos(): Propiedad[] {
+    return this.favoritosSubject.value;
   }
+
 }

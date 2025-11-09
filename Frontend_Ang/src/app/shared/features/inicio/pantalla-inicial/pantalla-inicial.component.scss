@@ -1,0 +1,33 @@
+.inicio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+
+  h1 {
+    font-size: 2rem;
+    color: var(--mat-sys-primary, #1976d2);
+  }
+
+  p {
+    margin: 0.5rem 0 1.5rem;
+    color: #555;
+  }
+
+  button {
+    background: var(--mat-sys-primary, #1976d2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: #1565c0;
+    }
+  }
+}

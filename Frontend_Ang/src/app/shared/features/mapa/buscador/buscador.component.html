@@ -1,0 +1,78 @@
+<app-drawer-shell
+  [(opened)]="opened"
+  (openedChange)="onOpenedChange($event)"
+  [title]="'Filtros de búsqueda'"
+  position="right"
+  [width]="'520px'"
+  [loading]="loadingZonas"
+>
+  <div drawer-content>
+    <!-- Selects jerárquicos -->
+    <div class="select-group">
+      <label>Ciudad / Municipio</label>
+      <select [(ngModel)]="ciudad" (change)="resetDependientes(); cargarStatsZona()">
+        <option [ngValue]="''">Selecciona ciudad</option>
+        <option *ngFor="let c of ciudadesOptions" [value]="c">{{ c }}</option>
+      </select>
+
+      <label>Distrito</label>
+      <select [(ngModel)]="distrito" (change)="barrio = ''; cargarStatsZona()" [disabled]="!ciudad">
+        <option [ngValue]="''">Selecciona distrito</option>
+        <option *ngFor="let d of distritosOptions" [value]="d">{{ d }}</option>
+      </select>
+
+      <label>Barrio</label>
+      <select [(ngModel)]="barrio" (change)="cargarStatsZona()" [disabled]="!distrito">
+        <option [ngValue]="''">Selecciona barrio</option>
+        <option *ngFor="let b of barriosOptions" [value]="b">{{ b }}</option>
+      </select>
+    </div>
+
+    <!-- Tipo de operación -->
+    <div class="select-group">
+      <label>Tipo de operación</label>
+      <select [(ngModel)]="operation" (change)="cargarStatsZona()">
+        <option value="rent">Alquiler</option>
+        <option value="sale">Venta</option>
+      </select>
+    </div>
+
+    <!-- Rangos -->
+    <div *ngIf="stats && !noData" class="rango">
+      <label>💶 Precio (€)</label>
+      <input type="range" [(ngModel)]="priceRange[0]" [min]="stats.price.min" [max]="stats.price.max" />
+      <input type="range" [(ngModel)]="priceRange[1]" [min]="stats.price.min" [max]="stats.price.max" />
+
+      <label>📏 Tamaño (m²)</label>
+      <input type="range" [(ngModel)]="sizeRange[0]" [min]="stats.size.min" [max]="stats.size.max" />
+      <input type="range" [(ngModel)]="sizeRange[1]" [min]="stats.size.min" [max]="stats.size.max" />
+
+      <label>⭐ Score (0–100)</label>
+      <input type="range" [(ngModel)]="scoreRange[0]" [min]="stats.score.min" [max]="stats.score.max" />
+      <input type="range" [(ngModel)]="scoreRange[1]" [min]="stats.score.min" [max]="stats.score.max" />
+    </div>
+
+    <!-- Avanzado -->
+    <div class="advanced">
+      <h4>Filtros avanzados</h4>
+      <label>Habitaciones mínimas</label>
+      <input type="number" [(ngModel)]="rooms" min="0" />
+
+      <label>Planta mínima</label>
+      <input type="number" [(ngModel)]="floor" min="0" />
+
+      <label>
+        <input type="checkbox" [(ngModel)]="hasLift" /> Ascensor
+      </label>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div drawer-footer>
+    <div class="footer-actions">
+      <button class="secondary" (click)="opened = false; openedChange.emit(false)">Cancelar</button>
+      <button class="secondary" (click)="mostrarTodos()">Mostrar todos</button>
+      <button class="primary" (click)="buscarPisos()" [disabled]="loading || noData">Buscar</button>
+    </div>
+  </div>
+</app-drawer-shell>

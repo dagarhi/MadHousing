@@ -1,45 +1,40 @@
-/* ======================================================
-   🎨 THEME-TOGGLE.SCSS FINAL
-   Icono visible y adaptativo en modo claro/oscuro
-   ====================================================== */
-
 :host {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1600;
+}
+
+.theme-toggle {
+  background: var(--mat-sys-primary, #1976d2);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 46px;
+  height: 46px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-}
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: background 0.2s ease, transform 0.2s ease;
 
-/* === Botón principal === */
-button[mat-icon-button] {
-  border-radius: 50%;
-  transition: background-color 0.3s ease, color 0.3s ease;
-  width: 40px;
-  height: 40px;
-}
+  &:hover {
+    background: #1565c0;
+    transform: scale(1.05);
+  }
 
-/* === Icono (Lucide) === */
-lucide-icon {
-  width: 22px;
-  height: 22px;
-  transition: color 0.3s ease;
-}
+  lucide-icon {
+    width: 22px;
+    height: 22px;
+  }
 
-/* Modo claro (por defecto) */
-body:not(.dark-theme) button[mat-icon-button] {
-  background-color: rgba(0, 0, 0, 0.05);
-  color: #222 !important;
-}
+  &.dark {
+    background: #111827;
+    color: #f5f5f5;
 
-body:not(.dark-theme) lucide-icon {
-  color: #222 !important;
-}
-
-/* Modo oscuro */
-body.dark-theme button[mat-icon-button] {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #fff !important;
-}
-
-body.dark-theme lucide-icon {
-  color: #fff !important;
+    &:hover {
+      background: #1e293b;
+    }
+  }
 }

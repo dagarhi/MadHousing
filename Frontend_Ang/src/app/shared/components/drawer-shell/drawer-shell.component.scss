@@ -1,0 +1,118 @@
+:host {
+  position: fixed;
+  inset: 0;
+  pointer-events: none; // evita interferencias cuando está cerrado
+  z-index: 2000; // ✅ Drawer siempre por encima de flotantes
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  transition: opacity 0.25s ease;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1999; // ✅ justo por debajo del panel
+
+  &.open,
+  :host(.open) & {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.drawer-panel {
+  position: fixed;
+  top: 0;
+  height: 100%;
+  background: var(--mat-sys-surface, #fff);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.35);
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  z-index: 2000; // ✅ asegura que está sobre los flotantes
+
+  &.left {
+    left: 0;
+    transform: translateX(-100%);
+    &.open {
+      transform: translateX(0);
+    }
+  }
+
+  &.right {
+    right: 0;
+    &.open {
+      transform: translateX(0);
+    }
+  }
+
+  .drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: var(--mat-sys-primary, #6a0dad); // tu violeta principal
+    color: white;
+    z-index: 2001; // opcional, para que sobresalga el header del panel
+
+    h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+
+      &:hover {
+        opacity: 0.7;
+      }
+    }
+  }
+
+  .drawer-content {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+
+  .drawer-footer {
+    padding: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .drawer-loader {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 4px solid rgba(0, 0, 0, 0.2);
+      border-top-color: var(--mat-sys-primary, #6a0dad);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

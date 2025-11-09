@@ -1,0 +1,50 @@
+<app-drawer-shell
+  [(opened)]="opened"
+  (openedChange)="onOpenedChange($event)"
+  [title]="'Historial de búsquedas'"
+  position="right"
+  [width]="'460px'"
+>
+  <div drawer-content>
+    <ng-container *ngIf="(historial.historial$ | async) as lista">
+      <p *ngIf="lista.length === 0" class="empty-msg">
+        No hay búsquedas recientes.
+      </p>
+
+      <div *ngFor="let h of lista" class="historial-item">
+        <div class="info">
+          <h4>{{ h.fecha }}</h4>
+          <p>
+            <strong>Zona:</strong> {{ h.ciudad || 'N/D' }} —
+            <strong>{{
+              h.operation === 'rent' ? 'Alquiler' : 'Venta'
+            }}</strong>
+          </p>
+
+          <p class="filtros" *ngIf="h.filtros">
+            <span *ngIf="h.filtros.min_price && h.filtros.max_price">
+              💶 {{ h.filtros.min_price }}–{{ h.filtros.max_price }} €
+            </span>
+            <span *ngIf="h.filtros.min_size && h.filtros.max_size">
+              📏 {{ h.filtros.min_size }}–{{ h.filtros.max_size }} m²
+            </span>
+          </p>
+
+          <div class="badge">{{ h.cantidad ?? 0 }} resultados</div>
+        </div>
+
+        <button class="remove-btn" (click)="eliminar(h.fecha)">
+          <lucide-icon name="trash-2"></lucide-icon>
+          Quitar
+        </button>
+      </div>
+    </ng-container>
+  </div>
+
+  <div drawer-footer>
+    <button class="clear-btn" (click)="borrarTodos()">
+      <lucide-icon name="trash"></lucide-icon>
+      Borrar historial
+    </button>
+  </div>
+</app-drawer-shell>

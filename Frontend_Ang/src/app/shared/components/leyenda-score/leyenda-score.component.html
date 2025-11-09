@@ -1,0 +1,18 @@
+<div class="leyenda" [class.dark]="isDark" [class.expanded]="expanded">
+  <button class="toggle" (click)="toggle()">
+    <span *ngIf="!expanded">📊</span>
+    <span *ngIf="expanded">❌</span>
+  </button>
+
+  <div class="panel" *ngIf="expanded">
+    <h4>Score medio</h4>
+    <div class="barra" [ngStyle]="gradientStyle"></div>
+    <div class="labels">
+      <span>0</span>
+      <span>25</span>
+      <span>50</span>
+      <span>75</span>
+      <span>100</span>
+    </div>
+  </div>
+</div>

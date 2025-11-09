@@ -1,41 +1,48 @@
+
 import { bootstrapApplication } from '@angular/platform-browser';
-import { importProvidersFrom } from '@angular/core';
-import { HttpClientModule } from '@angular/common/http';
 import { AppComponent } from './app/app';
+import { provideRouter } from '@angular/router';
+import { routes } from './app/app.routes';
+import { importProvidersFrom } from '@angular/core';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideHttpClient } from '@angular/common/http';
+
+// 👇 Lucide
 import { LucideAngularModule } from 'lucide-angular';
-import { provideAnimations } from '@angular/platform-browser/animations';
 import {
-  Layers,
-  Layers2,
-  Eye,
-  EyeOff,
-  BarChart3,
   Heart,
-  Menu,
+  History,
+  BarChart3,
+  Scale,
   Search,
   X,
+  Trash2,
+  Trash,
+  Map,
+  Moon,
   Sun,
-  Moon
 } from 'lucide-angular';
 
 bootstrapApplication(AppComponent, {
   providers: [
+    provideRouter(routes),
+    provideHttpClient(),
+    provideAnimationsAsync(),
+    // 👇 REGISTRO GLOBAL DE ICONOS
     importProvidersFrom(
-      HttpClientModule,
       LucideAngularModule.pick({
-        Layers,
-        Layers2,
-        Eye,
-        EyeOff,
-        BarChart3,
         Heart,
-        Menu,
+        History,
+        BarChart3,
+        Scale,
         Search,
         X,
+        Trash2,
+        Trash,
+        Map,
+        Moon,
         Sun,
-        Moon
       })
     ),
-    provideAnimations(),
   ],
 }).catch((err) => console.error(err));
