@@ -21,7 +21,7 @@ export class LeyendaScoreComponent {
 
   get gradientStyle() {
     return {
-      background: 'linear-gradient(to right, #f1eef6, #bdc9e1, #74a9cf, #2b8cbe, #045a8d)',
+      background: 'linear-gradient(to right, #e74c3c, #f39c12, #f1c40f, #2ecc71, #27ae60)',
     };
   }
 }

@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Propiedad } from '../models/propiedad.model';
 import { Observable, lastValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
+import { FiltroBusqueda } from '../models/filtros.model';
 
 @Injectable({ providedIn: 'root' })
 export class BusquedaService {
@@ -10,9 +11,16 @@ export class BusquedaService {
 
   constructor(private http: HttpClient) {}
 
-  buscar(params: any): Observable<any> {
-    return this.http.get(`${this.baseUrl}/buscar`, { params });
-  }
+  buscar(filtros: FiltroBusqueda): Observable<any> {
+    const params = new HttpParams({
+      fromObject: Object.entries(filtros)
+        .filter(([_, v]) => v !== undefined && v !== null && v !== '')
+        .reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {}),
+    });
+
+  return this.http.get(`${this.baseUrl}/buscar`, { params });
+}
+
 
   buscarTodo(operation: string): Observable<any> {
     return this.http.get(`${this.baseUrl}/buscar-todo`, {

@@ -11,6 +11,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
 import {
   Heart,
+  HeartOff,
   History,
   BarChart3,
   Scale,
@@ -32,6 +33,7 @@ bootstrapApplication(AppComponent, {
     importProvidersFrom(
       LucideAngularModule.pick({
         Heart,
+        HeartOff,
         History,
         BarChart3,
         Scale,

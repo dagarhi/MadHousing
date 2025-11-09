@@ -125,6 +125,7 @@ export class BuscadorComponent implements OnChanges {
       this.loading = true;
       const pisos = await this.busqueda.buscarTodasPaginas(filtros);
       this.resultados.emit({ pisos, filtros });
+      console.log('🟢 Emitiendo resultados al mapa:', pisos.length, 'pisos');
       this.opened = false;
       this.openedChange.emit(false);
     } catch (err) {
