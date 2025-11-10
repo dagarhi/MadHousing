@@ -1,32 +1,38 @@
-@use 'styles/tokens' as *;
-@use 'styles/mixins' as *;
-
-:host { display: block; }
 
 .popup {
-  @include card;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
   padding: var(--space-3);
   width: clamp(260px, 34vw, 460px);
 
   .header {
-    display: flex; align-items: center; gap: var(--space-3);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
     margin-bottom: var(--space-3);
 
     .title {
+      margin: 0;
       font-weight: 700;
       line-height: 1.2;
-      margin: 0;
+      font-size: 1rem;
     }
     .price {
-      color: var(--app-brand);
+      color: var(--brand);
       font-weight: 700;
+      white-space: nowrap;
     }
   }
 
   .meta {
-    display: flex; flex-wrap: wrap; gap: var(--space-2);
-    color: var(--app-muted);
-    font-size: .9rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    color: var(--muted);
+    font-size: 0.9rem;
   }
 
   .description {
@@ -35,14 +41,26 @@
   }
 
   .actions {
-    display: flex; gap: var(--space-3);
+    display: flex;
+    gap: var(--space-3);
     margin-top: var(--space-4);
 
     .link {
-      color: var(--app-brand);
+      color: var(--brand);
       font-weight: 600;
       text-decoration: none;
-      &:hover { text-decoration: underline; }
     }
+    .link:hover { text-decoration: underline; }
   }
+}
+
+/* Detalle: enlaces dentro del popup que no lleven la clase .link */
+.popup a:not(.link) {
+  color: var(--brand);
+  text-decoration: underline;
+}
+
+/* Preferencia de usuario: reducir animaciones si procede */
+@media (prefers-reduced-motion: reduce) {
+  .popup * { transition: none !important; animation: none !important; }
 }

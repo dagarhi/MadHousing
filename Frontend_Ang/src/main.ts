@@ -26,7 +26,11 @@ import {
   ChevronsDown,
   ChevronsUp,
   Ruler,
-  Sparkles
+  Sparkles,
+  Layers,
+  Flame,
+  MapPin
+  
 } from 'lucide-angular';
 
 bootstrapApplication(AppComponent, {
@@ -53,7 +57,10 @@ bootstrapApplication(AppComponent, {
         ChevronsDown,
         ChevronsUp,
         Ruler,
-        Sparkles
+        Sparkles,
+        Layers,
+        Flame,
+        MapPin
       })
     ),
   ],
