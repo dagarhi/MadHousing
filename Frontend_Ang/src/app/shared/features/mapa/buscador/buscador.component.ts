@@ -7,11 +7,21 @@ import { BusquedaService } from '../../../../core/services/busqueda.service';
 import { ZonasService } from '../../../../core/services/zonas.service';
 import { FiltroBusqueda } from '../../../../core/models/filtros.model';
 import { Propiedad } from '../../../../core/models/propiedad.model';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-buscador',
   standalone: true,
-  imports: [CommonModule, FormsModule, DrawerShellComponent, LucideAngularModule],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    MatFormFieldModule,
+    DrawerShellComponent, 
+    MatInputModule,
+    MatIconModule,
+    LucideAngularModule],
   templateUrl: './buscador.component.html',
   styleUrls: ['./buscador.component.scss'],
 })
@@ -31,7 +41,6 @@ export class BuscadorComponent implements OnChanges {
   scoreRange = [0, 100];
   rooms: number | null = null;
   floor: number | null = null;
-  hasLift = false;
   loading = false;
   loadingZonas = true;
   noData = false;
@@ -118,7 +127,6 @@ export class BuscadorComponent implements OnChanges {
       max_score: this.scoreRange[1],
       rooms: this.rooms ?? undefined,
       floor: this.floor ?? undefined,
-      hasLift: this.hasLift,
     };
 
     try {
@@ -156,4 +164,29 @@ export class BuscadorComponent implements OnChanges {
     this.opened = value;
     this.openedChange.emit(value);
   }
+
+  // Normaliza los pares min/max, asegurando límites de stats y orden
+  onRangeInput(
+    kind: 'price' | 'size' | 'score',
+    idx: 0 | 1,
+    value: number | string
+  ) {
+    const num = Number(value ?? 0);
+    const bounds = this.stats?.[kind] ?? { min: 0, max: Number.MAX_SAFE_INTEGER };
+    const clamp = (v: number) => Math.max(bounds.min, Math.min(bounds.max, v));
+
+    // Trabajamos sobre la referencia correcta
+    const target = kind === 'price' ? this.priceRange
+                : kind === 'size'  ? this.sizeRange
+                :                    this.scoreRange;
+
+    target[idx] = clamp(num);
+
+    // Asegurar orden min ≤ max
+    if (target[0] > target[1]) {
+      if (idx === 0) target[1] = target[0];
+      else target[0] = target[1];
+    }
+  }
+
 }

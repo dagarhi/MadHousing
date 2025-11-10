@@ -12,6 +12,9 @@ export class MapService {
   private markers: maplibregl.Marker[] = [];
   private activePopup?: maplibregl.Popup;
 
+  // Tamaño visual de la chincheta (px)
+  private readonly markerSizePx = 34;
+
   async initMap(container: HTMLElement): Promise<void> {
     if (this.map) return;
 
@@ -49,7 +52,7 @@ export class MapService {
 
     for (const p of pisos) {
       const key = (p.city || p.district || p.neighborhood || 'desconocido').toLowerCase().trim();
-      const s = Number(p.score_intrinseco ?? p.score ?? 0);
+      const s = Number((p as any).score_intrinseco ?? (p as any).score ?? 0);
       if (!Number.isFinite(s)) continue;
       if (!medias[key]) { medias[key] = 0; cuenta[key] = 0; }
       medias[key] += s; cuenta[key]++;
@@ -97,8 +100,8 @@ export class MapService {
   }
 
   /**
-   * Dibuja marcadores nativos de MapLibre y lanza onClick al pulsar.
-   * Cubre múltiples variantes de coordenadas (lat/lon/lng/location.*).
+   * Dibuja marcadores tipo chincheta (SVG inline) con color por operación.
+   * Colores: venta (verde), alquiler (azul). Fallback gris.
    */
   async dibujarChinchetasMapLibre(
     pisos: Propiedad[],
@@ -115,26 +118,19 @@ export class MapService {
     this.limpiarMarkers();
 
     for (const p of pisos) {
-      const lat = Number(p.latitude ?? p.latitude ?? p.location?.lat);
-      const lon = Number(p.longitude ?? p.longitude ?? p.longitude ?? p.location?.lng ?? p.location?.lon);
+      // Coordenadas robustas
+      const lat = Number((p as any).latitude ?? (p as any).location?.lat);
+      const lon = Number((p as any).longitude ?? (p as any).location?.lng ?? (p as any).location?.lon);
       if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
 
-      // Elemento DOM del marcador (visible sin CSS externo: estilos inline)
-      const el = document.createElement('div');
-      el.style.width = '16px';
-      el.style.height = '16px';
-      el.style.borderRadius = '50%';
-      el.style.border = '2px solid #000';
-      el.style.boxShadow = '0 0 6px rgba(0,0,0,0.5)';
-      el.style.cursor = 'pointer';
-
-      const score = Number(p.score_intrinseco ?? p.score ?? 0);
-      el.style.background = score >= 70 ? '#2ecc71' : score >= 50 ? '#f1c40f' : '#e74c3c';
+      // Elemento DOM del marcador (auto-contenido, sin depender de CSS global)
+      const el = this.buildPinElement(p);
 
       const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([lon, lat])
         .addTo(this.map!);
 
+      // Click del marcador
       el.addEventListener('click', (ev) => {
         ev.stopPropagation();
         onClick(p, [lon, lat]);
@@ -178,5 +174,48 @@ export class MapService {
     this.map?.remove();
     this.map = undefined;
     this.mapaCargado = false;
+  }
+
+  // =========================
+  // Helpers de marcadores SVG
+  // =========================
+
+  /** Devuelve un DIV con la chincheta SVG coloreada por operación. */
+  private buildPinElement(p: Propiedad): HTMLDivElement {
+    const el = document.createElement('div');
+    el.style.position = 'absolute';   // por si no carga el CSS global de MapLibre
+    el.style.cursor = 'pointer';
+    el.style.zIndex = '2';
+    el.style.width = `${this.markerSizePx}px`;
+    el.style.height = `${this.markerSizePx}px`;
+    el.innerHTML = this.pinSVG(this.colorForOperacion(p), this.markerSizePx);
+    return el;
+    }
+
+  /** Determina color por operación. */
+  private colorForOperacion(p: Propiedad): string {
+    const raw = (p as any)?.tipo ?? (p as any)?.operation ?? '';
+    const t = String(raw).toLowerCase();
+    if (t.includes('venta') || t.includes('sale')) return '#2E7D32';   // verde
+    if (t.includes('alquiler') || t.includes('rent')) return '#1565C0';// azul
+    return '#6E6E6E'; // gris fallback
+  }
+
+  /** SVG de chincheta (vectorial, nítida en retina) */
+  private pinSVG(color = '#FF3B30', size = 34): string {
+    // viewBox cuadrado y anclaje inferior (pico)
+    return `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="${size}" height="${size}" aria-hidden="true" focusable="false">
+      <defs>
+        <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity=".35"/>
+        </filter>
+      </defs>
+      <!-- cuerpo de la chincheta -->
+      <path d="M20 37s-11-11.5-11-19C9 8.5 13.9 4 20 4s11 4.5 11 14c0 7.5-11 19-11 19z"
+            fill="${color}" filter="url(#shadow)"/>
+      <!-- ojo interior -->
+      <circle cx="20" cy="17" r="4.5" fill="#ffffff"/>
+    </svg>`;
   }
 }

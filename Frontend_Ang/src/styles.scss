@@ -1,19 +1,54 @@
 @use '@angular/material' as mat;
+@import 'maplibre-gl/dist/maplibre-gl.css';
 
-html {
+/* Tema claro por defecto */
+html, :root {
   @include mat.theme((
     color: (
-      primary: mat.$violet-palette,
-      accent: mat.$magenta-palette,
+      theme-type: light,
+      primary: mat.$magenta-palette,
+      tertiary: mat.$violet-palette,
     ),
     typography: Roboto,
+    density: 0,
   ));
+  color-scheme: light;
+
+  /* 🔹 Tokens de app (usa los de Material como fuente) */
+  --app-bg:            var(--mat-sys-surface);
+  --app-on-bg:         var(--mat-sys-on-surface);
+  --app-card:          var(--mat-sys-surface-container);
+  --app-border:        var(--mat-sys-outline-variant);
+  --app-elev-shadow:   0 6px 16px rgba(0,0,0,.08);
 }
 
-/* Tus estilos globales a continuación */
-* {
-  box-sizing: border-box;
+/* Tema oscuro cuando html[data-theme=dark] o .dark-theme (overlays) */
+:root[data-theme="dark"], .dark-theme {
+  @include mat.theme((
+    color: (
+      theme-type: dark,
+      primary: mat.$magenta-palette,
+      tertiary:  mat.$violet-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+  color-scheme: dark;
+
+  --app-bg:            var(--mat-sys-surface);
+  --app-on-bg:         var(--mat-sys-on-surface);
+  --app-card:          var(--mat-sys-surface-container-highest);
+  --app-border:        var(--mat-sys-outline-variant);
+  --app-elev-shadow:   0 8px 20px rgba(0,0,0,.40);
+}
+
+/* Base de la app */
+body { 
+  background: var(--app-bg); 
+  color: var(--app-on-bg); 
   margin: 0;
   padding: 0;
 }
 
+/* Ejemplos globales opcionales */
+.card-like { background: var(--app-card); box-shadow: var(--app-elev-shadow); border: 1px solid var(--app-border); }

@@ -28,20 +28,43 @@ export class BusquedaService {
     });
   }
 
-  async buscarTodasPaginas(paramsBase: any): Promise<Propiedad[]> {
+  buscarTodasPaginas(paramsBase: any): Promise<Propiedad[]> {
     const per_page = 100;
     let page = 1;
     let acumulado: Propiedad[] = [];
 
-    while (true) {
-      const params = new HttpParams({ fromObject: { ...paramsBase, page, per_page } });
-      const res: any = await lastValueFrom(this.http.get(`${this.baseUrl}/buscar`, { params }));
-      const chunk = Array.isArray(res?.propiedades) ? res.propiedades : [];
-      acumulado = acumulado.concat(chunk);
-      const total = res?.total ?? chunk.length;
-      if (page * per_page >= total || chunk.length === 0) break;
-      page++;
-    }
-    return acumulado;
+    // ✅ Sanitizar: quitar undefined, null, '', y también false en booleanos (p.ej. hasLift)
+    const sanitize = (obj: Record<string, any>) =>
+      Object.fromEntries(
+        Object.entries(obj).filter(([_, v]) =>
+          v !== undefined && v !== null && v !== '' && !(typeof v === 'boolean' && v === false)
+        )
+      );
+
+    const base = sanitize(paramsBase);
+
+    const buildParams = (extra: Record<string, any>) =>
+      new HttpParams({
+        fromObject: Object.fromEntries(
+          Object.entries({ ...base, ...extra }).map(([k, v]) => [k, String(v)])
+        ),
+      });
+
+    return new Promise(async (resolve, reject) => {
+      try {
+        while (true) {
+          const params = buildParams({ page, per_page });
+          const res: any = await lastValueFrom(this.http.get(`${this.baseUrl}/buscar`, { params }));
+          const chunk = Array.isArray(res?.propiedades) ? res.propiedades : [];
+          acumulado = acumulado.concat(chunk);
+          const total = res?.total ?? chunk.length;
+          if (page * per_page >= total || chunk.length === 0) break;
+          page++;
+        }
+        resolve(acumulado);
+      } catch (e) {
+        reject(e);
+      }
+    });
   }
 }

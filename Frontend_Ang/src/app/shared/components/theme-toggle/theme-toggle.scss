@@ -6,8 +6,8 @@
 }
 
 .theme-toggle {
-  background: var(--mat-sys-primary, #1976d2);
-  color: white;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
   border: none;
   border-radius: 50%;
   width: 46px;
@@ -16,25 +16,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--app-elev-shadow);
   transition: background 0.2s ease, transform 0.2s ease;
 
-  &:hover {
-    background: #1565c0;
-    transform: scale(1.05);
-  }
+   /* Hover que funciona en ambos temas sin elegir colores fijos */
+  &:hover { filter: brightness(0.92); }
 
-  lucide-icon {
-    width: 22px;
-    height: 22px;
-  }
+  /* Si tienes estados “activo/pressed” */
+  &:active { transform: translateY(1px); }
 
-  &.dark {
-    background: #111827;
-    color: #f5f5f5;
-
-    &:hover {
-      background: #1e293b;
-    }
-  }
+  lucide-icon { width: 22px; height: 22px; }
 }
