@@ -1,66 +1,63 @@
+.popup-propiedad {
+  min-width: 220px;
+  max-width: 320px;
+  font-size: 13px;
+  line-height: 1.35;
 
-.popup {
-  background: var(--bg);
-  color: var(--fg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  padding: var(--space-3);
-  width: clamp(260px, 34vw, 460px);
+  &.dark {
+    color: #e5e7eb;
+    a { color: #93c5fd; }
+  }
 
   .header {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    margin-bottom: var(--space-3);
+    gap: .5rem;
+    justify-content: space-between;
+    margin-bottom: .25rem;
 
-    .title {
+    h4 {
       margin: 0;
-      font-weight: 700;
-      line-height: 1.2;
-      font-size: 1rem;
-    }
-    .price {
-      color: var(--brand);
-      font-weight: 700;
-      white-space: nowrap;
-    }
-  }
-
-  .meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    color: var(--muted);
-    font-size: 0.9rem;
-  }
-
-  .description {
-    margin-top: var(--space-3);
-    line-height: 1.45;
-  }
-
-  .actions {
-    display: flex;
-    gap: var(--space-3);
-    margin-top: var(--space-4);
-
-    .link {
-      color: var(--brand);
+      font-size: 14px;
       font-weight: 600;
-      text-decoration: none;
     }
-    .link:hover { text-decoration: underline; }
+
+    .fav-btn {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+    }
+  }
+
+  .precio {
+    margin: 0;
+    font-weight: 700;
+  }
+
+  .detalles, .score {
+    margin: .15rem 0 0 0;
+    color: #4b5563;
+  }
+
+  .link {
+    display: inline-block;
+    margin-top: .4rem;
+    text-decoration: underline;
   }
 }
 
-/* Detalle: enlaces dentro del popup que no lleven la clase .link */
-.popup a:not(.link) {
-  color: var(--brand);
-  text-decoration: underline;
-}
-
-/* Preferencia de usuario: reducir animaciones si procede */
-@media (prefers-reduced-motion: reduce) {
-  .popup * { transition: none !important; animation: none !important; }
+/* Si no quieres tocar styles.scss, usa esto: */
+:host ::ng-deep .maplibregl-popup.tfg-popup .maplibregl-popup-close-button {
+  font-size: 20px;
+  line-height: 20px;
+  width: 26px;
+  height: 26px;
+  top: 6px;
+  right: 6px;
 }

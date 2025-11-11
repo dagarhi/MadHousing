@@ -1,17 +1,13 @@
-import { Component, AfterViewInit, OnChanges, Input, SimpleChanges, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+// src/app/features/mapa-principal/mapa-principal.component.ts
+import { Component, AfterViewInit, OnChanges, OnDestroy, Input, ViewChild, ElementRef, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { LucideAngularModule } from 'lucide-angular';
-
-import { MapService } from '../../../../core/services/map.service';
-import { Propiedad } from '../../../../core/models/propiedad.model';
-import { PinsLayerService } from '../../../../core/services/pins-layer.service';
-import { HeatValueMapService } from '../../../../core/services/heat-value-map.service';
-
-import 'maplibre-gl/dist/maplibre-gl.css';
-
-type Modo = 'coropletico' | 'heat' | 'chinchetas';
+import { Propiedad } from '../../../../core/models/propiedad.model'; 
+import { MapLayerManager, Modo } from '../../../../core/services/map-layer-manager.service'; 
+import { HttpClient } from '@angular/common/http';
+import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 
 @Component({
   selector: 'app-mapa-principal',
@@ -23,78 +19,42 @@ type Modo = 'coropletico' | 'heat' | 'chinchetas';
 export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestroy {
   @ViewChild('mapContainer', { static: true }) mapContainer!: ElementRef<HTMLDivElement>;
   @Input() pisos: Propiedad[] = [];
+  @Input() modo: Modo = 'heat';
 
-  modo: Modo = 'coropletico';
+  private ready = false;
 
-  constructor(
-    private readonly mapSvc: MapService,
-    private readonly pins: PinsLayerService,
-    private readonly heat: HeatValueMapService,
-  ) {}
+  constructor(private readonly manager: MapLayerManager, private http: HttpClient) {}
 
+  // mapa-principal.component.ts
   async ngAfterViewInit() {
-    await this.mapSvc.initMap(this.mapContainer.nativeElement);
-    this.pins.attach(this.mapSvc as any);
-    this.heat.attach(this.mapSvc as any);
-    setTimeout(() => this.redibujar(), 0);
+    await this.manager.init(this.mapContainer.nativeElement);
+    this.ready = true; // <- IMPORTANTE (tu snippet no lo tenía)
+
+    this.http.get<FeatureCollection<Polygon | MultiPolygon>>('assets/municipios_cam.geojson')
+      .subscribe(geo => {
+        // 1) cargar polígonos
+        this.manager.setChoroplethPolygons(geo, 'CODIGOINE'); // cambia 'NOMBRE' si procede
+
+        // 2) datos
+        this.manager.setData(this.pisos);
+
+        // 3) modo (si quieres coroplético)
+        this.manager.setMode(this.modo); // o 'coropletico' si lo vas a forzar
+      });
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['pisos']) this.redibujar();
+
+  ngOnChanges(ch: SimpleChanges) {
+    if (!this.ready) return;
+    if (ch['pisos']) this.manager.setData(this.pisos);
+    if (ch['modo']) this.manager.setMode(this.modo);
   }
+
+  ngOnDestroy() { this.manager.destroy(); }
 
   setModo(m: Modo) {
     if (this.modo === m) return;
     this.modo = m;
-    this.redibujar();
-  }
-
-  private redibujar() {
-    if (!this.pisos?.length) {
-      this.heat.clear();
-      this.pins.clear();
-      this.mapSvc.cerrarPopup?.();
-      return;
-    }
-
-    switch (this.modo) {
-      case 'coropletico':
-        this.heat.setVisible(false);
-        this.pins.setVisible(false);
-        this.mapSvc.dibujarMapaCoropletico?.(this.pisos);
-        break;
-
-      case 'heat':
-        this.pins.setVisible(false);
-        this.heat.render(this.pisos, {
-          valueAccessor: (p) => p.score ?? p.price,
-          radiusUnit: 'px',
-          radiusRange: { min: 8, max: 26 },
-          bins: 7,
-          opacity: 0.7,
-          blur: 0.6,
-          highOnTop: true,
-        });
-        this.heat.setVisible(true);
-        break;
-
-      case 'chinchetas':
-        this.heat.setVisible(false);
-        this.pins.render(this.pisos, {
-          colorByOperation: true,
-          rentColor: '#22c55e',
-          saleColor: '#3b82f6',
-          fallbackColor: '#9ca3af',
-          sizePx: 34,
-        });
-        this.pins.setVisible(true);
-        break;
-    }
-  }
-
-  ngOnDestroy() {
-    this.heat.clear();
-    this.pins.clear();
-    this.mapSvc.destroy?.();
+    this.manager.setMode(m);
   }
 }

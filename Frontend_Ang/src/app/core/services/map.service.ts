@@ -86,6 +86,43 @@ export class MapService {
       paint: { 'line-color': '#333', 'line-width': 0.8 }
     });
   }
+  setChoroplethVisible(v: boolean): void {
+    if (!this.map) return;
+    for (const id of ['muni-fill', 'muni-line']) {
+      if (this.map.getLayer(id)) {
+        this.map.setLayoutProperty(id, 'visibility', v ? 'visible' : 'none');
+      }
+    }
+  }
+  clearChoropleth(): void {
+    if (!this.map) return;
+
+    // Quita capas si existen
+    for (const id of ['muni-fill', 'muni-line']) {
+      if (this.map.getLayer(id)) {
+        try { this.map.removeLayer(id); } catch {}
+      }
+    }
+    // Quita la fuente si existe
+    if (this.map.getSource('muni_cam')) {
+      try { this.map.removeSource('muni_cam'); } catch {}
+    }
+
+    // Fallback "por si acaso" si en algún momento cambias IDs
+    const style = this.map.getStyle();
+    const layerIds = (style?.layers ?? []).map(l => l.id);
+    for (const id of layerIds) {
+      if (/(muni|choro|coropl)/i.test(id) && this.map.getLayer(id)) {
+        try { this.map.removeLayer(id); } catch {}
+      }
+    }
+    const srcIds = Object.keys(style?.sources ?? {});
+    for (const id of srcIds) {
+      if (/(muni|choro|coropl)/i.test(id) && this.map.getSource(id)) {
+        try { this.map.removeSource(id); } catch {}
+      }
+    }
+  }
 
   /** Borra todos los marcadores del mapa */
   limpiarMarkers(): void {

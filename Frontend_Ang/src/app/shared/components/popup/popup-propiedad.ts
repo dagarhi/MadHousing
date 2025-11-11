@@ -1,6 +1,8 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
+
 import { Propiedad } from '../../../core/models/propiedad.model';
 import { FavoritosService } from '../../../core/services/favoritos.service';
 
@@ -11,23 +13,33 @@ import { FavoritosService } from '../../../core/services/favoritos.service';
   templateUrl: './popup-propiedad.html',
   styleUrls: ['./popup-propiedad.scss'],
 })
-export class PopupPropiedadComponent {
+export class PopupPropiedadComponent implements OnInit, OnDestroy {
   @Input() piso!: Propiedad;
   @Input() isDark = false;
-  @Input() favoritos: Propiedad[] = [];
-  @Input() toggleFavorito!: (p: Propiedad) => void;
+
+  private sub?: Subscription;
+  favoritos: Propiedad[] = [];
+  isFav: false | undefined;
 
   constructor(private favs: FavoritosService) {}
 
-  esFavorito(piso: Propiedad): boolean {
-    return this.favoritos.some((f) => f.propertyCode === piso.propertyCode);
+  ngOnInit(): void {
+    // estado inicial + suscripción reactiva
+    this.favoritos = this.favs.currentFavoritos;
+    this.sub = this.favs.favoritos$.subscribe(f => (this.favoritos = f));
   }
 
-  onToggleFavorito() {
-    if (this.toggleFavorito) {
-      this.toggleFavorito(this.piso);
-    } else {
-      this.favs.toggleFavorito(this.piso);
-    }
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
+
+  esFavorito(piso: Propiedad): boolean {
+    const code = String((piso as any).propertyCode ?? '');
+    return this.favoritos.some(f => String((f as any).propertyCode ?? '') === code);
+  }
+
+  onToggleFavorito(): void {
+    if (!this.piso) return;
+    this.favs.toggleFavorito(this.piso);
   }
 }

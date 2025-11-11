@@ -1,11 +1,10 @@
 <div class="popup-propiedad" [class.dark]="isDark">
   <div class="header">
     <h4>{{ piso.address || 'Dirección desconocida' }}</h4>
-    <button class="fav-btn" (click)="onToggleFavorito()">
-      <lucide-icon
-        [name]="esFavorito(piso) ? 'heart' : 'heart-off'"
-        [style.color]="esFavorito(piso) ? '#e03131' : 'inherit'"
-      ></lucide-icon>
+    <button class="fav-btn" (click)="onToggleFavorito()" aria-label="Guardar en favoritos">
+      <lucide-icon name="heart" [attr.stroke]="isFav ? 'currentColor' : '#6b7280'"
+                  [attr.fill]="isFav ? 'currentColor' : 'none'">
+      </lucide-icon>
     </button>
   </div>
 
@@ -15,7 +14,6 @@
       <span *ngIf="piso.size">{{ piso.size }} m²</span>
       <span *ngIf="piso.rooms">• {{ piso.rooms }} hab.</span>
       <span *ngIf="piso.bathrooms">• {{ piso.bathrooms }} baños</span>
-      <span *ngIf="piso.hasLift">• 🛗 ascensor</span>
     </p>
     <p class="score" *ngIf="piso.score_intrinseco || piso.score">
       Score: {{ piso.score_intrinseco ?? piso.score | number: '1.0-1' }}/100
