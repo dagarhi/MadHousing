@@ -16,6 +16,16 @@ Para poder usar el código necesitarás installar todos los requisitos:
 Por último, y hasta nuevo aviso, para probar el programa necesitarás ejecutar:
     uvicorn main:app --reload --port 8000
 
+
+En el frontend se deberá usar primero
+
+    # npm install
+    
+para la instalación de dependencias. Una vez hecho esto, para cargar la aplicación, que estará en localhost/4200:
+
+    # ng serve
+
+    
 Ahora tendrás toda la configuración hecha, salvo los datos del .env, los cuales los dejo por aquí:
 
     IDEALISTA_API_KEY=9dj2hej9k8u006jr9rd7mf6eol87fdyy
@@ -23,20 +33,9 @@ Ahora tendrás toda la configuración hecha, salvo los datos del .env, los cuale
     DATABASE_URL=sqlite:///./pisos.db
 
 
-A razón de que mi app usa una versión limitada de la API de idealista, hay que generar a mano los datos para no llenar las peticiones, se usa este comando:
+A razón de que mi app usa una versión limitada de la API de idealista, hay que generar a mano los datos para no llenar las peticiones, se deberá usar el archivo update_all.py de la siguiente forma:
 
-    # 1. Vallecas alquiler
-    Invoke-WebRequest -Uri "http://127.0.0.1:8000/seed-idealista?zona=vallecas&operation=rent" -Method POST | Select-Object -Expand Content
-    
-    # 2. Vallecas venta
-    Invoke-WebRequest -Uri "http://127.0.0.1:8000/seed-idealista?zona=vallecas&operation=sale" -Method POST | Select-Object -Expand Content
-    
-    # 3. Alcorcón alquiler
-    Invoke-WebRequest -Uri "http://127.0.0.1:8000/seed-idealista?zona=alcorcon&operation=rent" -Method POST | Select-Object -Expand Content
-    
-    # 4. Alcorcón venta
-    Invoke-WebRequest -Uri "http://127.0.0.1:8000/seed-idealista?zona=alcorcon&operation=sale" -Method POST | Select-Object -Expand Content
+    # python update_all.py
+(esto estando en la raíz del fichero de backend)
 
 
-para comprobar que hay datos se usa: 
-    Invoke-WebRequest -Uri "http://127.0.0.1:8000/buscar?ciudad=vallecas&operation=rent" | Select-Object -Expand Content
