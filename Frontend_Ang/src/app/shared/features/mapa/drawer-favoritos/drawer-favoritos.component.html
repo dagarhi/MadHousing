@@ -19,13 +19,10 @@
             {{ p.price ? (p.price | number) + ' €' : 'Sin precio' }} —
             {{ p.size ? p.size + ' m²' : 'Sin tamaño' }}
           </p>
-          <a
-            *ngIf="p.url"
-            [href]="p.url"
-            target="_blank"
-            rel="noopener noreferrer"
-            >Ver en Idealista</a
-          >
+          <button class="go-btn" (click)="irAlFavorito(p)">
+            <lucide-icon name="map-pin"></lucide-icon>
+            Ir al piso
+          </button>
         </div>
 
         <button class="remove-btn" (click)="quitarFavorito(p)">

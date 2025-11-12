@@ -4,6 +4,7 @@ import { DrawerShellComponent } from '../../../components/drawer-shell/drawer-sh
 import { FavoritosService } from '../../../../core/services/favoritos.service'; 
 import { LucideAngularModule } from 'lucide-angular';
 import { Propiedad } from '../../../../core/models/propiedad.model';
+import { PinsLayerService } from '../../../../core/services/pins-layer.service';
 
 @Component({
   selector: 'app-drawer-favoritos',
@@ -17,7 +18,10 @@ export class DrawerFavoritosComponent {
   @Input() opened = false;
   @Output() openedChange = new EventEmitter<boolean>();
 
-  constructor(public favoritos: FavoritosService) {}
+  constructor(
+    public favoritos: FavoritosService,
+    private pins: PinsLayerService
+  ) {}
 
   toggleDrawer(open: boolean) {
     this.opened = open;
@@ -38,5 +42,9 @@ export class DrawerFavoritosComponent {
   onOpenedChange(value: boolean) {
     this.opened = value;
     this.openedChange.emit(value);
+  }
+  irAlFavorito(item: Propiedad) {
+    if (!item?.propertyCode) return;
+    this.pins.focusOn(item.propertyCode, 16, true); // abre popup del componente
   }
 }

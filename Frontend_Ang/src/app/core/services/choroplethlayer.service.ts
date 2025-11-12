@@ -174,8 +174,8 @@ export class ChoroplethLayerService {
         layout: { visibility: this.visible ? 'visible' : 'none' },
         paint: {
           'line-color': '#111827',
-          'line-opacity': 0.25,
-          'line-width': 0.5
+          'line-opacity': 0.5,
+          'line-width': 1
         }
       });
     }

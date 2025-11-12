@@ -1,32 +1,21 @@
+<!-- popup-propiedad.html -->
 <div class="popup-propiedad" [class.dark]="isDark">
   <div class="header">
     <h4>{{ piso.address || 'Dirección desconocida' }}</h4>
-    <button class="fav-btn" (click)="onToggleFavorito()" aria-label="Guardar en favoritos">
-      <lucide-icon name="heart" [attr.stroke]="isFav ? 'currentColor' : '#6b7280'"
-                  [attr.fill]="isFav ? 'currentColor' : 'none'">
+
+    <button
+      class="fav-btn"
+      (click)="onToggleFavorito()"
+      [attr.aria-pressed]="isFav"
+      aria-label="Guardar en favoritos"
+    >
+      <lucide-icon
+        name="heart"
+        [attr.stroke]="isFav ? 'currentColor' : '#6b7280'"
+        [attr.fill]="isFav ? 'currentColor' : 'none'">
       </lucide-icon>
     </button>
   </div>
 
-  <div class="body">
-    <p class="precio">{{ piso.price ? (piso.price | number) + ' €' : 'Sin precio' }}</p>
-    <p class="detalles">
-      <span *ngIf="piso.size">{{ piso.size }} m²</span>
-      <span *ngIf="piso.rooms">• {{ piso.rooms }} hab.</span>
-      <span *ngIf="piso.bathrooms">• {{ piso.bathrooms }} baños</span>
-    </p>
-    <p class="score" *ngIf="piso.score_intrinseco || piso.score">
-      Score: {{ piso.score_intrinseco ?? piso.score | number: '1.0-1' }}/100
-    </p>
-
-    <a
-      *ngIf="piso.url"
-      [href]="piso.url"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="link"
-    >
-      Ver en Idealista →
-    </a>
-  </div>
+  <!-- resto sin cambios -->
 </div>

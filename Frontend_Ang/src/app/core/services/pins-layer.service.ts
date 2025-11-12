@@ -1,8 +1,8 @@
-// src/app/core/services/pins-layer.service.ts
 import { Injectable, OnDestroy } from '@angular/core';
 import maplibregl, { Marker, Popup } from 'maplibre-gl';
 import { MapService } from './map.service';
 import { Propiedad } from '../models/propiedad.model'; 
+import { PopupPropiedadService } from './popup-propiedad.service';
 
 type LngLat = [number, number];
 
@@ -51,7 +51,10 @@ export class PinsLayerService implements OnDestroy {
   private activePopup?: Popup;
   private selectedId?: string;
 
-  constructor(private readonly mapSvc: MapService) {}
+  constructor(
+    private readonly mapSvc: MapService,
+    private readonly popupSvc: PopupPropiedadService
+  ) {}
 
   attach(map?: maplibregl.Map) {
     this.map = map ?? (this.mapSvc as any).getMap?.() ?? this.map;
@@ -60,7 +63,6 @@ export class PinsLayerService implements OnDestroy {
   ngOnDestroy() { this.clear(); }
 
   clear() {
-    this.closePopup();
     for (const rec of this.markersById.values()) rec.marker.remove();
     this.markersById.clear();
     this.selectedId = undefined;
@@ -71,7 +73,6 @@ export class PinsLayerService implements OnDestroy {
     for (const rec of this.markersById.values()) {
       rec.root.style.display = visible ? 'block' : 'none';
     }
-    if (!visible) this.closePopup();
   }
 
   render(pisos: Propiedad[], opts: PinsOptions = {}) {
@@ -197,23 +198,15 @@ export class PinsLayerService implements OnDestroy {
   }
 
   private openPopup(rec: MarkerRecord) {
-    this.closePopup();
-    const content = this.options.popupBuilder?.(rec.propiedad);
-    const popup = new maplibregl.Popup({
-      closeButton: true,
-      closeOnClick: false,
-      offset: [0, -this.options.popupOffsetY]
-    });
-    if (typeof content === 'string') popup.setHTML(content);
-    else if (content instanceof HTMLElement) popup.setDOMContent(content);
-    else popup.setHTML(this.defaultPopupHTML(rec.propiedad));
+    // Si quieres detectar modo oscuro automáticamente, usa una clase global:
+    const isDark =
+      document.documentElement.classList.contains('dark') ||
+      document.body.classList.contains('dark');
 
-    popup.setLngLat(rec.marker.getLngLat()).addTo(this.map!);
-    this.activePopup = popup;
-  }
-
-  private closePopup() {
-    if (this.activePopup) { this.activePopup.remove(); this.activePopup = undefined; }
+    // coge el lng/lat del marker
+    const { lng, lat } = rec.marker.getLngLat();
+    // delega en tu servicio que monta el componente Angular
+    this.popupSvc.open(rec.propiedad, [lng, lat], isDark);
   }
 
   private getLngLat(p: Propiedad): LngLat | null {

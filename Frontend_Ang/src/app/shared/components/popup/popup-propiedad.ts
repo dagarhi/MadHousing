@@ -19,12 +19,11 @@ export class PopupPropiedadComponent implements OnInit, OnDestroy {
 
   private sub?: Subscription;
   favoritos: Propiedad[] = [];
-  isFav: false | undefined;
 
   constructor(private favs: FavoritosService) {}
 
   ngOnInit(): void {
-    // estado inicial + suscripción reactiva
+    // estado inicial + suscripción
     this.favoritos = this.favs.currentFavoritos;
     this.sub = this.favs.favoritos$.subscribe(f => (this.favoritos = f));
   }
@@ -33,7 +32,11 @@ export class PopupPropiedadComponent implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  esFavorito(piso: Propiedad): boolean {
+  get isFav(): boolean {
+    return this.esFavorito(this.piso);
+  }
+
+  private esFavorito(piso: Propiedad): boolean {
     const code = String((piso as any).propertyCode ?? '');
     return this.favoritos.some(f => String((f as any).propertyCode ?? '') === code);
   }
