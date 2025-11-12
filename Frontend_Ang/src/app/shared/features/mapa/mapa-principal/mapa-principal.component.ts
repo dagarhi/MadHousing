@@ -1,4 +1,3 @@
-// src/app/features/mapa-principal/mapa-principal.component.ts
 import { Component, AfterViewInit, OnChanges, OnDestroy, Input, ViewChild, ElementRef, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';

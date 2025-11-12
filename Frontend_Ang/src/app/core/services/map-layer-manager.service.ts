@@ -8,12 +8,18 @@ import { ChoroplethLayerService } from './choroplethlayer.service';
 import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 
 export type Modo = 'coropletico' | 'heat' | 'chinchetas';
+type ChoroAggMode = 'count' | 'avgPrice' | 'avgUnitPrice' | 'avgScore';
+type ChoroOp = 'venta' | 'alquiler' | 'all';
 
 @Injectable({ providedIn: 'root' })
 export class MapLayerManager {
   private map?: maplibregl.Map;
   private mode: Modo = 'heat';
   private data: Propiedad[] = [];
+
+  private choroIdField: string = 'CODIGOINE';
+  private choroMetric: ChoroAggMode = 'avgScore';
+  private choroOperation: ChoroOp = 'all';
 
   constructor(
     private readonly mapSvc: MapService,
@@ -33,13 +39,12 @@ export class MapLayerManager {
   setMode(m: Modo) {
     if (this.mode === m) return;
 
-    // limpia el modo anterior si era coroplético
     if (this.mode === 'coropletico') {
-        this.choro.clear();          // <<— borra capas y fuente
+        this.choro.setVisible(false);          
     } else if (this.mode === 'heat') {
-        this.heat.setVisible(false); // o this.heat.clear() si prefieres
+        this.heat.setVisible(false); 
     } else if (this.mode === 'chinchetas') {
-        this.pins.setVisible(false); // o this.pins.clear()
+        this.pins.setVisible(false);
     }
 
     this.mode = m;
@@ -68,7 +73,11 @@ export class MapLayerManager {
         this.pins.render(this.data, { showPopupOnClick: true, colorByOperation: true });
         break;
       case 'coropletico':
-        this.choro.render(this.data);
+        this.choro.render(this.data, {
+          idField: this.choroIdField,
+          mode: this.choroMetric,
+          filterOperation: this.choroOperation,
+        });
         break;
     }
   }
@@ -80,13 +89,17 @@ export class MapLayerManager {
     this.mapSvc.destroy?.();
   }
   // Añade este método al manager
-setChoroplethPolygons(geojson: FeatureCollection<Polygon | MultiPolygon>, idField = 'CODIGOINE') {
-  this.choro.setPolygons(geojson, idField);
-  // Si el modo actual es coroplético, re-render con la métrica activa
-  if (this.mode === 'coropletico') {
-    this.choro.setVisible(true);
-    this.choro.render(this.data, { idField });
+  setChoroplethPolygons(geojson: FeatureCollection<Polygon | MultiPolygon>, idField = 'CODIGOINE') {
+    this.choroIdField = idField;
+    this.choro.setPolygons(geojson, idField);
+    if (this.mode === 'coropletico') {
+      this.choro.setVisible(true);
+      this.choro.render(this.data, {
+        idField: this.choroIdField,
+        mode: this.choroMetric,
+        filterOperation: this.choroOperation,
+      });
+    }
   }
-}
 
 }
