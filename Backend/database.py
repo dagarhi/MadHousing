@@ -6,29 +6,27 @@ from models import Base
 
 load_dotenv()
 
-DATABASE_URL_PROD = os.getenv("DATABASE_URL", "sqlite:///./pisos.db")
-DATABASE_URL_TEST = os.getenv("DATABASE_URL_TEST", "sqlite:///./pisos_test.db")
+# 🔹 Solo una URL (producción / “real”)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./pisos.db")
 
-engines = {
-    "prod": create_engine(DATABASE_URL_PROD, future=True),
-    "test": create_engine(DATABASE_URL_TEST, future=True),
-}
+# 🔹 Engine único
+engine = create_engine(DATABASE_URL, future=True)
 
-SessionLocal = {
-    "prod": sessionmaker(autocommit=False, autoflush=False, bind=engines["prod"]),
-    "test": sessionmaker(autocommit=False, autoflush=False, bind=engines["test"]),
-}
+# 🔹 SessionLocal única
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+)
 
 def init_db():
-    """Crea las tablas si no existen (prod y test)."""
-    for e in engines.values():
-        Base.metadata.create_all(bind=e)
+    """Crea las tablas si no existen en la base de datos principal."""
+    Base.metadata.create_all(bind=engine)
     print("✅ Tablas creadas o verificadas correctamente")
 
-def get_db(mode: str = "prod"):
-    """Devuelve una sesión de base de datos según el modo (por defecto prod)."""
-    DB = SessionLocal.get(mode, SessionLocal["prod"])
-    db = DB()
+def get_db():
+    """Devuelve una sesión de base de datos."""
+    db = SessionLocal()
     try:
         yield db
     finally:
