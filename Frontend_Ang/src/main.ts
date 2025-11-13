@@ -7,7 +7,7 @@ import { importProvidersFrom } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 
 // 👇 Lucide
-import { LucideAngularModule } from 'lucide-angular';
+import { BrushCleaning, LucideAngularModule } from 'lucide-angular';
 import {
   Heart,
   HeartOff,
@@ -29,7 +29,8 @@ import {
   Sparkles,
   Layers,
   Flame,
-  MapPin
+  MapPin,
+  RefreshCcw,
   
 } from 'lucide-angular';
 
@@ -60,7 +61,9 @@ bootstrapApplication(AppComponent, {
         Sparkles,
         Layers,
         Flame,
-        MapPin
+        MapPin,
+        RefreshCcw,
+        BrushCleaning
       })
     ),
   ],

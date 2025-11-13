@@ -1,6 +1,4 @@
-:host {
-  display: block;
-}
+:host { display: block; }
 
 .empty-msg {
   text-align: center;
@@ -8,102 +6,44 @@
   margin-top: 2rem;
 }
 
-.historial-item {
+.hist-item {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 0.75rem;
-  margin-bottom: 0.75rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  padding: .75rem;
+  margin-bottom: .75rem;
+  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+  border-radius: 12px;
   background: var(--mat-sys-surface, #fff);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.2s;
+}
 
-  &:hover {
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  max-width: calc(100% - 190px);
+}
+
+.title { font-weight: 600; }
+.meta  { font-size: .8rem; opacity: .7; }
+
+.actions {
+  display: flex;
+  gap: .5rem;
+
+  .btn {
+    display: inline-flex; align-items: center; gap: .4rem;
+    border: 1px solid #ddd; border-radius: 10px;
+    padding: .45rem .65rem; cursor: pointer; background: #f8f9fa;
   }
 
-  .info {
-    flex: 1;
-
-    h4 {
-      margin: 0;
-      font-size: 0.95rem;
-      color: var(--mat-sys-on-surface, #111);
-    }
-
-    p {
-      margin: 0.25rem 0;
-      font-size: 0.85rem;
-      color: var(--mat-sys-on-surface-variant, #555);
-    }
-
-    .filtros {
-      font-size: 0.8rem;
-      color: #555;
-      span {
-        display: inline-block;
-        margin-right: 8px;
-      }
-    }
-
-    .badge {
-      margin-top: 4px;
-      display: inline-block;
-      background: #1976d2;
-      color: white;
-      border-radius: 6px;
-      padding: 0.2rem 0.6rem;
-      font-size: 0.75rem;
-    }
-  }
-
-  .remove-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    color: #e03131;
-    font-size: 0.85rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 6px;
-    transition: background 0.2s;
-
-    &:hover {
-      background: rgba(224, 49, 49, 0.1);
-    }
-
-    lucide-icon {
-      width: 16px;
-      height: 16px;
-    }
-  }
+  .secondary:hover { background: #eef2f7; }
+  .danger { background: #ffe3e3; border-color: #ffc9c9; }
+  .danger:hover { background: #ffc9c9; }
 }
 
 .clear-btn {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
-  background: #1976d2;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0.6rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.2s ease;
-
-  &:hover {
-    background: #1565c0;
-  }
-
-  lucide-icon {
-    width: 18px;
-    height: 18px;
-  }
+  display: inline-flex; align-items: center; gap: .4rem;
+  border: 1px solid #ddd; border-radius: 10px;
+  padding: .5rem .8rem; cursor: pointer; background: #fff5f5;
 }

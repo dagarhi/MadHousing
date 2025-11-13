@@ -116,6 +116,7 @@ export class ChoroplethLayerService {
   /** Limpia capas+fuente y marca invisible */
   clear() {
     this.visible = false;
+    this.lastData= [];
     if (!this.map) return;
     if (this.map.getLayer(this.HIT_ID))  this.map.removeLayer(this.HIT_ID);
     if (this.map.getLayer(this.FILL_ID)) this.map.removeLayer(this.FILL_ID);

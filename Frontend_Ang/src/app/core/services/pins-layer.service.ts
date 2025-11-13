@@ -51,9 +51,13 @@ export class PinsLayerService implements OnDestroy {
   private activePopup?: Popup;
   private selectedId?: string;
 
+  private markers: maplibregl.Marker[] = [];
+  private pinLayerIds = new Set<string>();
+  private pinSourceIds = new Set<string>();
+
   constructor(
     private readonly mapSvc: MapService,
-    private readonly popupSvc: PopupPropiedadService
+    private readonly popupSvc: PopupPropiedadService,
   ) {}
 
   attach(map?: maplibregl.Map) {
@@ -63,9 +67,14 @@ export class PinsLayerService implements OnDestroy {
   ngOnDestroy() { this.clear(); }
 
   clear() {
+    // Quitar todos los Marker que mantienes en tu mapa
     for (const rec of this.markersById.values()) rec.marker.remove();
     this.markersById.clear();
     this.selectedId = undefined;
+
+    // 👇 asegura cerrar el popup activo
+    this.activePopup?.remove();
+    this.activePopup = undefined;
   }
 
   setVisible(visible: boolean) {
@@ -75,15 +84,23 @@ export class PinsLayerService implements OnDestroy {
     }
   }
 
-  render(pisos: Propiedad[], opts: PinsOptions = {}) {
-    this.attach();
+  render(map: maplibregl.Map, pisos: Propiedad[], opts?: PinsOptions): void;
+  render(pisos: Propiedad[], opts?: PinsOptions): void;
+  render(a: any, b?: any, c?: any): void {
+    const isMapFirst = a && typeof a === 'object' && typeof a.addLayer === 'function';
+    const map = isMapFirst ? (a as maplibregl.Map) : undefined;
+    const pisos: Propiedad[] = isMapFirst ? (b as Propiedad[] ?? []) : (a as Propiedad[] ?? []);
+    const opts: PinsOptions = (isMapFirst ? c : b) ?? {};
+
+    this.attach(map);
     if (!this.map) return;
 
+    // 🔧 corregido el merge de opciones
     this.options = { ...this.options, ...opts };
 
     const incoming = new Set<string>();
     for (const p of pisos) {
-      const id = p.propertyCode;
+      const id = (p as any).propertyCode as string;
       if (!id) continue;
       const ll = this.getLngLat(p);
       if (!ll) continue;
@@ -244,5 +261,42 @@ export class PinsLayerService implements OnDestroy {
         <div class="row-4"><a href="${url}" target="_blank" rel="noopener">Ver anuncio</a></div>
       </div>
     `;
+  }
+
+  hasPin(propertyCode: string): boolean {
+    return this.markersById.has(String(propertyCode));
+  }
+
+  addOne(p: Propiedad, opts: { fly?: boolean; zoom?: number; openPopup?: boolean } = {}): boolean {
+    this.attach();
+    if (!this.map) return false;
+
+    const id = String((p as any).propertyCode ?? '');
+    if (!id) return false;
+
+    let rec = this.markersById.get(id);
+    if (!rec) {
+      const ll = this.getLngLat(p);
+      if (!ll) return false;
+      rec = this.createMarker(p, ll);
+      this.markersById.set(id, rec);
+      // asegura visibilidad coherente con el estado actual
+      this.setVisible(this.visible);
+    } else {
+      // refresca datos (por si vienen del drawer)
+      rec.propiedad = p;
+      this.updateMarkerAppearance(rec);
+    }
+
+    if (opts.fly) {
+      this.map.easeTo({
+        center: rec.marker.getLngLat(),
+        zoom: opts.zoom ?? Math.max(this.map.getZoom(), 16)
+      });
+    }
+    if (opts.openPopup && this.options.showPopupOnClick) {
+      this.openPopup(rec);
+    }
+    return true;
   }
 }

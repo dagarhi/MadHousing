@@ -1,7 +1,3 @@
-:host {
-  display: block;
-}
-
 .selectors {
   display: flex;
   gap: 1rem;
@@ -12,21 +8,12 @@
     display: flex;
     flex-direction: column;
 
-    label {
-      font-weight: 600;
-      margin-bottom: 0.3rem;
-    }
-
+    label { font-weight: 600; margin-bottom: .25rem; }
     select {
-      border-radius: 6px;
-      border: 1px solid rgba(0, 0, 0, 0.2);
-      padding: 0.4rem;
-      font-size: 0.9rem;
-
-      &:focus {
-        border-color: #1976d2;
-        outline: none;
-      }
+      padding: .45rem .6rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: .95rem;
     }
   }
 }
@@ -34,71 +21,70 @@
 .operation-toggle {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: .75rem;
   margin-bottom: 1rem;
 
-  label {
-    font-weight: 600;
-  }
-
+  label { font-weight: 600; }
   select {
-    border-radius: 6px;
-    padding: 0.4rem;
-    border: 1px solid rgba(0, 0, 0, 0.2);
+    padding: .35rem .5rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: .95rem;
   }
 }
 
-.summary {
-  font-weight: 500;
-  margin-bottom: 1rem;
+.comparacion .summary {
+  margin: .5rem 0 1rem 0;
 }
 
 .chart-group {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1rem;
-  margin-bottom: 1.5rem;
+}
 
-  .chart-item {
-    background: var(--mat-sys-surface, #fff);
-    border-radius: 10px;
-    padding: 0.8rem;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-    h4 {
-      margin: 0 0 0.5rem;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--mat-sys-on-surface, #111);
-    }
+.chart-item {
+  background: var(--surface-variant, #fafafa);
+  border-radius: 12px;
+  padding: .75rem;
+
+  h4 {
+    font-size: 1rem;
+    margin: 0 0 .5rem 0;
+    color: var(--text-primary, #222);
   }
+}
+
+/* 👇 contenedor con altura controlada */
+.chart-canvas {
+  position: relative;
+  height: 260px;               /* ajusta a tu gusto (p. ej. clamp(220px, 28vh, 320px)) */
+  /* Optional: si el drawer puede ser muy pequeño en móvil */
+  min-height: 200px;
+}
+
+/* El canvas ocupa el wrapper y NO fuerza crecer al padre */
+.chart-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .comparador-tabla {
   width: 100%;
+  margin-top: 1rem;
   border-collapse: collapse;
-  border-radius: 8px;
-  overflow: hidden;
-  font-size: 0.9rem;
 
-  th {
-    background: #1976d2;
-    color: white;
+  th, td {
+    border-bottom: 1px solid #e5e5e5;
+    padding: .5rem .6rem;
     text-align: left;
-    padding: 0.5rem;
   }
 
-  td {
-    padding: 0.5rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-  }
-
-  tr:nth-child(even) td {
-    background: rgba(25, 118, 210, 0.05);
+  thead th {
+    font-weight: 700;
+    background: var(--surface, #fff);
   }
 }
 
-.empty-msg {
-  text-align: center;
-  color: var(--mat-sys-on-surface-variant, #777);
-  margin-top: 2rem;
-}
+.empty-msg { opacity: .7; margin-top: .5rem; }

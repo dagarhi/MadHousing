@@ -10,24 +10,24 @@
     <div class="selectors">
       <div class="group">
         <label>Zona A</label>
-        <select [(ngModel)]="zonaA">
+        <select [(ngModel)]="zonaA" (ngModelChange)="onZonaChange()">
           <option [ngValue]="null">Selecciona...</option>
-          <option *ngFor="let z of zonasConDatos" [value]="z">{{ z }}</option>
+          <option *ngFor="let z of zonasConDatos" [ngValue]="z">{{ z }}</option>
         </select>
       </div>
 
       <div class="group">
         <label>Zona B</label>
-        <select [(ngModel)]="zonaB">
+        <select [(ngModel)]="zonaB" (ngModelChange)="onZonaChange()">
           <option [ngValue]="null">Selecciona...</option>
-          <option *ngFor="let z of zonasConDatos" [value]="z">{{ z }}</option>
+          <option *ngFor="let z of zonasConDatos" [ngValue]="z">{{ z }}</option>
         </select>
       </div>
     </div>
 
     <div class="operation-toggle">
       <label>Tipo de operación:</label>
-      <select [(ngModel)]="tipoOperacion" (change)="actualizarZonas()">
+      <select [(ngModel)]="tipoOperacion" (change)="onOperacionChange()">
         <option value="sale">🏠 Venta</option>
         <option value="rent">🔑 Alquiler</option>
       </select>
@@ -39,26 +39,36 @@
         ({{ tipoOperacion === 'sale' ? 'Venta' : 'Alquiler' }})
       </p>
 
-      <!-- Gráficos -->
-      <div class="chart-group">
-        <div class="chart-item">
-          <h4>💶 Precio medio (€)</h4>
-          <canvas baseChart [data]="crearDatosChart('precio_medio')" chartType="bar"></canvas>
+      <!-- Gráficos (sin funciones en plantilla) -->
+       <!-- 💶 Precio medio (€) -->
+      <div class="chart-item">
+        <h4>💶 Precio medio (€)</h4>
+        <div class="chart-canvas">
+          <canvas #precioCanvas></canvas>
         </div>
+      </div>
 
-        <div class="chart-item">
-          <h4>📏 Tamaño medio (m²)</h4>
-          <canvas baseChart [data]="crearDatosChart('tamano_medio')" chartType="bar"></canvas>
+      <!-- 📏 Tamaño medio (m²) -->
+      <div class="chart-item">
+        <h4>📏 Tamaño medio (m²)</h4>
+        <div class="chart-canvas">
+          <canvas #tamanoCanvas></canvas>
         </div>
+      </div>
 
-        <div class="chart-item">
-          <h4>⭐ Score medio</h4>
-          <canvas baseChart [data]="crearDatosChart('score_medio')" chartType="bar"></canvas>
+      <!-- ⭐ Score medio -->
+      <div class="chart-item">
+        <h4>⭐ Score medio</h4>
+        <div class="chart-canvas">
+          <canvas #scoreCanvas></canvas>
         </div>
+      </div>
 
-        <div class="chart-item">
-          <h4>🏘️ Número de pisos</h4>
-          <canvas baseChart [data]="crearDatosChart('count')" chartType="bar"></canvas>
+      <!-- 🏘️ Número de pisos -->
+      <div class="chart-item">
+        <h4>🏘️ Número de pisos</h4>
+        <div class="chart-canvas">
+          <canvas #countCanvas></canvas>
         </div>
       </div>
 

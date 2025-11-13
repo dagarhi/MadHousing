@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MapaPrincipalComponent } from '../mapa-principal/mapa-principal.component';
 import { DrawerFavoritosComponent } from '../drawer-favoritos/drawer-favoritos.component';
@@ -10,6 +10,8 @@ import { ThemeToggleComponent } from '../../../components/theme-toggle/theme-tog
 import { LeyendaScoreComponent } from '../../../components/leyenda-score/leyenda-score.component'; 
 import { LucideAngularModule } from 'lucide-angular';
 import { Propiedad } from '../../../../core/models/propiedad.model'; 
+import { FiltroBusqueda } from '../../../../core/models/filtros.model';
+import { MapLayerManager } from '../../../../core/services/map-layer-manager.service';
 
 @Component({
   selector: 'app-vista-mapa',
@@ -30,6 +32,7 @@ import { Propiedad } from '../../../../core/models/propiedad.model';
   styleUrls: ['./vista-mapa.component.scss'],
 })
 export class VistaMapaComponent {
+   @ViewChild(BuscadorComponent) buscador!: BuscadorComponent;
   // Estado global del mapa y drawers
   mostrarFavoritos = false;
   mostrarHistorial = false;
@@ -39,9 +42,11 @@ export class VistaMapaComponent {
 
   pisos: Propiedad[] = [];
 
+  constructor(private layers: MapLayerManager) {}
+
   // Recibe resultados del buscador
-  onResultados({ pisos }: { pisos: Propiedad[] }) {
-    this.pisos = pisos;
+  onResultados(e: { pisos: any[]; filtros: FiltroBusqueda }) {
+    this.pisos = e.pisos;
   }
 
   // Cierra todos los drawers excepto el especificado
@@ -61,6 +66,17 @@ export class VistaMapaComponent {
     this.mostrarEstadisticas= excepto === 'estadisticas'? !estadoActual : false;
     this.mostrarComparador  = excepto === 'comparador'  ? !estadoActual : false;
     this.mostrarBuscador    = excepto === 'buscador'    ? !estadoActual : false;
+  }
+  onReaplicarHist(filtros: FiltroBusqueda) {
+    this.mostrarHistorial = false;           // cierra historial para que se note
+    this.mostrarBuscador = false;            // opcional: cierra el buscador si lo abres automáticamente
+    // Ejecuta la carga + búsqueda
+    Promise.resolve(this.buscador.aplicarFiltros(filtros, true));
+  }
+
+  limpiarMapa() {
+    this.pisos = [];
+    this.layers.clearAll();
   }
 
 }

@@ -60,3 +60,16 @@
     height: calc(100vh - 56px);
   }
 }
+
+.map-fab {
+  position: absolute;
+  left: 16px;
+  top: 140px;
+  z-index: 10;
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid #de00fc; background: #de00fc;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  cursor: pointer;
+}
+.map-fab:hover { background: #f6f7f9; }

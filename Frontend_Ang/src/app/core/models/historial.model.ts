@@ -1,8 +1,8 @@
 import { FiltroBusqueda } from './filtros.model';
 export interface HistorialItem {
-  fecha: string; // ejemplo: "9/11/2025, 17:35:22"
-  ciudad?: string;
-  operation: 'sale' | 'rent';
-  cantidad: number;
-  filtros?: FiltroBusqueda;
+  id: string;               // uid
+  fechaISO: string;         // timestamp ISO
+  resumen: string;          // para mostrar en la lista
+  filtros: FiltroBusqueda;  // snapshot de los filtros
+  hash: string;             // huella deduplicación (sin fecha)
 }

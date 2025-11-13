@@ -38,7 +38,8 @@
   </app-drawer-favoritos>
   <app-drawer-historial 
     [(opened)]="mostrarHistorial"
-    (openedChange)="mostrarHistorial = $event">
+    (openedChange)="mostrarHistorial = $event"
+    (reaplicar)="onReaplicarHist($event)">
   </app-drawer-historial>
   <app-drawer-estadisticas 
     [(opened)]="mostrarEstadisticas"
@@ -55,4 +56,7 @@
 
   <!-- 🔹 Controles flotantes -->
   <app-leyenda-score></app-leyenda-score>
+  <button class="map-fab" (click)="limpiarMapa()" aria-label="Limpiar mapa">
+    <lucide-icon name="brush-cleaning"></lucide-icon>
+  </button>
 </div>

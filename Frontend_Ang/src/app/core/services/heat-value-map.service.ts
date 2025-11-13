@@ -115,14 +115,22 @@ export class HeatValueMapService implements OnDestroy {
     this.clear();
   }
 
-  clear() {
-    if (!this.map) return;
+  clear(map?: maplibregl.Map) {
+    const m = map ?? this.map;
+    if (!m) return;
+
+    // quita todas las capas que guardaste en this.layerIds
     for (const id of this.layerIds) {
-      if (this.map.getLayer(id)) this.map.removeLayer(id);
+      if (m.getLayer(id)) { try { m.removeLayer(id); } catch {} }
     }
-    if (this.map.getSource(this.sourceId)) this.map.removeSource(this.sourceId);
     this.layerIds = [];
-    this.detachMetersListener();
+
+    // y la source principal
+    if (this.sourceId && m.getSource(this.sourceId)) {
+      try { m.removeSource(this.sourceId as any); } catch {}
+    }
+    // deja el sourceId listo para una nueva renderización
+    this.sourceId;
   }
 
   render(pisos: Propiedad[], opts: HeatValueOptions = {}) {

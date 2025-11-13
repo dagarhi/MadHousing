@@ -24,7 +24,9 @@ export class MapService {
       center: [-3.7038, 40.4168],
       zoom: 9.2,
     });
-
+    if (typeof window !== 'undefined') {
+      (window as any).map = this.map;
+    }
     await new Promise<void>((resolve) => {
       this.map!.on('load', () => { this.mapaCargado = true; resolve(); });
     });
