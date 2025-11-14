@@ -12,6 +12,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { Propiedad } from '../../../../core/models/propiedad.model'; 
 import { FiltroBusqueda } from '../../../../core/models/filtros.model';
 import { MapLayerManager } from '../../../../core/services/map-layer-manager.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-vista-mapa',
@@ -42,7 +43,7 @@ export class VistaMapaComponent {
 
   pisos: Propiedad[] = [];
 
-  constructor(private layers: MapLayerManager) {}
+  constructor(private layers: MapLayerManager, private auth: AuthService, ) {}
 
   // Recibe resultados del buscador
   onResultados(e: { pisos: any[]; filtros: FiltroBusqueda }) {
@@ -77,6 +78,10 @@ export class VistaMapaComponent {
   limpiarMapa() {
     this.pisos = [];
     this.layers.clearAll();
+  }
+
+  logout(): void {
+    this.auth.logout(); 
   }
 
 }

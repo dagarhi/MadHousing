@@ -10,6 +10,7 @@ from math import radians, cos, sin, asin, sqrt
 from collections import defaultdict
 from statistics import mean
 from routers.heatmap_router import router as heatmap_router
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from pydantic import BaseModel
 from typing import Optional, List
@@ -77,7 +78,7 @@ class SearchHistoryOut(BaseModel):
     created_at: datetime
     query: dict
 
-
+security = HTTPBearer(auto_error=False)
 app = FastAPI(title="Buscador de Pisos API", version="5.0.0")
 app.include_router(heatmap_router)
 
@@ -116,27 +117,31 @@ def db_from_request(request: Request):
 
 
 def get_current_user(
-    authorization: str = Header(None),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(db_from_request),
 ):
     """
-    Lee el header Authorization: Bearer <token>, valida el JWT
-    y devuelve el usuario.
+    Extrae el token Bearer del header Authorization usando HTTPBearer,
+    valida el JWT y devuelve el usuario autenticado.
     """
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Token de autenticación no encontrado")
+    # 1) ¿Ha llegado algo en el header Authorization?
+    if credentials is None:
+        raise HTTPException(status_code=401, detail="Token de autenticación no enviado")
 
-    token = authorization.split(" ", 1)[1]
+    # HTTPBearer ya comprueba que el esquema sea "Bearer"
+    token = credentials.credentials
 
+    # 2) Decodificar JWT
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: int = payload.get("user_id")
         username: str = payload.get("sub")
         if user_id is None or username is None:
-            raise HTTPException(status_code=401, detail="Token inválido")
+            raise HTTPException(status_code=401, detail="Token inválido (sin user_id o sub)")
     except JWTError:
         raise HTTPException(status_code=401, detail="Token inválido")
 
+    # 3) Buscar usuario en BD
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
@@ -374,34 +379,35 @@ def buscar_todo(
 # 📊 Estadísticas globales agrupadas por distrito
 @app.get("/estadisticas-globales")
 def estadisticas_por_zona(db: Session = Depends(db_from_request)):
-    """Devuelve estadísticas agrupadas por distrito (price, size, score)."""
     props = db.query(Propiedad).all()
-    agrupado = defaultdict(list)
+
+    # zona -> op -> [propiedades]
+    agrupado = defaultdict(lambda: defaultdict(list))
 
     for p in props:
         zona = (p.district or "Desconocido").strip()
-        agrupado[zona].append(p)
+        op = (p.operation or "desconocido").strip()
+        agrupado[zona][op].append(p)
 
-    resultados = []
-    for zona, lista in agrupado.items():
-        precios = [p.price for p in lista if p.price]
-        tamanos = [p.size for p in lista if p.size]
-        scores = [p.score_intrinseco for p in lista if p.score_intrinseco]
+    resultado = {}
 
-        resultados.append(
-            {
-                "zona": zona,
-                "num_propiedades": len(lista),
+    for zona, por_op in agrupado.items():
+        resultado[zona] = {}
+        for op, lista in por_op.items():
+            precios = [p.price for p in lista if p.price is not None]
+            tamanos = [p.size for p in lista if p.size is not None]
+            scores = [p.score_intrinseco for p in lista if p.score_intrinseco is not None]
+
+            resultado[zona][op] = {
+                "count": len(lista),
                 "precio_medio": mean(precios) if precios else 0,
                 "tamano_medio": mean(tamanos) if tamanos else 0,
                 "score_medio": mean(scores) if scores else 0,
                 "precio_min": min(precios) if precios else 0,
                 "precio_max": max(precios) if precios else 0,
             }
-        )
 
-    return resultados
-
+    return resultado
 
 # 🚀 Cargar datos desde Idealista
 @app.post("/seed-idealista")

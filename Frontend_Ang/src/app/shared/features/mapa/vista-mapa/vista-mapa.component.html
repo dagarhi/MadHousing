@@ -1,29 +1,48 @@
 <div class="vista-mapa">
   <!-- 🔹 Barra superior -->
   <header class="header">
-    <h3>MadHouse</h3>
-    <div class="acciones">
+    <!-- Izquierda: logout -->
+    <div class="header-left">
+      <button mat-button class="logout-btn" (click)="logout()">
+        <lucide-icon name="log-out"></lucide-icon>
+        <span>Cerrar sesión</span>
+      </button>
+    </div>
+
+    <!-- Centro: título -->
+    <div class="header-center">
+      <h3 class="header-title">MadHousing</h3>
+    </div>
+
+    <!-- Derecha: resto de acciones -->
+    <div class="header-right">
       <button mat-button (click)="cerrarOtros('favoritos')">
-        <lucide-icon name="heart"></lucide-icon> Favoritos
+        <lucide-icon name="heart"></lucide-icon>
+        Favoritos
       </button>
 
       <button mat-button (click)="cerrarOtros('historial')">
-        <lucide-icon name="history"></lucide-icon> Historial
+        <lucide-icon name="history"></lucide-icon>
+        Historial
       </button>
 
       <button mat-button (click)="cerrarOtros('estadisticas')">
-        <lucide-icon name="bar-chart-3"></lucide-icon> Estadísticas
+        <lucide-icon name="bar-chart-3"></lucide-icon>
+        Estadísticas
       </button>
 
       <button mat-button (click)="cerrarOtros('comparador')">
-        <lucide-icon name="scale"></lucide-icon> Comparador
+        <lucide-icon name="columns-3"></lucide-icon>
+        Comparador
       </button>
 
       <button mat-button (click)="cerrarOtros('buscador')">
-        <lucide-icon name="search"></lucide-icon> Buscador
+        <lucide-icon name="search"></lucide-icon>
+        Buscador
       </button>
     </div>
   </header>
+
 
   <!-- 🔹 Contenedor principal del mapa -->
   <main class="mapa-container">

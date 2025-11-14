@@ -11,47 +11,64 @@
   flex-direction: column;
 
   .header {
-    height: 56px;
-    background: var(--mat-sys-primary, #1976d2);
-    color: white;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 0.75rem;
+    height: 56px;
     padding: 0 1rem;
-    z-index: 1000;
+    background: #de00fc; // mismo color marca que la landing
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  }
 
-    h3 {
-      margin: 0;
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
+  .header-left {
+    display: flex;
+    align-items: center;
+  }
 
-    .acciones {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
+  .header-center {
+    flex: 1;
+    text-align: center;
+  }
 
-      button {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        background: none;
-        color: white;
-        border: none;
-        font-weight: 500;
-        cursor: pointer;
-        transition: opacity 0.2s;
+  .header-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
 
-        &:hover {
-          opacity: 0.8;
-        }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
 
-        lucide-icon {
-          width: 18px;
-          height: 18px;
-        }
-      }
-    }
+  // Botones del header (acciones + logout)
+  .header button[mat-button] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.9rem;
+    min-height: 40px;
+    border-radius: 999px;
+    border: none;
+    background: rgba(0, 0, 0, 0.7); 
+    color: #ffffff;
+    font-size: 0.85rem;
+    text-transform: none;
+  }
+
+  .header button[mat-button]:hover {
+    background: rgba(37, 37, 37, 0.774); 
+  }
+
+  .header .logout-btn {
+    margin-right: 0.25rem; // un pelín separada del borde
+  }
+
+  .header lucide-icon {
+    width: 18px;
+    height: 18px;
   }
 
   .mapa-container {

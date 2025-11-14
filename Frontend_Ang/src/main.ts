@@ -5,9 +5,11 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app/app.routes';
 import { importProvidersFrom } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
+import { withInterceptors } from '@angular/common/http';
+import { authInterceptor } from './app/core/interceptors/auth.interceptor';
 
 // 👇 Lucide
-import { BrushCleaning, LucideAngularModule } from 'lucide-angular';
+import { BrushCleaning, EyeOff, LucideAngularModule } from 'lucide-angular';
 import {
   Heart,
   HeartOff,
@@ -31,14 +33,16 @@ import {
   Flame,
   MapPin,
   RefreshCcw,
+  LogOut,
+  Columns3,
+  Eye,
   
 } from 'lucide-angular';
 
 bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(routes),
-    provideHttpClient(),
-    // 👇 REGISTRO GLOBAL DE ICONOS
+    provideHttpClient(withInterceptors([authInterceptor])),
     importProvidersFrom(
       LucideAngularModule.pick({
         Heart,
@@ -63,7 +67,11 @@ bootstrapApplication(AppComponent, {
         Flame,
         MapPin,
         RefreshCcw,
-        BrushCleaning
+        BrushCleaning,
+        LogOut,
+        Columns3,
+        Eye,
+        EyeOff
       })
     ),
   ],
