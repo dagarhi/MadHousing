@@ -19,10 +19,29 @@ export class MapService {
     if (this.map) return;
 
     this.map = new maplibregl.Map({
-      container,
-      style: 'https://tiles.stadiamaps.com/styles/alidade_smooth.json',
-      center: [-3.7038, 40.4168],
-      zoom: 11,
+      container: 'map',
+      style: {
+        version: 8,
+        sources: {
+          osm: {
+            type: 'raster',
+            tiles: [
+              'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+            ],
+            tileSize: 256,
+            attribution: '© OpenStreetMap contributors'
+          }
+        },
+        layers: [
+          {
+            id: 'osm-base',
+            type: 'raster',
+            source: 'osm'
+          }
+        ]
+      },
+      center: [-3.7038, 40.4168], // Madrid
+      zoom: 12
     });
     if (typeof window !== 'undefined') {
       (window as any).map = this.map;
