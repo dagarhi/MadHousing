@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import maplibregl, { Marker, Popup } from 'maplibre-gl';
+import maplibregl from 'maplibre-gl';
 import { MapService } from './map.service';
-import { Propiedad } from '../models/propiedad.model'; 
+import { Propiedad } from '../models/propiedad.model';
 import { PopupPropiedadService } from './popup-propiedad.service';
 
 type LngLat = [number, number];
@@ -20,16 +20,17 @@ export interface PinsOptions {
   zIndexBase?: number;
 }
 
-type MarkerRecord = {
-  marker: Marker;
+type PinData = {
   propiedad: Propiedad;
-  root: HTMLElement; // wrapper que controla MapLibre (NO tocar transform aquí)
-  icon: HTMLElement; // hijo que sí podemos escalar
+  coord: LngLat;
 };
 
 @Injectable({ providedIn: 'root' })
 export class PinsLayerService implements OnDestroy {
   private map?: maplibregl.Map;
+
+  private readonly sourceId = 'pins-source';
+  private readonly layerId = 'pins-layer';
 
   private options: Required<PinsOptions> = {
     sizePx: 34,
@@ -40,50 +41,97 @@ export class PinsLayerService implements OnDestroy {
     showPopupOnClick: true,
     popupBuilder: (p) => this.defaultPopupHTML(p),
     popupOffsetY: 14,
-    hoverScale: 1.1,
+    hoverScale: 1.08,
     selectedScale: 1.2,
     zIndexBase: 10,
   };
 
-  private markersById = new Map<string, MarkerRecord>();
   private visible = true;
-
-  private activePopup?: Popup;
   private selectedId?: string;
 
-  private markers: maplibregl.Marker[] = [];
-  private pinLayerIds = new Set<string>();
-  private pinSourceIds = new Set<string>();
+  // Mantenemos datos mínimos para cada pin
+  private dataById = new Map<string, PinData>();
+  private attached = false;
 
   constructor(
     private readonly mapSvc: MapService,
     private readonly popupSvc: PopupPropiedadService,
   ) {}
 
+  // Se llama desde el MapLayerManager en el init
   attach(map?: maplibregl.Map) {
     this.map = map ?? (this.mapSvc as any).getMap?.() ?? this.map;
+    if (!this.map || this.attached) return;
+
+    // 1) Fuente GeoJSON vacía
+    if (!this.map.getSource(this.sourceId)) {
+      this.map.addSource(this.sourceId, {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [],
+        },
+      } as any);
+    }
+
+    // 2) Capa de círculos (de momento; luego podemos pasar a symbol + iconos)
+    if (!this.map.getLayer(this.layerId)) {
+      this.map.addLayer({
+        id: this.layerId,
+        type: 'symbol',
+        source: this.sourceId,
+        layout: {
+          'icon-image': [
+            'case',
+            ['==', ['get', 'operation'], 'rent'], 'pin-rent',
+            ['==', ['get', 'operation'], 'sale'], 'pin-sale',
+            'pin-sale'
+          ],
+          'icon-size': 0.9,
+          'icon-allow-overlap': true,
+        },
+      } as any);
+    }
+
+    // Eventos de interacción
+    this.map.on('click', this.layerId, this.handleClick);
+    this.map.on('mouseenter', this.layerId, this.handleMouseEnter);
+    this.map.on('mouseleave', this.layerId, this.handleMouseLeave);
+
+    this.attached = true;
+    this.syncLayerStyle();
   }
 
-  ngOnDestroy() { this.clear(); }
+  ngOnDestroy() {
+    this.clear();
+  }
 
   clear() {
-    // Quitar todos los Marker que mantienes en tu mapa
-    for (const rec of this.markersById.values()) rec.marker.remove();
-    this.markersById.clear();
-    this.selectedId = undefined;
+    if (!this.map) return;
 
-    // 👇 asegura cerrar el popup activo
-    this.activePopup?.remove();
-    this.activePopup = undefined;
+    if (this.map.getLayer(this.layerId)) {
+      this.map.off('click', this.layerId, this.handleClick);
+      this.map.off('mouseenter', this.layerId, this.handleMouseEnter);
+      this.map.off('mouseleave', this.layerId, this.handleMouseLeave);
+      this.map.removeLayer(this.layerId);
+    }
+    if (this.map.getSource(this.sourceId)) {
+      this.map.removeSource(this.sourceId);
+    }
+
+    this.dataById.clear();
+    this.selectedId = undefined;
+    this.attached = false;
+    this.mapSvc.cerrarPopup?.();
   }
 
   setVisible(visible: boolean) {
     this.visible = visible;
-    for (const rec of this.markersById.values()) {
-      rec.root.style.display = visible ? 'block' : 'none';
-    }
+    if (!this.map || !this.map.getLayer(this.layerId)) return;
+    this.map.setLayoutProperty(this.layerId, 'visibility', visible ? 'visible' : 'none');
   }
 
+  // Sobrecarga como ya tenías: render(map, pisos, opts) o render(pisos, opts)
   render(map: maplibregl.Map, pisos: Propiedad[], opts?: PinsOptions): void;
   render(pisos: Propiedad[], opts?: PinsOptions): void;
   render(a: any, b?: any, c?: any): void {
@@ -95,208 +143,221 @@ export class PinsLayerService implements OnDestroy {
     this.attach(map);
     if (!this.map) return;
 
-    // 🔧 corregido el merge de opciones
+    this.mapSvc.cerrarPopup();
     this.options = { ...this.options, ...opts };
 
-    const incoming = new Set<string>();
-    for (const p of pisos) {
+    // Guardamos todos los pisos en el mapa interno
+    this.dataById.clear();
+    for (const p of pisos ?? []) {
       const id = (p as any).propertyCode as string;
       if (!id) continue;
-      const ll = this.getLngLat(p);
-      if (!ll) continue;
-
-      incoming.add(id);
-
-      const rec = this.markersById.get(id);
-      if (rec) {
-        rec.marker.setLngLat(ll);
-        rec.propiedad = p;
-        this.updateMarkerAppearance(rec);
-      } else {
-        const created = this.createMarker(p, ll);
-        this.markersById.set(id, created);
-      }
+      const coord = this.getLngLat(p);
+      if (!coord) continue;
+      this.dataById.set(id, { propiedad: p, coord });
     }
 
-    for (const [id, rec] of this.markersById) {
-      if (!incoming.has(id)) {
-        rec.marker.remove();
-        this.markersById.delete(id);
-      }
-    }
-
+    // Actualizamos la fuente GeoJSON a partir de dataById
+    this.rebuildSourceFromData();
+    this.syncLayerStyle();
     this.setVisible(this.visible);
   }
 
-  setData(pisos: Propiedad[], opts?: PinsOptions) { this.render(pisos, opts); }
+  setData(pisos: Propiedad[], opts?: PinsOptions) {
+    this.render(pisos, opts);
+  }
 
+  // ========= Métodos usados por otros componentes =========
+
+  // Para saber si un pin ya está pintado (favoritos)
+  hasPin(propertyCode: string): boolean {
+    return this.dataById.has(propertyCode);
+  }
+
+  // Añadir un único pin (por ejemplo desde el drawer de favoritos)
+  addOne(
+    p: Propiedad | any,
+    options?: { fly?: boolean; zoom?: number; openPopup?: boolean },
+  ): boolean {
+    if (!this.map) return false;
+
+    const id = (p as any).propertyCode as string;
+    if (!id) return false;
+
+    // Si ya existe, opcionalmente solo hacemos focus
+    if (this.dataById.has(id)) {
+      if (options?.fly) {
+        this.focusOn(id, options.zoom, options.openPopup ?? false);
+      }
+      return false;
+    }
+
+    const coord = this.getLngLat(p as Propiedad);
+    if (!coord) return false;
+
+    this.dataById.set(id, {
+      propiedad: p as Propiedad,
+      coord,
+    });
+
+    this.rebuildSourceFromData();
+
+    if (options?.fly) {
+      this.focusOn(id, options.zoom, options.openPopup ?? false);
+    }
+
+    return true;
+  }
+
+  // Sigue existiendo para favoritos, etc.
   setSelected(propertyCode?: string) {
-    const prev = this.selectedId && this.markersById.get(this.selectedId);
-    if (prev) this.applyScale(prev.icon, 1);
     this.selectedId = propertyCode;
-    const next = propertyCode && this.markersById.get(propertyCode);
-    if (next) this.applyScale(next.icon, this.options.selectedScale);
+    this.syncLayerStyle();
   }
 
   focusOn(propertyCode: string, zoom?: number, withPopup = true) {
     if (!this.map) return;
-    const rec = this.markersById.get(propertyCode);
+    const rec = this.dataById.get(propertyCode);
     if (!rec) return;
-    this.map.easeTo({ center: rec.marker.getLngLat(), zoom: zoom ?? Math.max(this.map.getZoom(), 14) });
-    if (withPopup && this.options.showPopupOnClick) this.openPopup(rec);
-  }
 
-  fitToMarkers(padding: number | { top: number; bottom: number; left: number; right: number } = 40) {
-    if (!this.map) return;
-    const bounds = new maplibregl.LngLatBounds();
-    let count = 0;
-    for (const rec of this.markersById.values()) { bounds.extend(rec.marker.getLngLat()); count++; }
-    if (count > 0) this.map.fitBounds(bounds, { padding, duration: 600 });
-  }
-
-  // ===== Internos =====
-
-  private createMarker(p: Propiedad, ll: LngLat): MarkerRecord {
-    // root + icon
-    const root = document.createElement('div');
-    root.className = 'pin-wrap';
-    root.style.willChange = 'transform';      // OK, no seteamos 'transform' aquí
-    root.style.pointerEvents = 'auto';
-    root.style.cursor = 'pointer';
-
-    const icon = document.createElement('div');
-    icon.className = 'pin-icon';
-    const color = this.getColor(p);
-    icon.innerHTML = this.getMarkerSVG(color, this.options.sizePx);
-    icon.style.transformOrigin = '50% 100%';  // escala desde la punta inferior
-    root.appendChild(icon);
-
-    // hover/leave → escala en EL ICONO
-    root.addEventListener('mouseenter', () => this.applyScale(icon, this.options.hoverScale));
-    root.addEventListener('mouseleave', () => {
-      const scale = (this.selectedId && this.selectedId === p.propertyCode) ? this.options.selectedScale : 1;
-      this.applyScale(icon, scale);
-    });
-    root.addEventListener('click', (ev) => {
-      ev.stopPropagation();
-      this.setSelected(p.propertyCode);
-      if (this.options.showPopupOnClick) {
-        const rec = this.markersById.get(p.propertyCode!);
-        if (rec) this.openPopup(rec);
-      }
+    const [lng, lat] = rec.coord;
+    this.map.easeTo({
+      center: rec.coord,
+      zoom: zoom ?? Math.max(this.map.getZoom(), 14),
     });
 
-    const marker = new maplibregl.Marker({ element: root, anchor: 'bottom' })
-      .setLngLat(ll)
-      .addTo(this.map!);
-
-    // z-index
-    marker.getElement().style.zIndex = String(this.options.zIndexBase);
-
-    return { marker, propiedad: p, root, icon };
-  }
-
-  private updateMarkerAppearance(rec: MarkerRecord) {
-    const color = this.getColor(rec.propiedad);
-    rec.icon.innerHTML = this.getMarkerSVG(color, this.options.sizePx);
-  }
-
-  private getColor(p: Propiedad): string {
-    if (this.options.colorByOperation) {
-      if (p.operation === 'rent') return this.options.rentColor;
-      if (p.operation === 'sale') return this.options.saleColor;
+    if (withPopup && this.options.showPopupOnClick) {
+      const isDark =
+        document.documentElement.classList.contains('dark') ||
+        document.body.classList.contains('dark');
+      this.popupSvc.open(rec.propiedad, [lng, lat], isDark);
     }
-    return this.options.fallbackColor;
   }
 
-  private applyScale(iconEl: HTMLElement, scale: number) {
-    iconEl.style.transform = `scale(${scale})`;
-    iconEl.style.transition = 'transform 120ms ease';
+  fitToMarkers(
+    padding: number | { top: number; bottom: number; left: number; right: number } = 40,
+  ) {
+    if (!this.map || this.dataById.size === 0) return;
+
+    const bounds = new maplibregl.LngLatBounds();
+    for (const rec of this.dataById.values()) {
+      bounds.extend(rec.coord);
+    }
+    this.map.fitBounds(bounds, { padding, duration: 600 });
   }
 
-  private openPopup(rec: MarkerRecord) {
-    // Si quieres detectar modo oscuro automáticamente, usa una clase global:
-    const isDark =
-      document.documentElement.classList.contains('dark') ||
-      document.body.classList.contains('dark');
+  // ========= Reconstruir fuente GeoJSON a partir de dataById =========
 
-    // coge el lng/lat del marker
-    const { lng, lat } = rec.marker.getLngLat();
-    // delega en tu servicio que monta el componente Angular
-    this.popupSvc.open(rec.propiedad, [lng, lat], isDark);
+  private rebuildSourceFromData() {
+    if (!this.map) return;
+    const src = this.map.getSource(this.sourceId) as maplibregl.GeoJSONSource | undefined;
+    if (!src) return;
+
+    const features: any[] = [];
+    for (const [id, rec] of this.dataById.entries()) {
+      features.push({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: rec.coord,
+        },
+        properties: {
+          id,
+          operation: rec.propiedad.operation,
+        },
+      });
+    }
+
+    src.setData({
+      type: 'FeatureCollection',
+      features,
+    } as any);
   }
+
+  // ========= Eventos de mapa =========
+
+  private handleClick = (e: any) => {
+    if (!this.map || !e.features?.length) return;
+    const f = e.features[0];
+    const id: string | undefined = f.properties?.id;
+    if (!id) return;
+
+    this.setSelected(id);
+    this.focusOn(id, undefined, true);
+  };
+
+  private handleMouseEnter = () => {
+    if (!this.map) return;
+    this.map.getCanvas().style.cursor = 'pointer';
+  };
+
+  private handleMouseLeave = () => {
+    if (!this.map) return;
+    this.map.getCanvas().style.cursor = '';
+  };
+
+  // ========= Estilo de la capa (color + seleccionado) =========
+
+  private syncLayerStyle() {
+    if (!this.map || !this.map.getLayer(this.layerId)) return;
+
+    const sizeExpr: any = this.selectedId
+      ? [
+          'case',
+          ['==', ['get', 'id'], this.selectedId],
+          1.1,  
+          0.9,  
+        ]
+      : 0.9;
+    this.map.setLayoutProperty(this.layerId, 'icon-size', sizeExpr);
+  }
+
+  // ========= Utilidades =========
 
   private getLngLat(p: Propiedad): LngLat | null {
     const lat = Number(p.latitude ?? (p as any).lat ?? p.location?.lat);
-    const lon = Number(p.longitude ?? (p as any).lng ?? (p as any).lon ?? p.location?.lng ?? p.location?.lon);
+    const lon = Number(
+      p.longitude ??
+        (p as any).lng ??
+        (p as any).lon ??
+        p.location?.lng ??
+        p.location?.lon,
+    );
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
     return [lon, lat];
   }
 
-  private getMarkerSVG(color: string, size: number) {
-    return `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="${size}" height="${size}" aria-hidden="true">
-        <defs>
-          <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity=".35"/>
-          </filter>
-        </defs>
-        <path d="M20 37s-11-11.5-11-19C9 8.5 13.9 4 20 4s11 4.5 11 14c0 7.5-11 19-11 19z"
-              fill="${color}" filter="url(#shadow)"/>
-        <circle cx="20" cy="17" r="4.5" fill="#ffffff"/>
-      </svg>`;
-  }
-
+  // Popup HTML de fallback (por si algún día quieres usar popupBuilder)
   private defaultPopupHTML(p: Propiedad) {
-    const precio = (p.price ?? 0).toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+    const precio = (p.price ?? 0).toLocaleString('es-ES', {
+      style: 'currency',
+      currency: 'EUR',
+      maximumFractionDigits: 0,
+    });
     const tam = p.size ? `${p.size} m²` : '';
-    const dir = [p.address, p.neighborhood, p.district, p.city].filter(Boolean).join(' · ');
-    const tipo = p.operation === 'rent' ? 'Alquiler' : p.operation === 'sale' ? 'Venta' : '—';
+    const dir = [p.address, p.neighborhood, p.district, p.city]
+      .filter(Boolean)
+      .join(' · ');
+    const tipo =
+      p.operation === 'rent'
+        ? 'Alquiler'
+        : p.operation === 'sale'
+        ? 'Venta'
+        : '—';
     const url = p.url ?? '#';
+
     return `
       <div class="popup-propiedad">
-        <div class="row-1"><strong>${precio}</strong> <span>${tam}</span></div>
-        <div class="row-2">${dir}</div>
-        <div class="row-3">${tipo}</div>
-        <div class="row-4"><a href="${url}" target="_blank" rel="noopener">Ver anuncio</a></div>
+        <div class="header">
+          <div class="precio">${precio}</div>
+          <div class="tipo">${tipo}${tam ? ' · ' + tam : ''}</div>
+        </div>
+        <div class="direccion">${dir}</div>
+        ${
+          url !== '#'
+            ? `<a class="link" href="${url}" target="_blank" rel="noopener">Ver anuncio</a>`
+            : ''
+        }
       </div>
     `;
-  }
-
-  hasPin(propertyCode: string): boolean {
-    return this.markersById.has(String(propertyCode));
-  }
-
-  addOne(p: Propiedad, opts: { fly?: boolean; zoom?: number; openPopup?: boolean } = {}): boolean {
-    this.attach();
-    if (!this.map) return false;
-
-    const id = String((p as any).propertyCode ?? '');
-    if (!id) return false;
-
-    let rec = this.markersById.get(id);
-    if (!rec) {
-      const ll = this.getLngLat(p);
-      if (!ll) return false;
-      rec = this.createMarker(p, ll);
-      this.markersById.set(id, rec);
-      // asegura visibilidad coherente con el estado actual
-      this.setVisible(this.visible);
-    } else {
-      // refresca datos (por si vienen del drawer)
-      rec.propiedad = p;
-      this.updateMarkerAppearance(rec);
-    }
-
-    if (opts.fly) {
-      this.map.easeTo({
-        center: rec.marker.getLngLat(),
-        zoom: opts.zoom ?? Math.max(this.map.getZoom(), 16)
-      });
-    }
-    if (opts.openPopup && this.options.showPopupOnClick) {
-      this.openPopup(rec);
-    }
-    return true;
   }
 }

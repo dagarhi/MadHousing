@@ -21,6 +21,7 @@ export interface AuthUser {
   username: string;
   profile?: string | null;
   token: string;
+  expiresAt: number; 
 }
 
 const STORAGE_KEY = 'tfg_auth_user';
@@ -28,6 +29,35 @@ const STORAGE_KEY = 'tfg_auth_user';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly apiUrl = environment.apiBaseUrl;
+
+  private getTokenExpiration(token: string): number {
+    const ONE_HOUR = 60 * 60 * 1000; // 1 hora en ms
+
+    try {
+      // Intentamos leer "exp" del JWT si viene
+      const payloadBase64 = token.split('.')[1];
+      if (payloadBase64) {
+        const json = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
+        const payload = JSON.parse(json) as { exp?: number };
+        if (payload.exp) {
+          return payload.exp * 1000; // exp suele venir en segundos
+        }
+      }
+    } catch {
+      // ignoramos errores
+    }
+
+    // Si no hay "exp" en el token, usamos 1h desde ahora
+    return Date.now() + ONE_HOUR;
+  }
+
+  private isTokenExpired(expiresAt: number | undefined): boolean {
+    if (!expiresAt) {
+      // si no tenemos fecha, mejor considerarlo caducado para forzar login de nuevo
+      return true;
+    }
+    return Date.now() >= expiresAt;
+  }
 
   // Estado en memoria del usuario actual
   private currentUserSubject = new BehaviorSubject<AuthUser | null>(null);
@@ -47,11 +77,14 @@ export class AuthService {
       .post<LoginResponse>(`${this.apiUrl}/auth/login`, { username, password })
       .pipe(
         map((res) => {
+          const expiresAt = this.getTokenExpiration(res.access_token);
+
           const user: AuthUser = {
             userId: res.user_id,
             username: res.username,
             profile: res.profile,
             token: res.access_token,
+            expiresAt, // ← AQUÍ
           };
           return user;
         }),
@@ -71,7 +104,14 @@ export class AuthService {
 
   /** Devuelve true si hay un usuario autenticado en memoria */
   isAuthenticated(): boolean {
-    return !!this.currentUserSubject.value;
+    const user = this.currentUserSubject.value;
+    if (!user) return false;
+
+    if (this.isTokenExpired(user.expiresAt)) {
+      return false;
+    }
+
+    return true;
   }
 
   /** Devuelve el usuario actual (o null) */
@@ -81,7 +121,15 @@ export class AuthService {
 
   /** Devuelve solo el token JWT (o null) */
   getToken(): string | null {
-    return this.currentUserSubject.value?.token ?? null;
+    const user = this.currentUserSubject.value;
+    if (!user) return null;
+
+    if (this.isTokenExpired(user.expiresAt)) {
+      this.logout(); 
+      return null;
+    }
+
+    return user.token;
   }
 
   // ---------- SESIÓN (LOCALSTORAGE) ---------- //
@@ -98,11 +146,15 @@ export class AuthService {
       if (!raw) return;
 
       const stored = JSON.parse(raw) as AuthUser;
-      if (stored && stored.token) {
-        this.currentUserSubject.next(stored);
+
+      // Sin token o token caducado => borramos y no restauramos
+      if (!stored.token || this.isTokenExpired(stored.expiresAt)) {
+        localStorage.removeItem(STORAGE_KEY);
+        return;
       }
+
+      this.currentUserSubject.next(stored);
     } catch {
-      // Si algo falla al parsear, limpiamos
       localStorage.removeItem(STORAGE_KEY);
     }
   }

@@ -22,7 +22,7 @@ export class MapService {
       container,
       style: 'https://tiles.stadiamaps.com/styles/alidade_smooth.json',
       center: [-3.7038, 40.4168],
-      zoom: 9.2,
+      zoom: 11,
     });
     if (typeof window !== 'undefined') {
       (window as any).map = this.map;
@@ -30,6 +30,7 @@ export class MapService {
     await new Promise<void>((resolve) => {
       this.map!.on('load', () => { this.mapaCargado = true; resolve(); });
     });
+    this.loadPinsIcons();
   }
 
   getMap(): maplibregl.Map | undefined {
@@ -134,10 +135,14 @@ export class MapService {
 
   /** Cierra popup activo si lo hay */
   cerrarPopup(): void {
-    this.activePopup?.remove();
-    this.activePopup = undefined;
+    if (this.activePopup) {
+      this.activePopup.remove();  
+      this.activePopup = undefined;
+    }
   }
-
+  hasActivePopup(): boolean {
+    return !!this.activePopup;
+  }
   /**
    * Dibuja marcadores tipo chincheta (SVG inline) con color por operación.
    * Colores: venta (verde), alquiler (azul). Fallback gris.
@@ -193,7 +198,12 @@ export class MapService {
     this.cerrarPopup();
 
     const container = document.createElement('div');
-    const popup = new maplibregl.Popup({ offset: 18, closeButton: true, closeOnClick: true })
+    const popup = new maplibregl.Popup({ 
+      offset: [0, -40], 
+      closeButton: false, 
+      closeOnClick: true,
+      className: 'tfg-popup'
+    })
       .setLngLat(lngLat)
       .setDOMContent(container)
       .addTo(this.map);
@@ -257,4 +267,36 @@ export class MapService {
       <circle cx="20" cy="17" r="4.5" fill="#ffffff"/>
     </svg>`;
   }
+
+  private async loadPinsIcons(): Promise<void> {
+    if (!this.map) return;
+
+    const loadIcon = (id: string, url: string) =>
+      new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            if (!this.map!.hasImage(id)) {
+              this.map!.addImage(id, img as any);
+            }
+            resolve();
+          } catch (err) {
+            console.error('[MapService] Error al registrar icono', id, err);
+            reject(err);
+          }
+        };
+
+        img.onerror = (ev) => {
+          console.error('[MapService] Error al cargar icono', id, url, ev);
+          reject(ev);
+        };
+        img.src = url;
+      });
+
+    await Promise.all([
+      loadIcon('pin-sale', 'assets/icons/house-fill.svg'),
+      loadIcon('pin-rent', 'assets/icons/key-fill.svg'),
+    ]);
+  }
+
 }

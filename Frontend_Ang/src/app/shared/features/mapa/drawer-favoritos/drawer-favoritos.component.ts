@@ -46,8 +46,11 @@ export class DrawerFavoritosComponent {
     this.openedChange.emit(value);
   }
   irAlFavorito(item: Propiedad) {
+    this.onClose();
     const id = String((item as any).propertyCode ?? '');
     if (!id) return;
+
+    this.pins.setVisible(true);
 
     if (this.pins.hasPin(id)) {
       // Caso 1: ya está en el mapa → centramos y abrimos popup

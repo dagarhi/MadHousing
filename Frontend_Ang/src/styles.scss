@@ -52,3 +52,36 @@ body {
 
 /* Ejemplos globales opcionales */
 .card-like { background: var(--app-card); box-shadow: var(--app-elev-shadow); border: 1px solid var(--app-border); }
+
+/* Quitar la caja por defecto de TODOS los popups de MapLibre */
+.maplibregl-popup {
+  background: transparent;
+  box-shadow: none;
+}
+
+.maplibregl-popup .maplibregl-popup-content {
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* Si quieres quitar el triangulito del popup */
+.maplibregl-popup .maplibregl-popup-tip {
+  display: none;
+}
+
+
+.maplibregl-popup-close-button {
+  position: absolute;  
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
+  line-height: 18px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(15, 23, 42, 0.06);
+  cursor: pointer;
+}

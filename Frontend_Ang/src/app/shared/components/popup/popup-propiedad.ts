@@ -5,6 +5,7 @@ import { LucideAngularModule } from 'lucide-angular';
 
 import { Propiedad } from '../../../core/models/propiedad.model';
 import { FavoritosService } from '../../../core/services/favoritos.service';
+import { MapService } from '../../../core/services/map.service';
 
 @Component({
   selector: 'app-popup-propiedad',
@@ -16,11 +17,11 @@ import { FavoritosService } from '../../../core/services/favoritos.service';
 export class PopupPropiedadComponent implements OnInit, OnDestroy {
   @Input() piso!: Propiedad;
   @Input() isDark = false;
-
+  @Input() close?: () => void; 
   private sub?: Subscription;
   favoritos: Propiedad[] = [];
 
-  constructor(private favs: FavoritosService) {}
+  constructor(private favs: FavoritosService, private mapSvc: MapService, ) {}
 
   ngOnInit(): void {
     // estado inicial + suscripción
@@ -44,5 +45,15 @@ export class PopupPropiedadComponent implements OnInit, OnDestroy {
   onToggleFavorito(): void {
     if (!this.piso) return;
     this.favs.toggleFavorito(this.piso);
+  }
+  get operationLabel(): string {
+    const op = this.piso?.operation;
+    if (!op) return '—';
+    if (op === 'rent') return 'Alquiler';
+    if (op === 'sale') return 'Venta';
+    return op;
+  }
+  onClosePopup(): void {
+    this.mapSvc.cerrarPopup();
   }
 }

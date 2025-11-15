@@ -23,6 +23,7 @@ export class PopupPropiedadService {
         });
         cmpRef.setInput('piso', piso);
         cmpRef.setInput('isDark', isDark);
+        cmpRef.setInput('close', close);
         this.appRef.attachView(cmpRef.hostView);
       },
       () => {

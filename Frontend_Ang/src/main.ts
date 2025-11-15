@@ -36,6 +36,7 @@ import {
   LogOut,
   Columns3,
   Eye,
+  XIcon
   
 } from 'lucide-angular';
 
@@ -71,7 +72,8 @@ bootstrapApplication(AppComponent, {
         LogOut,
         Columns3,
         Eye,
-        EyeOff
+        EyeOff,
+        XIcon
       })
     ),
   ],

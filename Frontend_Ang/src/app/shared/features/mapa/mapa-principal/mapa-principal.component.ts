@@ -31,14 +31,9 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
 
     this.http.get<FeatureCollection<Polygon | MultiPolygon>>('assets/municipios_cam.geojson')
       .subscribe(geo => {
-        // 1) cargar polígonos
-        this.manager.setChoroplethPolygons(geo, 'CODIGOINE'); // cambia 'NOMBRE' si procede
-
-        // 2) datos
+        this.manager.setChoroplethPolygons(geo, 'CODIGOINE'); 
         this.manager.setData(this.pisos);
-
-        // 3) modo (si quieres coroplético)
-        this.manager.setMode(this.modo); // o 'coropletico' si lo vas a forzar
+        this.manager.setMode(this.modo); 
       });
   }
 
