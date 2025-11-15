@@ -1,0 +1,40 @@
+<app-drawer-shell
+  [(opened)]="opened"
+  (openedChange)="onOpenedChange($event)"
+  [title]="'Historial de búsquedas'"
+  position="right"
+  [width]="'460px'"
+>
+  <div drawer-content>
+    <ng-container *ngIf="(historial.historial$ | async) as lista">
+      <p *ngIf="lista.length === 0" class="empty-msg">
+        Aún no hay búsquedas en esta sesión.
+      </p>
+
+      <div *ngFor="let h of lista" class="hist-item">
+        <div class="info">
+          <div class="title">{{ h.resumen }}</div>
+          <div class="meta">{{ h.fechaISO | date:'short' }}</div>
+        </div>
+
+        <div class="actions">
+          <button class="btn secondary" (click)="onReaplicar(h)">
+            <lucide-icon name="refresh-ccw"></lucide-icon>
+            Reaplicar
+          </button>
+          <button class="btn danger" (click)="eliminar(h); $event.stopPropagation()">
+            <lucide-icon name="trash-2"></lucide-icon>
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <div drawer-footer>
+    <button class="clear-btn" (click)="borrarTodos()">
+      <lucide-icon name="trash"></lucide-icon>
+      Borrar todo
+    </button>
+  </div>
+</app-drawer-shell>

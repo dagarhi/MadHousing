@@ -1,0 +1,65 @@
+<div class="popup-propiedad" [class.dark]="isDark">
+  <div class="header">
+    <div class="address">
+      <h4>{{ piso.address || 'Dirección desconocida' }}</h4>
+
+      <p class="location" *ngIf="piso.neighborhood || piso.district || piso.city">
+        <ng-container *ngIf="piso.neighborhood">{{ piso.neighborhood }}</ng-container>
+        <ng-container *ngIf="piso.neighborhood && piso.district"> · </ng-container>
+        <ng-container *ngIf="piso.district">{{ piso.district }}</ng-container>
+        <ng-container *ngIf="(piso.neighborhood || piso.district) && piso.city"> · </ng-container>
+        <ng-container *ngIf="piso.city">{{ piso.city }}</ng-container>
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button
+        type="button"
+        class="close-btn"
+        (click)="onClosePopup()"
+        aria-label="Cerrar popup"
+      >
+        <lucide-icon name="x"
+        ></lucide-icon>
+      </button>
+
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="price">
+      <span class="amount">
+        {{ piso.price ? (piso.price | number:'1.0-0') + ' €' : 'Sin precio' }}
+      </span>
+      <span class="size" *ngIf="piso.size">{{ piso.size }} m²</span>
+    </div>
+
+    <div class="operation" *ngIf="piso.operation">
+      {{ operationLabel }}
+    </div>
+    <button
+      type="button"
+      class="fav-btn"
+      (click)="onToggleFavorito()"
+      [attr.aria-pressed]="isFav"
+      aria-label="Guardar en favoritos"
+    >
+      <lucide-icon
+        [name]="isFav ? 'heart' : 'heart-off'"
+        [style.color]="isFav ? '#ef4444' : '#6b7280'">
+      </lucide-icon>
+    </button>
+  </div>
+
+  <div class="footer">
+    <a
+      *ngIf="piso.url"
+      class="link"
+      [href]="piso.url"
+      target="_blank"
+      rel="noopener"
+    >
+      Ver en Idealista
+    </a>
+  </div>
+</div>

@@ -1,0 +1,62 @@
+:host {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1500;
+}
+
+.leyenda {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  .toggle {
+    background: var(--mat-sys-primary);
+    color: var(--mat-sys-on-primary);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    box-shadow: var(--app-elev-shadow);
+    transition: background 0.2s ease;
+
+    &:hover { filter: brightness(0.95); }
+  }
+
+  .panel {
+    position: absolute;
+    bottom: 50px;
+    left: 0;
+    background: var(--app-card);
+    color: var(--app-on-bg);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    padding: 0.75rem 1rem;
+    width: 200px;
+    transition: all 0.25s ease;
+    font-size: 0.85rem;
+
+    h4 {
+      margin: 0 0 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .barra {
+      height: 10px;
+      border-radius: 6px;
+      margin-bottom: 0.3rem;
+    }
+
+    .labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--app-elev-shadow);
+    }
+  }
+
+}

@@ -1,0 +1,113 @@
+<app-drawer-shell
+  [opened]="opened"
+  (openedChange)="onOpenedChange($event)"
+  [title]="'Comparador de zonas'"
+  position="right"
+  [width]="'620px'"
+  [loading]="loading"
+>
+  <div drawer-content>
+    <div class="selectors">
+      <div class="group">
+        <label>Zona A</label>
+        <select [(ngModel)]="zonaA" (ngModelChange)="onZonaChange()">
+          <option [ngValue]="null">Selecciona...</option>
+          <option *ngFor="let z of zonasConDatos" [ngValue]="z">{{ z }}</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <label>Zona B</label>
+        <select [(ngModel)]="zonaB" (ngModelChange)="onZonaChange()">
+          <option [ngValue]="null">Selecciona...</option>
+          <option *ngFor="let z of zonasConDatos" [ngValue]="z">{{ z }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="operation-toggle">
+      <label>Tipo de operación:</label>
+      <select [(ngModel)]="tipoOperacion" (change)="onOperacionChange()">
+        <option value="sale">🏠 Venta</option>
+        <option value="rent">🔑 Alquiler</option>
+      </select>
+    </div>
+
+    <div *ngIf="zonaA && zonaB" class="comparacion">
+      <p class="summary">
+        Comparando <strong>{{ zonaA }}</strong> vs <strong>{{ zonaB }}</strong>
+        ({{ tipoOperacion === 'sale' ? 'Venta' : 'Alquiler' }})
+      </p>
+
+      <!-- Gráficos (sin funciones en plantilla) -->
+       <!-- 💶 Precio medio (€) -->
+      <div class="chart-item">
+        <h4>💶 Precio medio (€)</h4>
+        <div class="chart-canvas">
+          <canvas #precioCanvas></canvas>
+        </div>
+      </div>
+
+      <!-- 📏 Tamaño medio (m²) -->
+      <div class="chart-item">
+        <h4>📏 Tamaño medio (m²)</h4>
+        <div class="chart-canvas">
+          <canvas #tamanoCanvas></canvas>
+        </div>
+      </div>
+
+      <!-- ⭐ Score medio -->
+      <div class="chart-item">
+        <h4>⭐ Score medio</h4>
+        <div class="chart-canvas">
+          <canvas #scoreCanvas></canvas>
+        </div>
+      </div>
+
+      <!-- 🏘️ Número de pisos -->
+      <div class="chart-item">
+        <h4>🏘️ Número de pisos</h4>
+        <div class="chart-canvas">
+          <canvas #countCanvas></canvas>
+        </div>
+      </div>
+
+      <!-- Tabla resumen -->
+      <table class="comparador-tabla">
+        <thead>
+          <tr>
+            <th>Métrica</th>
+            <th>{{ zonaA }}</th>
+            <th>{{ zonaB }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Precio medio (€)</td>
+            <td>{{ getDatosZona(zonaA)?.precio_medio?.toLocaleString?.() ?? '—' }}</td>
+            <td>{{ getDatosZona(zonaB)?.precio_medio?.toLocaleString?.() ?? '—' }}</td>
+          </tr>
+          <tr>
+            <td>Tamaño medio (m²)</td>
+            <td>{{ getDatosZona(zonaA)?.tamano_medio?.toFixed?.(1) ?? '—' }}</td>
+            <td>{{ getDatosZona(zonaB)?.tamano_medio?.toFixed?.(1) ?? '—' }}</td>
+          </tr>
+          <tr>
+            <td>Score medio</td>
+            <td>{{ getDatosZona(zonaA)?.score_medio?.toFixed?.(1) ?? '—' }}</td>
+            <td>{{ getDatosZona(zonaB)?.score_medio?.toFixed?.(1) ?? '—' }}</td>
+          </tr>
+          <tr>
+            <td>Nº de pisos</td>
+            <td>{{ getDatosZona(zonaA)?.count ?? '—' }}</td>
+            <td>{{ getDatosZona(zonaB)?.count ?? '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p *ngIf="!zonaA || !zonaB" class="empty-msg">
+      Selecciona dos zonas para comparar.
+    </p>
+  </div>
+</app-drawer-shell>

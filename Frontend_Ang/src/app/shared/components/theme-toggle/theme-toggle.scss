@@ -1,0 +1,29 @@
+:host {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1600;
+}
+
+.theme-toggle {
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+  border: none;
+  border-radius: 50%;
+  width: 46px;
+  height: 46px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--app-elev-shadow);
+  transition: background 0.2s ease, transform 0.2s ease;
+
+   /* Hover que funciona en ambos temas sin elegir colores fijos */
+  &:hover { filter: brightness(0.92); }
+
+  /* Si tienes estados “activo/pressed” */
+  &:active { transform: translateY(1px); }
+
+  lucide-icon { width: 22px; height: 22px; }
+}

@@ -205,3 +205,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# ==== Frontend Angular ====
+Frontend_Ang/node_modules/
+Frontend_Ang/dist/
+Frontend_Ang/.angular/
+Frontend_Ang/.env
+
+# Entorno virtual del backend (si lo tienes dentro de Backend/)
+Backend/venv/
+
+# (Opcional) Config de VSCode
+.vscode/

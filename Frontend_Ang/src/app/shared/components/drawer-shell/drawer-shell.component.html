@@ -1,0 +1,37 @@
+<!-- drawer-shell.component.html -->
+<div
+  class="drawer-backdrop"
+  [class.open]="opened"
+  (click)="onBackdropClick()"
+  [style.z-index]="zIndex - 1"
+></div>
+
+<div
+  class="drawer-panel"
+  [class.open]="opened"
+  [class.right]="position === 'right'"
+  [class.left]="position === 'left'"
+  [style.width]="width"
+  [style.z-index]="zIndex"
+  role="dialog"
+  aria-modal="true"
+>
+  <header class="drawer-header">
+    <h3 *ngIf="title">{{ title }}</h3>
+    <button *ngIf="showClose" class="close-btn" (click)="onCloseClick($event)" aria-label="Cerrar">
+      <lucide-icon name="x"></lucide-icon>
+    </button>
+  </header>
+
+  <section class="drawer-content">
+    <ng-content select="[drawer-content]"></ng-content>
+  </section>
+
+  <footer class="drawer-footer">
+    <ng-content select="[drawer-footer]"></ng-content>
+  </footer>
+
+  <div class="drawer-loader" *ngIf="loading">
+    <div class="spinner"></div>
+  </div>
+</div>

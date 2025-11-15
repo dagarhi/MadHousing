@@ -1,0 +1,158 @@
+<app-drawer-shell
+  [(opened)]="opened"
+  (openedChange)="onOpenedChange($event)"
+  [title]="'Filtros de búsqueda'"
+  position="right"
+  [width]="'520px'"
+  [loading]="loadingZonas"
+>
+  <div drawer-content>
+    <!-- Selects jerárquicos -->
+    <div class="select-group">
+      <label>Ciudad / Municipio</label>
+      <select [(ngModel)]="ciudad" (change)="resetDependientes(); cargarStatsZona()">
+        <option [ngValue]="''">Selecciona ciudad</option>
+        <option *ngFor="let c of ciudadesOptions" [value]="c">{{ c }}</option>
+      </select>
+
+      <label>Distrito</label>
+      <select [(ngModel)]="distrito" (change)="barrio = ''; cargarStatsZona()" [disabled]="!ciudad">
+        <option [ngValue]="''">Selecciona distrito</option>
+        <option *ngFor="let d of distritosOptions" [value]="d">{{ d }}</option>
+      </select>
+
+      <label>Barrio</label>
+      <select [(ngModel)]="barrio" (change)="cargarStatsZona()" [disabled]="!distrito">
+        <option [ngValue]="''">Selecciona barrio</option>
+        <option *ngFor="let b of barriosOptions" [value]="b">{{ b }}</option>
+      </select>
+    </div>
+
+    <!-- Tipo de operación -->
+    <div class="select-group">
+      <label>Tipo de operación</label>
+      <select [(ngModel)]="operation" (change)="cargarStatsZona()">
+        <option value="rent">Alquiler</option>
+        <option value="sale">Venta</option>
+      </select>
+    </div>
+
+    <section class="filter-card">
+      <h3 class="card-title">
+        <lucide-icon name="Funnel"></lucide-icon>
+        Filtros
+      </h3>
+
+      <div *ngIf="stats && !noData" class="rangos-grid">
+        <!-- Precio -->
+        <div class="grupo">
+          <div class="grupo-titulo">
+            <lucide-icon name="euro"></lucide-icon>
+            <span>Precio (€)</span>
+          </div>
+          <div class="campo-par">
+            <mat-form-field appearance="outline" class="modern-field" floatLabel="always">
+              <mat-label>Mínimo</mat-label>
+              <span matPrefix class="prefix"><lucide-icon name="chevrons-down"></lucide-icon></span>
+              <input matInput type="number"
+                    [ngModel]="priceRange[0]"
+                    (ngModelChange)="onRangeInput('price', 0, $event)"
+                    [min]="stats.price.min" [max]="stats.price.max" step="1" />
+            </mat-form-field>
+
+            <span class="dash" aria-hidden="true">–</span>
+
+            <mat-form-field appearance="outline" class="modern-field" floatLabel="always">
+              <mat-label>Máximo</mat-label>
+              <span matPrefix class="prefix"><lucide-icon name="chevrons-up"></lucide-icon></span>
+              <input matInput type="number"
+                    [ngModel]="priceRange[1]"
+                    (ngModelChange)="onRangeInput('price', 1, $event)"
+                    [min]="stats.price.min" [max]="stats.price.max" step="1" />
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Tamaño -->
+        <div class="grupo">
+          <div class="grupo-titulo">
+            <lucide-icon name="ruler"></lucide-icon>
+            <span>Tamaño (m²)</span>
+          </div>
+          <div class="campo-par">
+            <mat-form-field appearance="outline" class="modern-field" floatLabel="always">
+              <mat-label>Mínimo</mat-label>
+              <span matPrefix class="prefix"><lucide-icon name="chevrons-down"></lucide-icon></span>
+              <input matInput type="number"
+                    [ngModel]="sizeRange[0]"
+                    (ngModelChange)="onRangeInput('size', 0, $event)"
+                    [min]="stats.size.min" [max]="stats.size.max" step="1" />
+            </mat-form-field>
+
+            <span class="dash" aria-hidden="true">–</span>
+
+            <mat-form-field appearance="outline" class="modern-field" floatLabel="always">
+              <mat-label>Máximo</mat-label>
+              <span matPrefix class="prefix"><lucide-icon name="chevrons-up"></lucide-icon></span>
+              <input matInput type="number"
+                    [ngModel]="sizeRange[1]"
+                    (ngModelChange)="onRangeInput('size', 1, $event)"
+                    [min]="stats.size.min" [max]="stats.size.max" step="1" />
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Score -->
+        <div class="grupo">
+          <div class="grupo-titulo">
+            <lucide-icon name="sparkles"></lucide-icon>
+            <span>Score (0–100)</span>
+          </div>
+          <div class="campo-par">
+            <mat-form-field appearance="outline" class="modern-field" floatLabel="always">
+              <mat-label>Mínimo</mat-label>
+              <span matPrefix class="prefix"><lucide-icon name="chevrons-down"></lucide-icon></span>
+              <input matInput type="number"
+                    [ngModel]="scoreRange[0]"
+                    (ngModelChange)="onRangeInput('score', 0, $event)"
+                    [min]="stats.score.min" [max]="stats.score.max" step="1" />
+            </mat-form-field>
+
+            <span class="dash" aria-hidden="true">–</span>
+
+            <mat-form-field appearance="outline" class="modern-field" floatLabel="always">
+              <mat-label>Máximo</mat-label>
+              <span matPrefix class="prefix"><lucide-icon name="chevrons-up"></lucide-icon></span>
+              <input matInput type="number"
+                    [ngModel]="scoreRange[1]"
+                    (ngModelChange)="onRangeInput('score', 1, $event)"
+                    [min]="stats.score.min" [max]="stats.score.max" step="1" />
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+
+    <!-- Avanzado -->
+    <div class="advanced">
+      <h4>Filtros avanzados</h4>
+      <label>Habitaciones mínimas</label>
+      <input type="number" [(ngModel)]="rooms" min="0" />
+
+      <label>Planta mínima</label>
+      <input type="number" [(ngModel)]="floor" min="0" />
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div drawer-footer>
+    <div class="footer-actions">
+      <button class="secondary" (click)="onOpenedChange(false)">Cancelar</button>
+      <button class="secondary" (click)="mostrarTodos()">Mostrar todos</button>
+      <button class="primary" (click)="buscarPisos()" [disabled]="loading || noData">Buscar</button>
+    </div>
+  </div>
+</app-drawer-shell>

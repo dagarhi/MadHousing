@@ -1,0 +1,81 @@
+<div class="vista-mapa">
+  <!-- 🔹 Barra superior -->
+  <header class="header">
+    <!-- Izquierda: logout -->
+    <div class="header-left">
+      <button mat-button class="logout-btn" (click)="logout()">
+        <lucide-icon name="log-out"></lucide-icon>
+        <span>Cerrar sesión</span>
+      </button>
+    </div>
+
+    <!-- Centro: título -->
+    <div class="header-center">
+      <h3 class="header-title">MadHousing</h3>
+    </div>
+
+    <!-- Derecha: resto de acciones -->
+    <div class="header-right">
+      <button mat-button (click)="cerrarOtros('favoritos')">
+        <lucide-icon name="heart"></lucide-icon>
+        Favoritos
+      </button>
+
+      <button mat-button (click)="cerrarOtros('historial')">
+        <lucide-icon name="history"></lucide-icon>
+        Historial
+      </button>
+
+      <button mat-button (click)="cerrarOtros('estadisticas')">
+        <lucide-icon name="bar-chart-3"></lucide-icon>
+        Estadísticas
+      </button>
+
+      <button mat-button (click)="cerrarOtros('comparador')">
+        <lucide-icon name="columns-3"></lucide-icon>
+        Comparador
+      </button>
+
+      <button mat-button (click)="cerrarOtros('buscador')">
+        <lucide-icon name="search"></lucide-icon>
+        Buscador
+      </button>
+    </div>
+  </header>
+
+
+  <!-- 🔹 Contenedor principal del mapa -->
+  <main class="mapa-container">
+    <app-mapa-principal [pisos]="pisos"></app-mapa-principal>
+    <app-theme-toggle></app-theme-toggle>
+  </main>
+
+  <!-- 🔹 Drawers -->
+  <app-drawer-favoritos
+    [(opened)]="mostrarFavoritos"
+    (openedChange)="mostrarFavoritos = $event">
+  </app-drawer-favoritos>
+  <app-drawer-historial 
+    [(opened)]="mostrarHistorial"
+    (openedChange)="mostrarHistorial = $event"
+    (reaplicar)="onReaplicarHist($event)">
+  </app-drawer-historial>
+  <app-drawer-estadisticas 
+    [(opened)]="mostrarEstadisticas"
+    (openedChange)="mostrarEstadisticas = $event">
+  </app-drawer-estadisticas>
+  <app-drawer-comparador 
+    [(opened)]="mostrarComparador"
+    (openedChange)="mostrarComparador = $event"></app-drawer-comparador>
+  <app-buscador 
+    [(opened)]="mostrarBuscador" 
+    (resultados)="onResultados($event)"
+    (openedChange)="mostrarBuscador = $event">
+  </app-buscador>
+
+  <!-- 🔹 Controles flotantes -->
+  <app-leyenda-score></app-leyenda-score>
+  <button class="map-fab" (click)="limpiarMapa()" aria-label="Limpiar mapa">
+    <lucide-icon name="brush-cleaning"></lucide-icon>
+  </button>
+</div>

@@ -1,0 +1,90 @@
+.selectors {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  .group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    label { font-weight: 600; margin-bottom: .25rem; }
+    select {
+      padding: .45rem .6rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: .95rem;
+    }
+  }
+}
+
+.operation-toggle {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: 1rem;
+
+  label { font-weight: 600; }
+  select {
+    padding: .35rem .5rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: .95rem;
+  }
+}
+
+.comparacion .summary {
+  margin: .5rem 0 1rem 0;
+}
+
+.chart-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.chart-item {
+  background: var(--surface-variant, #fafafa);
+  border-radius: 12px;
+  padding: .75rem;
+
+  h4 {
+    font-size: 1rem;
+    margin: 0 0 .5rem 0;
+    color: var(--text-primary, #222);
+  }
+}
+
+/* 👇 contenedor con altura controlada */
+.chart-canvas {
+  position: relative;
+  height: 260px;               /* ajusta a tu gusto (p. ej. clamp(220px, 28vh, 320px)) */
+  /* Optional: si el drawer puede ser muy pequeño en móvil */
+  min-height: 200px;
+}
+
+/* El canvas ocupa el wrapper y NO fuerza crecer al padre */
+.chart-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.comparador-tabla {
+  width: 100%;
+  margin-top: 1rem;
+  border-collapse: collapse;
+
+  th, td {
+    border-bottom: 1px solid #e5e5e5;
+    padding: .5rem .6rem;
+    text-align: left;
+  }
+
+  thead th {
+    font-weight: 700;
+    background: var(--surface, #fff);
+  }
+}
+
+.empty-msg { opacity: .7; margin-top: .5rem; }

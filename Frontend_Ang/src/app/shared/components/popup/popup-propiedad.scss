@@ -1,0 +1,162 @@
+.popup-propiedad {
+  min-height: fit-content;
+  max-height: 380px;
+
+  min-width: 260px;
+  max-width: 380px;
+
+  padding: 0.8rem 1rem 0.8rem;
+  padding-right: 3rem;   
+
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+  font-size: 13px;
+  line-height: 1.35;
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+
+  .header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .address {
+    flex: 1;
+    overflow: hidden;
+
+    h4 {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .location {
+      margin-top: 0.4rem;
+      font-size: 0.7rem;
+      color: #6b7280;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+  }
+  .close-btn {
+    border: none;
+    background: none;
+    padding: 0.1rem;
+    border-radius: 999px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    lucide-icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .fav-btn {
+    border: none;
+    background: none;
+    padding: 0.1rem;
+    border-radius: 999px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.35rem;   
+
+    lucide-icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      background: rgba(148, 163, 184, 0.15);
+    }
+  }
+
+  .main {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+
+    .amount {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .size {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+  }
+
+  .operation {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+
+  .footer {
+    margin-top: 0.25rem;
+
+    .link {
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-decoration: none;
+      color: #2563eb;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  // Versión modo oscuro
+  &.dark {
+    background: #020617;
+    color: #e5e7eb;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+
+    .address .location {
+      color: #9ca3af;
+    }
+
+    .price .size {
+      color: #9ca3af;
+    }
+
+    .operation {
+      background: #111827;
+      color: #93c5fd;
+    }
+
+    .footer .link {
+      color: #93c5fd;
+    }
+
+    .fav-btn:hover {
+      background: rgba(148, 163, 184, 0.25);
+    }
+  }
+}

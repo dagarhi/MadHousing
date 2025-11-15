@@ -1,0 +1,98 @@
+<div class="inicio">
+  <div class="inicio__layout">
+
+    <section class="inicio__info">
+      <h1 class="inicio__info-titulo">MadHousing</h1>
+      <p class="inicio__info-subtitulo">
+        Buscador de pisos en Madrid con mapa interactivo, sistema de filtros, comparador de zonas,
+        y registro de historial y favoritos
+      </p>
+
+      <div class="inicio__features">
+        <div class="feature">
+          <h3>Mapa interactivo</h3>
+          <p>
+            Explora las viviendas directamente sobre el mapa, filtra por zona,
+            precio y características.
+          </p>
+        </div>
+        <div class="feature">
+          <h3>Registro de usuario</h3>
+          <p>
+            Guarda tus pisos favoritos y tus búsquedas en tu propio perfil.
+          </p>
+        </div>
+        <div class="feature">
+          <h3>Herramientas de análisis</h3>
+          <p>
+            Consulta los datos globales de la aplicación, además
+            de comparar zonas concretas.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Columna derecha: tarjeta de login -->
+    <section class="inicio__card">
+      <h2 class="inicio__titulo">Acceso</h2>
+      <p class="inicio__subtitulo">
+        Inicia sesión para acceder al mapa y a tus favoritos.
+      </p>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+        <div class="form-group">
+          <label for="username">Usuario</label>
+          <input
+            id="username"
+            type="text"
+            formControlName="username"
+            [class.is-invalid]="hasError('username', 'required')"
+            autocomplete="username"
+          />
+          <div class="error" *ngIf="hasError('username', 'required')">
+            El usuario es obligatorio.
+          </div>
+        </div>
+
+        <div class="form-group">
+        <label for="password">Contraseña</label>
+
+        <div class="password-wrapper">
+          <input
+            id="password"
+            [type]="mostrarPassword ? 'text' : 'password'"
+            formControlName="password"
+            [class.is-invalid]="hasError('password', 'required')"
+            autocomplete="current-password"
+          />
+
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="togglePassword()"
+            [attr.aria-pressed]="mostrarPassword"
+            [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            <lucide-icon
+              [name]="mostrarPassword ? 'eye-off' : 'eye'"
+            ></lucide-icon>
+          </button>
+        </div>
+
+        <div class="error" *ngIf="hasError('password', 'required')">
+          La contraseña es obligatoria.
+        </div>
+      </div>
+
+
+        <button type="submit" [disabled]="cargando || loginForm.invalid">
+          {{ cargando ? 'Iniciando sesión…' : 'Entrar' }}
+        </button>
+
+        <p *ngIf="error" class="error error--global">
+          {{ error }}
+        </p>
+      </form>
+    </section>
+  </div>
+</div>
