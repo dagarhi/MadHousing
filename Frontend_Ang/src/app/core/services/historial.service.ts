@@ -117,10 +117,10 @@ export class HistorialService {
 
   private renderResumen(f: FiltroBusqueda): string {
     const partes: string[] = [];
-    const ciudad = (f as any).ciudad as string | undefined;
+    const municipio = (f as any).municipio as string | undefined;
     const op = (f as any).operation as string | undefined;
 
-    if (ciudad) partes.push(ciudad);
+    if (municipio) partes.push(municipio);
     if (op) partes.push(op === 'rent' ? 'alquiler' : 'venta');
 
     const r = (label: string, a?: number, b?: number) =>

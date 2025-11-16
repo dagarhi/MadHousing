@@ -46,14 +46,14 @@ export class BuscadorComponent implements OnChanges {
     return Object.keys(this.zonas || {});
   }
   get distritosOptions() {
-    return this.ciudad ? Object.keys(this.zonas[this.ciudad] || {}) : [];
+    return this.municipio ? Object.keys(this.zonas[this.municipio] || {}) : [];
   }
   get barriosOptions() {
-    return this.ciudad && this.distrito ? (this.zonas[this.ciudad]?.[this.distrito] || []) : [];
+    return this.municipio && this.distrito ? (this.zonas[this.municipio]?.[this.distrito] || []) : [];
   }
 
   // Selecciones actuales
-  ciudad = '';
+  municipio = '';
   distrito = '';
   barrio = '';
   operation: 'rent' | 'sale' = 'rent';
@@ -95,7 +95,7 @@ export class BuscadorComponent implements OnChanges {
 
   // ====== API pública para el Drawer de Historial ======
   async aplicarFiltros(f: FiltroBusqueda, autoBuscar = true) {
-    this.ciudad   = (f as any).ciudad ?? '';
+    this.municipio   = (f as any).municipio ?? '';
     this.distrito = (f as any).distrito ?? '';
     this.barrio   = (f as any).barrio ?? '';
     this.operation = (f as any).operation ?? 'rent';
@@ -142,13 +142,17 @@ export class BuscadorComponent implements OnChanges {
   }
 
   async cargarStatsZona() {
-    const zonaSeleccionada = this.barrio || this.distrito || this.ciudad;
+    const zonaSeleccionada = this.barrio || this.distrito || this.municipio;
     if (!zonaSeleccionada) return;
 
     this.loading = true;
     try {
-      // Pides stats con tu endpoint actual y reajustas rangos
-      const res = await this.busqueda.buscar({ ciudad: zonaSeleccionada, operation: this.operation }).toPromise();
+      const res = await this.busqueda.buscar({
+      municipio: this.municipio,                         
+      distrito: this.distrito || undefined,           
+      barrio: this.barrio || undefined,               
+      operation: this.operation,
+    } as FiltroBusqueda).toPromise();
       const s = (res as any)?.stats || {};
       this.stats = s;
 
@@ -186,14 +190,16 @@ export class BuscadorComponent implements OnChanges {
 
   // ====== Búsqueda ======
   async buscarPisos() {
-    const zonaSeleccionada = this.barrio || this.distrito || this.ciudad;
+    const zonaSeleccionada = this.barrio || this.distrito || this.municipio;
     if (!zonaSeleccionada) {
       alert('Selecciona una zona válida');
       return;
     }
 
     const filtros: FiltroBusqueda = {
-      ciudad: zonaSeleccionada,
+      municipio: this.municipio,
+      distrito: this.distrito || undefined,
+      barrio:   this.barrio   || undefined,
       operation: this.operation,
       min_price: this.priceRange[0],
       max_price: this.priceRange[1],
@@ -223,7 +229,7 @@ export class BuscadorComponent implements OnChanges {
   }
   limpiarFiltros() {
 
-    this.ciudad = '';
+    this.municipio = '';
     this.distrito = '';
     this.barrio = '';
 
@@ -247,5 +253,26 @@ export class BuscadorComponent implements OnChanges {
   onOpenedChange(v: boolean) {
     this.opened = v;
     this.openedChange.emit(v);
+  }
+  async mostrarTodo() {
+    try {
+      this.loading = true;
+      const pisos = await this.busqueda.buscarTodo(this.operation);
+
+      const filtros: FiltroBusqueda = {
+        operation: this.operation,
+      } as any;
+
+      this.resultados.emit({ pisos, filtros });
+
+      this.historialSrv.add(filtros, 'Todas las propiedades');
+
+      this.onOpenedChange(false);
+    } catch (err) {
+      console.error('Error al cargar todos los resultados', err);
+      alert('Error al cargar todos los resultados');
+    } finally {
+      this.loading = false;
+    }
   }
 }

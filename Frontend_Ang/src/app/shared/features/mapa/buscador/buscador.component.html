@@ -10,13 +10,13 @@
     <!-- Selects jerárquicos -->
     <div class="select-group">
       <label>Ciudad / Municipio</label>
-      <select [(ngModel)]="ciudad" (change)="resetDependientes(); cargarStatsZona()">
+      <select [(ngModel)]="municipio" (change)="resetDependientes(); cargarStatsZona()">
         <option [ngValue]="''">Selecciona ciudad</option>
         <option *ngFor="let c of ciudadesOptions" [value]="c">{{ c }}</option>
       </select>
 
       <label>Distrito</label>
-      <select [(ngModel)]="distrito" (change)="barrio = ''; cargarStatsZona()" [disabled]="!ciudad">
+      <select [(ngModel)]="distrito" (change)="barrio = ''; cargarStatsZona()" [disabled]="!municipio">
         <option [ngValue]="''">Selecciona distrito</option>
         <option *ngFor="let d of distritosOptions" [value]="d">{{ d }}</option>
       </select>
@@ -151,6 +151,9 @@
   <div drawer-footer>
     <div class="footer-actions">
       <button class="secondary" (click)="limpiarFiltros()">Limpiar filtros</button>
+      <button class="secondary" (click)="mostrarTodo()" [disabled]="loading">
+        Mostrar todos
+      </button>
       <button class="primary" (click)="buscarPisos()" [disabled]="loading || noData">Buscar</button>
     </div>
   </div>

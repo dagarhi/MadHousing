@@ -240,7 +240,9 @@ def read_root():
 # 🔍 Buscar propiedades (sin zonas predefinidas)
 @app.get("/buscar")
 def buscar_propiedades(
-    ciudad: str = Query(..., description="Ciudad, distrito o barrio a buscar"),
+    municipio: str = Query(..., description="Municipio (obligatorio)"),
+    distrito: Optional[str] = Query(None, description="Distrito (opcional)"),
+    barrio: Optional[str] = Query(None, description="Barrio (opcional)"),
     operation: str = Query("rent"),
     min_price: Optional[float] = Query(None),
     max_price: Optional[float] = Query(None),
@@ -253,22 +255,34 @@ def buscar_propiedades(
     db: Session = Depends(db_from_request),
 ):
     """
-    Busca propiedades filtrando por city, district o neighborhood (búsqueda textual),
-    más filtros numéricos básicos. No depende de zonas predefinidas ni radios.
+    Busca propiedades filtrando por municipio, distrito y barrio usando
+    los campos city, district y neighborhood de la tabla Propiedad.
+
+    - municipio: filtra por city (obligatorio).
+    - distrito: refina por district (opcional).
+    - barrio: refina por neighborhood (opcional).
+
+    Además aplica filtros numéricos (precio, tamaño, habitaciones, ascensor) y paginación.
     """
-    ciudad_original = ciudad
-    ciudad = ciudad.lower()
+    # Normalizar a minúsculas / quitar espacios
+    municipio = municipio.strip().lower()
+    distrito = distrito.strip().lower() if distrito else None
+    barrio = barrio.strip().lower() if barrio else None
 
     query = db.query(Propiedad).filter(Propiedad.operation == operation)
 
-    # Filtro por texto en city / district / neighborhood
-    like = f"%{ciudad}%"
-    query = query.filter(
-        (Propiedad.city.ilike(like))
-        | (Propiedad.district.ilike(like))
-        | (Propiedad.neighborhood.ilike(like))
-    )
+    # 1) Filtro base: municipio (city)
+    query = query.filter(Propiedad.city.ilike(f"%{municipio}%"))
 
+    # 2) Refinar por distrito si viene
+    if distrito:
+        query = query.filter(Propiedad.district.ilike(f"%{distrito}%"))
+
+    # 3) Refinar por barrio si viene
+    if barrio:
+        query = query.filter(Propiedad.neighborhood.ilike(f"%{barrio}%"))
+
+    # Filtros numéricos
     if min_price is not None:
         query = query.filter(Propiedad.price >= min_price)
     if max_price is not None:
@@ -290,9 +304,9 @@ def buscar_propiedades(
     props_page = props_filtradas[inicio:fin]
 
     # Estadísticas básicas
-    precios = [p.price for p in props_filtradas if p.price]
-    tamanos = [p.size for p in props_filtradas if p.size]
-    scores = [p.score_intrinseco for p in props_filtradas if p.score_intrinseco]
+    precios = [p.price for p in props_filtradas if p.price is not None]
+    tamanos = [p.size for p in props_filtradas if p.size is not None]
+    scores = [p.score_intrinseco for p in props_filtradas if p.score_intrinseco is not None]
 
     stats = {
         "price": {
@@ -310,7 +324,9 @@ def buscar_propiedades(
     }
 
     return {
-        "ciudad_consultada": ciudad_original,
+        "municipio": municipio,
+        "distrito": distrito,
+        "barrio": barrio,
         "operation": operation,
         "total": total,
         "pagina": page,
@@ -408,144 +424,6 @@ def estadisticas_por_zona(db: Session = Depends(db_from_request)):
             }
 
     return resultado
-
-# 🚀 Cargar datos desde Idealista
-@app.post("/seed-idealista")
-def cargar_datos_idealista(
-    zona: str = Query(..., description="Nombre de la zona, ej: 'Vallecas' o 'Alcorcón'"),
-    operation: str = Query("rent", description="Tipo de operación: rent o sale"),
-):
-    """Carga o actualiza datos desde la API de Idealista."""
-    gen = get_db()
-    db = next(gen)
-    try:
-        api = IdealistaAPI()
-        # --- Coordenadas predefinidas para zonas comunes ---
-        centros = {
-            "madrid": ("40.4168,-3.7038", 10000),
-            "alcorcon": ("40.3459,-3.8249", 5000),
-            "vallecas": ("40.3895,-3.6570", 4000),
-            "retiro": ("40.4113,-3.6833", 3000),
-            "arganzuela": ("40.3982,-3.6956", 3000),
-            "moratalaz": ("40.4075,-3.6520", 3000),
-            "usera": ("40.3855,-3.7050", 3000),
-            "bellasvistas": ("40.4489,-3.7088", 3000),
-        }
-
-        center, distance_m = centros.get(zona.lower(), ("40.4168,-3.7038", 8000))
-
-        # Idealista usa km
-        datos = api.search_by_area(
-            center=center,
-            distance=distance_m / 1000.0,
-            operation=operation,
-        )
-
-        if not isinstance(datos, dict) or "elementList" not in datos:
-            raise HTTPException(status_code=502, detail="Error en la API de Idealista")
-
-        nuevas, actualizadas = 0, 0
-        for e in datos.get("elementList", []):
-            lat = e.get("latitude")
-            lon = e.get("longitude")
-            if lat is None or lon is None:
-                continue
-
-            # --- Corrección del municipio ---
-            city_val = e.get("municipality") or ""
-            district_val = e.get("district") or ""
-            neigh_val = e.get("neighborhood") or ""
-
-            # Si Idealista marca "Madrid" pero los campos secundarios indican otra localidad, usamos esos
-            if city_val.lower() == "madrid":
-                txt = f"{district_val} {neigh_val}".lower()
-                if "mostol" in txt:
-                    city_val = "mostoles"
-                elif "alcorcon" in txt:
-                    city_val = "alcorcon"
-                elif "fuenlabrad" in txt:
-                    city_val = "fuenlabrada"
-                elif "getafe" in txt:
-                    city_val = "getafe"
-                elif "leganes" in txt:
-                    city_val = "leganes"
-                elif "pozuelo" in txt:
-                    city_val = "pozuelo de alarcon"
-                elif "roz" in txt:
-                    city_val = "las rozas de madrid"
-                elif "alcobend" in txt:
-                    city_val = "alcobendas"
-                elif "parla" in txt:
-                    city_val = "parla"
-                elif "coslada" in txt:
-                    city_val = "coslada"
-                elif "torrejon" in txt:
-                    city_val = "torrejon de ardoz"
-                elif "san sebastian" in txt:
-                    city_val = "san sebastian de los reyes"
-                elif "alcala" in txt:
-                    city_val = "alcala de henares"
-                elif "rivas" in txt:
-                    city_val = "rivas vaciamadrid"
-                elif "majadahonda" in txt:
-                    city_val = "majadahonda"
-                elif "boadilla" in txt:
-                    city_val = "boadilla del monte"
-                elif "arroyomolinos" in txt:
-                    city_val = "arroyomolinos"
-                elif "villaviciosa" in txt:
-                    city_val = "villaviciosa de odon"
-
-            payload = {
-                "propertyCode": str(e.get("propertyCode", "")),
-                "price": e.get("price", 0),
-                "size": e.get("size", 0),
-                "rooms": e.get("rooms", 0),
-                "bathrooms": e.get("bathrooms", 0),
-                "floor": e.get("floor", ""),
-                "address": e.get("address", ""),
-                "district": district_val,
-                "neighborhood": neigh_val,
-                "city": city_val,
-                "latitude": lat,
-                "longitude": lon,
-                "hasLift": e.get("hasLift", False),
-                "exterior": e.get("exterior", False),
-                "url": e.get("url", ""),
-                "operation": operation,
-            }
-
-            payload["huella_digital"] = generar_huella_digital(payload)
-            payload["score_intrinseco"] = valoracion_intrinseca(payload)
-            payload["fecha_actualizacion"] = datetime.now()
-            payload["fecha_obtencion"] = datetime.now()
-
-            existe = db.query(Propiedad).filter(Propiedad.propertyCode == payload["propertyCode"]).first()
-            db.merge(Propiedad(**payload))
-            if existe:
-                actualizadas += 1
-            else:
-                nuevas += 1
-
-        db.commit()
-        total_guardadas = nuevas + actualizadas
-
-        return {
-            "zona": zona,
-            "operation": operation,
-            "total_guardadas": total_guardadas,
-            "nuevas": nuevas,
-            "actualizadas": actualizadas,
-        }
-
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error cargando datos: {str(e)}")
-    finally:
-        try:
-            next(gen)
-        except StopIteration:
-            pass
 
 # --------------------------------------------------------------
 #                      FAVORITOS POR USUARIO

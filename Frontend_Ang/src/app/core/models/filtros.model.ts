@@ -1,5 +1,5 @@
 export interface FiltroBusqueda {
-  ciudad?: string;
+  municipio?: string;
   distrito?: string;
   barrio?: string;
   operation?: 'sale' | 'rent';
@@ -13,7 +13,6 @@ export interface FiltroBusqueda {
 
   rooms?: number;
   floor?: number;
-  hasLift?: boolean;
-
+  per_page?: number;
   mostrarTodo?: boolean;
 }

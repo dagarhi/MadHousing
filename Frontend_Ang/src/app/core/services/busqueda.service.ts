@@ -21,13 +21,6 @@ export class BusquedaService {
   return this.http.get(`${this.baseUrl}/buscar`, { params });
 }
 
-
-  buscarTodo(operation: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/buscar-todo`, {
-      params: { operation, page: 1, per_page: 1000 },
-    });
-  }
-
   buscarTodasPaginas(paramsBase: any): Promise<Propiedad[]> {
     const per_page = 100;
     let page = 1;
@@ -67,4 +60,38 @@ export class BusquedaService {
       }
     });
   }
-}
+
+  async buscarTodo(operation: 'rent' | 'sale'): Promise<Propiedad[]> {
+    const per_page = 500;
+    let page = 1;
+    let acumulado: Propiedad[] = [];
+
+    return new Promise(async (resolve, reject) => {
+      try {
+        while (true) {
+          const params = new HttpParams({
+            fromObject: {
+              ...(operation ? { operation } : {}),
+              page,
+              per_page,
+            } as any,
+          });
+
+          const res: any = await lastValueFrom(
+            this.http.get(`${this.baseUrl}/buscar-todo`, { params })
+          );
+
+          const chunk = Array.isArray(res?.propiedades) ? res.propiedades : [];
+          acumulado = acumulado.concat(chunk);
+
+          const total = res?.total ?? chunk.length;
+          if (page * per_page >= total || chunk.length === 0) break;
+          page++;
+        }
+        resolve(acumulado);
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+  }

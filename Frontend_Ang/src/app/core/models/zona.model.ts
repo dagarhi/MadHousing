@@ -1,5 +1,5 @@
 export interface ZonasJerarquicas {
-  [ciudad: string]: {
+  [municipio: string]: {
     [distrito: string]: string[]; // barrios
   };
 }
