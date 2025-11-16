@@ -7,6 +7,7 @@ import { Propiedad } from '../../../../core/models/propiedad.model';
 import { MapLayerManager, Modo } from '../../../../core/services/map-layer-manager.service'; 
 import { HttpClient } from '@angular/common/http';
 import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-mapa-principal',
@@ -21,13 +22,17 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
   @Input() modo: Modo = 'heat';
 
   private ready = false;
+  private subs = new Subscription();
 
-  constructor(private readonly manager: MapLayerManager, private http: HttpClient) {}
+  constructor(
+    private readonly manager: MapLayerManager, 
+    private http: HttpClient, 
+  ) {}
 
   // mapa-principal.component.ts
   async ngAfterViewInit() {
     await this.manager.init(this.mapContainer.nativeElement);
-    this.ready = true; // <- IMPORTANTE (tu snippet no lo tenía)
+    this.ready = true; 
 
     this.http.get<FeatureCollection<Polygon | MultiPolygon>>('assets/municipios_cam.geojson')
       .subscribe(geo => {
@@ -44,7 +49,10 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
     if (ch['modo']) this.manager.setMode(this.modo);
   }
 
-  ngOnDestroy() { this.manager.destroy(); }
+  ngOnDestroy() { 
+    this.subs.unsubscribe(); 
+    this.manager.destroy(); 
+  }
 
   setModo(m: Modo) {
     if (this.modo === m) return;

@@ -1,12 +1,27 @@
-<div class="leyenda" [class.dark]="isDark" [class.expanded]="expanded">
-  <button class="toggle" (click)="toggle()">
-    <span *ngIf="!expanded">📊</span>
-    <span *ngIf="expanded">❌</span>
+<div class="leyenda">
+  <!-- Botón flotante para abrir/cerrar la leyenda -->
+  <button
+    class="toggle"
+    (click)="toggle()"
+    [attr.aria-label]="expanded ? 'Cerrar leyenda de score' : 'Mostrar leyenda de score'"
+  >
+    <!-- Icono de "leyenda/lista" cuando está cerrado -->
+    <lucide-icon
+      *ngIf="!expanded"
+      name="list-ordered"
+      aria-hidden="true"
+    ></lucide-icon>
+
+    <!-- Icono de "X" cuando está abierto -->
+    <lucide-icon *ngIf="expanded" name="x" aria-hidden="true"></lucide-icon>
   </button>
 
+  <!-- Panel de la leyenda -->
   <div class="panel" *ngIf="expanded">
     <h4>Score medio</h4>
+
     <div class="barra" [ngStyle]="gradientStyle"></div>
+
     <div class="labels">
       <span>0</span>
       <span>25</span>

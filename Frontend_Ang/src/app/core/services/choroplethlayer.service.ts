@@ -61,6 +61,8 @@ export class ChoroplethLayerService {
   // Popup hover
   private popup?: maplibregl.Popup;
   private hoverBound = false;
+  private lastHoverTs = 0;
+  private readonly HOVER_THROTTLE_MS = 5;
 
   constructor(private mapSvc: MapService) {}
 
@@ -200,7 +202,9 @@ export class ChoroplethLayerService {
     this.hoverBound = true;
 
     this.popup = new maplibregl.Popup({
-      closeButton: false, closeOnClick: false, offset: 12
+      closeButton: false,
+      closeOnClick: false,
+      offset: 12,
     });
 
     const fmtInt = (n: number) =>
@@ -209,22 +213,57 @@ export class ChoroplethLayerService {
       Number.isFinite(n) ? n.toFixed(d).replace('.', ',') : '—';
 
     this.map!.on('mousemove', this.HIT_ID, (e: any) => {
+      const now = performance.now();
+      if (now - this.lastHoverTs < this.HOVER_THROTTLE_MS) return;
+      this.lastHoverTs = now;
+
       const f = (e.features?.[0] as any) || undefined;
-      if (!f) { 
-        this.popup?.remove(); 
-        return;                 // ✅ asegura retorno void
+      if (!f) {
+        this.popup?.remove();
+        return;
       }
 
       const props: any = f.properties ?? {};
+
+      const rawValue = Number(props['value']);
+      const rawCount = Number(props['count']);
+
+      const hasScore = Number.isFinite(rawValue) && rawValue > 0;
+      const hasCount = Number.isFinite(rawCount) && rawCount > 0;
+
+      if (!hasScore || !hasCount) {
+        this.popup?.remove();
+        return;
+      }
+
       const html = `
-        <div style="font: 12px/1.35 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;">
-          <div><strong>${props['name'] ?? props['id'] ?? ''}</strong></div>
-          <div>Nº pisos: ${fmtInt(Number(props['count']))}</div>
-          <div>Score: ${fmtFixed(Number(props['value']), 2)}</div>
-          <div>€/m²: ${fmtInt(Number(props['avgUnitPrice']))}</div>
-          <div>Precio medio: ${fmtInt(Number(props['avgPrice']))}</div>
+        <div class="choro-tooltip">
+          <div class="choro-tooltip__header">
+            <div class="choro-tooltip__title">
+              ${props['name'] ?? props['id'] ?? ''}
+            </div>
+            <div class="choro-tooltip__score">
+              ${fmtFixed(rawValue, 1)}
+            </div>
+          </div>
+
+          <div class="choro-tooltip__body">
+            <div class="choro-tooltip__row">
+              <span class="label">Nº pisos</span>
+              <span class="value">${fmtInt(rawCount)}</span>
+            </div>
+            <div class="choro-tooltip__row">
+              <span class="label">€/m²</span>
+              <span class="value">${fmtInt(Number(props['avgUnitPrice']))}</span>
+            </div>
+            <div class="choro-tooltip__row">
+              <span class="label">Precio medio</span>
+              <span class="value">${fmtInt(Number(props['avgPrice']))}</span>
+            </div>
+          </div>
         </div>
       `;
+
       this.popup!.setLngLat(e.lngLat).setHTML(html).addTo(this.map!);
     });
 

@@ -63,7 +63,13 @@ export class MapLayerManager {
       case 'heat': {
         if (!hasData) { this.heat.clear(); return; }
         this.heat.setVisible(true);
-        this.heat.render(this.data, { highOnTop: true });
+        this.heat.render(this.data, {
+          highOnTop: true,
+          radiusRange: { min: 18, max: 38 },
+          opacity: 0.8,                     
+          blur: 0.2,    
+          maxZoom: 22,                     
+        });
         break;
       }
       case 'chinchetas': {
@@ -91,7 +97,7 @@ export class MapLayerManager {
     this.choro.clear();
     this.mapSvc.destroy?.();
   }
-  // Añade este método al manager
+
   setChoroplethPolygons(geojson: FeatureCollection<Polygon | MultiPolygon>, idField = 'CODIGOINE') {
     this.choroIdField = idField;
     this.choro.setPolygons(geojson, idField);
@@ -138,5 +144,8 @@ export class MapLayerManager {
         try { this.map.removeSource(id); } catch {}
       }
     }
+  }
+  lookNorth(): void {
+    this.mapSvc.resetNorth(true); 
   }
 }

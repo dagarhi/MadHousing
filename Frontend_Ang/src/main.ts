@@ -36,9 +36,13 @@ import {
   LogOut,
   Columns3,
   Eye,
-  XIcon
+  Navigation2,
+  ListOrdered,
+  House,
+
   
 } from 'lucide-angular';
+import { Legend } from 'chart.js';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -73,7 +77,9 @@ bootstrapApplication(AppComponent, {
         Columns3,
         Eye,
         EyeOff,
-        XIcon
+        Navigation2,
+        ListOrdered,
+        House
       })
     ),
   ],
