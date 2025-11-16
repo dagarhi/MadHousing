@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Propiedad } from '../models/propiedad.model';
 import { Observable, lastValueFrom } from 'rxjs';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 import { FiltroBusqueda } from '../models/filtros.model';
 
 @Injectable({ providedIn: 'root' })
