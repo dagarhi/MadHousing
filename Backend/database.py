@@ -6,8 +6,9 @@ from models import Base
 
 load_dotenv()
 
-# 🔹 Solo una URL (producción / “real”)
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./pisos.db")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(BASE_DIR, "pisos.db")
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{db_path}")
 
 # 🔹 Engine único
 engine = create_engine(DATABASE_URL, future=True)
