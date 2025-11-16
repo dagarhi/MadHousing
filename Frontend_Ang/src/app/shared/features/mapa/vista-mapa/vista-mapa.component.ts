@@ -6,7 +6,6 @@ import { DrawerHistorialComponent } from '../drawer-historial/drawer-historical.
 import { DrawerEstadisticasComponent } from '../drawer-estadisticas/drawer-estadisticas.component';
 import { DrawerComparadorComponent } from '../drawer-comparador/drawer-comparador.component';
 import { BuscadorComponent } from '../buscador/buscador.component';
-import { ThemeToggleComponent } from '../../../components/theme-toggle/theme-toggle';
 import { LeyendaScoreComponent } from '../../../components/leyenda-score/leyenda-score.component'; 
 import { LucideAngularModule } from 'lucide-angular';
 import { Propiedad } from '../../../../core/models/propiedad.model'; 
@@ -25,7 +24,6 @@ import { AuthService } from '../../../../core/services/auth.service';
     DrawerEstadisticasComponent,
     DrawerComparadorComponent,
     BuscadorComponent,
-    ThemeToggleComponent,
     LeyendaScoreComponent,
     LucideAngularModule,
   ],
@@ -82,6 +80,9 @@ export class VistaMapaComponent {
 
   logout(): void {
     this.auth.logout(); 
+  }
+  onLookNorth(): void {
+    this.layers.lookNorth();
   }
 
 }

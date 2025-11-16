@@ -221,30 +221,28 @@ export class BuscadorComponent implements OnChanges {
       this.loading = false;
     }
   }
+  limpiarFiltros() {
 
-  async mostrarTodos() {
-    const filtros: FiltroBusqueda = {
-      ciudad: this.barrio || this.distrito || this.ciudad || '',
-      operation: this.operation,
-    } as unknown as FiltroBusqueda;
+    this.ciudad = '';
+    this.distrito = '';
+    this.barrio = '';
 
-    try {
-      this.loading = true;
-      // Si tienes un endpoint dedicado:
-      // const res = await this.busqueda.buscarTodo(this.operation).toPromise();
-      // const pisos = (res as any)?.propiedades ?? [];
-      const pisos = await this.busqueda.buscarTodasPaginas(filtros);
-      this.resultados.emit({ pisos, filtros });
 
-      this.historialSrv.add(filtros, 'Mostrar todos');
-      this.onOpenedChange(false);
-    } catch (err) {
-      const e = err as Error;
-      alert('Error al cargar todos los datos: ' + e.message);
-    } finally {
-      this.loading = false;
-    }
+    this.operation = 'rent';
+    this.stats = { ...this.DEFAULT_STATS };
+
+    this.priceRange = [this.stats.price.min, this.stats.price.max];
+    this.sizeRange  = [this.stats.size.min,  this.stats.size.max];
+    this.scoreRange = [this.stats.score.min, this.stats.score.max];
+
+    // Filtros avanzados
+    this.rooms = null;
+    this.floor = null;
+
+    // Estado
+    this.noData = false;
   }
+
 
   onOpenedChange(v: boolean) {
     this.opened = v;

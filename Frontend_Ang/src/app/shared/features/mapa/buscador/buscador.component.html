@@ -150,8 +150,7 @@
   <!-- Footer -->
   <div drawer-footer>
     <div class="footer-actions">
-      <button class="secondary" (click)="onOpenedChange(false)">Cancelar</button>
-      <button class="secondary" (click)="mostrarTodos()">Mostrar todos</button>
+      <button class="secondary" (click)="limpiarFiltros()">Limpiar filtros</button>
       <button class="primary" (click)="buscarPisos()" [disabled]="loading || noData">Buscar</button>
     </div>
   </div>

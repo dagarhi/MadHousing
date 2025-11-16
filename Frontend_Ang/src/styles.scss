@@ -85,3 +85,53 @@ body {
   background: rgba(15, 23, 42, 0.06);
   cursor: pointer;
 }
+.choro-tooltip {
+  font: 12px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: rgba(15, 23, 42, 0.96); // fondo oscuro
+  color: #e5e7eb;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  min-width: 180px;
+}
+
+.choro-tooltip__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.choro-tooltip__title {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.choro-tooltip__score {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.18); // puedes cambiar al color que uses de “bueno”
+  color: #bfdbfe;
+}
+
+.choro-tooltip__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.choro-tooltip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.choro-tooltip__row .label {
+  opacity: 0.8;
+}
+
+.choro-tooltip__row .value {
+  font-weight: 500;
+}

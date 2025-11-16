@@ -52,6 +52,7 @@ export class PinsLayerService implements OnDestroy {
   // Mantenemos datos mínimos para cada pin
   private dataById = new Map<string, PinData>();
   private attached = false;
+  private lastPopupPropertyCode?: string;
 
   constructor(
     private readonly mapSvc: MapService,
@@ -61,7 +62,28 @@ export class PinsLayerService implements OnDestroy {
   // Se llama desde el MapLayerManager en el init
   attach(map?: maplibregl.Map) {
     this.map = map ?? (this.mapSvc as any).getMap?.() ?? this.map;
-    if (!this.map || this.attached) return;
+    if (!this.map) return;
+
+    const hasSource = !!this.map.getSource(this.sourceId);
+    const hasLayer  = !!this.map.getLayer(this.layerId);
+
+    // Si creemos que estamos adjuntos pero el estilo ha volado la capa/source,
+    // limpiamos y forzamos a reconstruir
+    if (this.attached && (!hasSource || !hasLayer)) {
+      if (hasLayer) {
+        this.map.off('click', this.layerId, this.handleClick);
+        this.map.off('mouseenter', this.layerId, this.handleMouseEnter);
+        this.map.off('mouseleave', this.layerId, this.handleMouseLeave);
+        this.map.removeLayer(this.layerId);
+      }
+      if (hasSource) {
+        this.map.removeSource(this.sourceId);
+      }
+      this.attached = false;
+    }
+
+    // Si ya está todo creado y sigue en el estilo, no hacemos nada
+    if (this.attached) return;
 
     // 1) Fuente GeoJSON vacía
     if (!this.map.getSource(this.sourceId)) {
@@ -74,7 +96,7 @@ export class PinsLayerService implements OnDestroy {
       } as any);
     }
 
-    // 2) Capa de círculos (de momento; luego podemos pasar a symbol + iconos)
+    // 2) Capa symbol con los iconos
     if (!this.map.getLayer(this.layerId)) {
       this.map.addLayer({
         id: this.layerId,
@@ -220,16 +242,27 @@ export class PinsLayerService implements OnDestroy {
     if (!rec) return;
 
     const [lng, lat] = rec.coord;
+
     this.map.easeTo({
       center: rec.coord,
       zoom: zoom ?? Math.max(this.map.getZoom(), 14),
+      duration: 600,
     });
 
     if (withPopup && this.options.showPopupOnClick) {
+      const samePin = this.lastPopupPropertyCode === propertyCode;
+      const popupOpen = this.mapSvc.hasActivePopup();
+
+      if (samePin && popupOpen) {
+        this.mapSvc.cerrarPopup();
+        return;
+      }
       const isDark =
         document.documentElement.classList.contains('dark') ||
         document.body.classList.contains('dark');
+
       this.popupSvc.open(rec.propiedad, [lng, lat], isDark);
+      this.lastPopupPropertyCode = propertyCode;
     }
   }
 

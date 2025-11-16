@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import maplibregl from 'maplibre-gl';
 import { Propiedad } from '../models/propiedad.model';
+import { environment } from '../../../environments/environment';
 
 type LngLatTuple = [number, number];
 
@@ -19,37 +20,18 @@ export class MapService {
     if (this.map) return;
 
     this.map = new maplibregl.Map({
-      container: 'map',
-      style: {
-        version: 8,
-        sources: {
-          osm: {
-            type: 'raster',
-            tiles: [
-              'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-            ],
-            tileSize: 256,
-            attribution: '© OpenStreetMap contributors'
-          }
-        },
-        layers: [
-          {
-            id: 'osm-base',
-            type: 'raster',
-            source: 'osm'
-          }
-        ]
-      },
-      center: [-3.7038, 40.4168], // Madrid
-      zoom: 12
+      container,
+      style: environment.mapStyleLight,  
+      center: [-3.7038, 40.4168],
+      zoom: 12,
     });
     if (typeof window !== 'undefined') {
       (window as any).map = this.map;
     }
     await new Promise<void>((resolve) => {
-      this.map!.on('load', () => { this.mapaCargado = true; resolve(); });
+      this.map!.once('load', () => { this.mapaCargado = true; resolve(); });
     });
-    this.loadPinsIcons();
+     await this.loadPinsIcons();
   }
 
   getMap(): maplibregl.Map | undefined {
@@ -316,6 +298,18 @@ export class MapService {
       loadIcon('pin-sale', 'assets/icons/house-fill.svg'),
       loadIcon('pin-rent', 'assets/icons/key-fill.svg'),
     ]);
+  }
+  resetNorth(animate: boolean = true): void {
+    if (!this.map) return;
+
+    if (animate) {
+      this.map.easeTo({
+        bearing: 0,     
+        duration: 500,   
+      });
+    } else {
+      this.map.setBearing(0);
+    }
   }
 
 }
