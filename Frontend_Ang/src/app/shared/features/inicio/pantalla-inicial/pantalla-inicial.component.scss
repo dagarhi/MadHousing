@@ -118,6 +118,15 @@
   font-size: 0.95rem;
   color: #555;
 }
+.inicio__alerta {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.9rem;
+  background: #fef3c7;      // amarillito suave
+  color: #92400e;           // marrón oscuro
+  border: 1px solid rgba(245, 158, 11, 0.5);
+}
 
 /* Formulario */
 
@@ -254,4 +263,16 @@ button[type='submit'] {
     background-color: rgba(123, 31, 162, 0.08);
     color: #4a148c;
   }
+}
+.inicio__alerta {
+  margin-bottom: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+
+  background: #fef3c7;        // amarillo suave
+  border: 1px solid #facc15;  // borde amarillo
+  color: #92400e;             // texto marrón oscuro
+
+  line-height: 1.4;
 }

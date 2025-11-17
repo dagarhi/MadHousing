@@ -338,17 +338,40 @@ def buscar_propiedades(
 
 # 🌍 Zonas jerárquicas automáticas (para el buscador)
 @app.get("/zonas-jerarquicas")
-def obtener_zonas_jerarquicas(db: Session = Depends(db_from_request)):
-    """
-    Devuelve jerarquía ciudad → distrito → barrio basada en los datos reales.
-    Permite crear selects anidados dinámicos en el frontend.
-    """
+def obtener_zonas_jerarquicas(
+    operation: Optional[str] = Query(
+        None,
+        description="Filtrar zonas que tienen al menos una propiedad de este tipo de operación (rent/sale)"
+    ),
+    municipio: Optional[str] = Query(
+        None,
+        description="Filtrar por municipio (city) si se desea"
+    ),
+    db: Session = Depends(db_from_request),
+):
     jerarquia = defaultdict(lambda: defaultdict(set))
-    props = db.query(Propiedad.city, Propiedad.district, Propiedad.neighborhood).distinct().all()
+
+    query = db.query(
+        Propiedad.city,
+        Propiedad.district,
+        Propiedad.neighborhood,
+    ).distinct()
+
+    # 🔹 Filtrado por operación (rent / sale)
+    if operation:
+        query = query.filter(Propiedad.operation == operation)
+
+    # 🔹 Filtrado por municipio si lo quieres limitar (ej. "madrid")
+    if municipio:
+        muni_norm = municipio.strip().lower()
+        query = query.filter(Propiedad.city.ilike(f"%{muni_norm}%"))
+
+    props = query.all()
 
     for city, district, neighborhood in props:
         if not city:
             continue
+
         city = city.strip()
         district = (district or "Desconocido").strip()
         neighborhood = (neighborhood or "").strip()
@@ -360,12 +383,10 @@ def obtener_zonas_jerarquicas(db: Session = Depends(db_from_request)):
     for city, distritos in jerarquia.items():
         result[city] = {}
         for d, barrios in distritos.items():
-            # quitamos cadenas vacías
             barrios_limpios = sorted([b for b in barrios if b])
             result[city][d] = barrios_limpios
 
     return result
-
 
 # 🌐 Buscar todo (sin filtros de zona)
 @app.get("/buscar-todo")

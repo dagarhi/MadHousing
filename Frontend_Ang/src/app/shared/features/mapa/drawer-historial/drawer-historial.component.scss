@@ -37,13 +37,17 @@
     padding: .45rem .65rem; cursor: pointer; background: #f8f9fa;
   }
 
-  .secondary:hover { background: #eef2f7; }
+  .secondary:hover { background: #0272fc; }
   .danger { background: #ffe3e3; border-color: #ffc9c9; }
-  .danger:hover { background: #ffc9c9; }
+  .danger:hover { background: #fc0000; }
 }
 
 .clear-btn {
   display: inline-flex; align-items: center; gap: .4rem;
   border: 1px solid #ddd; border-radius: 10px;
   padding: .5rem .8rem; cursor: pointer; background: #fff5f5;
+
+  &:hover{
+    background: #c92a2a;
+  }
 }

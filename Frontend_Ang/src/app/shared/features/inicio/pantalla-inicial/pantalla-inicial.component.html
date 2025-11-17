@@ -38,6 +38,9 @@
       <p class="inicio__subtitulo">
         Inicia sesión para acceder al mapa y a tus favoritos.
       </p>
+       <p *ngIf="mensajeSesion" class="inicio__alerta">
+        {{ mensajeSesion }}
+      </p>
 
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
         <div class="form-group">

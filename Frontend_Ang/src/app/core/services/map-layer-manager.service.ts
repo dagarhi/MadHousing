@@ -68,7 +68,7 @@ export class MapLayerManager {
           radiusRange: { min: 18, max: 38 },
           opacity: 0.8,                     
           blur: 0.2,    
-          maxZoom: 22,                     
+          maxZoom: 24,                     
         });
         break;
       }

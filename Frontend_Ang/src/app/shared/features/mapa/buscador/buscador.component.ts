@@ -100,6 +100,24 @@ export class BuscadorComponent implements OnChanges {
     this.barrio   = (f as any).barrio ?? '';
     this.operation = (f as any).operation ?? 'rent';
 
+    const zonaSeleccionada = this.barrio || this.distrito || this.municipio;
+
+    if (!zonaSeleccionada) {
+      this.stats = { ...this.DEFAULT_STATS };
+
+      this.priceRange = [this.stats.price.min, this.stats.price.max];
+      this.sizeRange  = [this.stats.size.min,  this.stats.size.max];
+      this.scoreRange = [this.stats.score.min, this.stats.score.max];
+
+      this.rooms = null;
+      this.floor = null;
+
+      if (autoBuscar) {
+        await this.mostrarTodo(); 
+      }
+      return;
+    }
+
     this.priceRange = [
       (f as any).min_price ?? this.priceRange[0],
       (f as any).max_price ?? this.priceRange[1],
@@ -126,8 +144,9 @@ export class BuscadorComponent implements OnChanges {
   async cargarZonas() {
     this.loadingZonas = true;
     try {
-      // Devuelve la jerarquía ciudad -> distrito -> [barrios]
-      this.zonas = await this.zonasSrv.getZonasJerarquicas().toPromise();
+      this.zonas = await this.zonasSrv
+        .getZonasJerarquicas(this.operation)
+        .toPromise();
     } catch (err) {
       console.error('Error cargando zonas', err);
       this.zonas = {};
@@ -143,7 +162,11 @@ export class BuscadorComponent implements OnChanges {
 
   async cargarStatsZona() {
     const zonaSeleccionada = this.barrio || this.distrito || this.municipio;
-    if (!zonaSeleccionada) return;
+     if (!zonaSeleccionada) {
+      this.stats = null as any;
+      this.noData = false; 
+      return;
+    }
 
     this.loading = true;
     try {

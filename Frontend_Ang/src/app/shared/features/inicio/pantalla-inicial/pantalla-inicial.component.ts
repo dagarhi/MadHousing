@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LucideAngularModule } from 'lucide-angular';
 
@@ -16,6 +16,7 @@ export class PantallaInicialComponent implements OnInit {
   loginForm: FormGroup;
   cargando = false;
   error: string | null = null;
+  mensajeSesion: string | null = null;
 
   mostrarPassword = false;
 
@@ -23,6 +24,7 @@ export class PantallaInicialComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private auth: AuthService,
+    private route: ActivatedRoute,
   ) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
@@ -31,9 +33,14 @@ export class PantallaInicialComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Si ya hay sesión iniciada, saltamos directamente al mapa
     if (this.auth.isAuthenticated()) {
       this.router.navigate(['/mapa']);
+      return;
+    }
+
+    const reason = this.route.snapshot.queryParamMap.get('reason');
+    if (reason === 'expired') {
+      this.mensajeSesion = 'Tu sesión ha expirado. Por favor, vuelve a iniciar sesión.';
     }
   }
 
