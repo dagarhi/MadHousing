@@ -268,7 +268,7 @@ export class HeatValueMapService implements OnDestroy {
       intensityStops,
       colorRamp: colors,
       minZoom: opts.minZoom ?? 10,
-      maxZoom: opts.maxZoom ?? 18
+      maxZoom: opts.maxZoom ?? 24
     };
   }
 

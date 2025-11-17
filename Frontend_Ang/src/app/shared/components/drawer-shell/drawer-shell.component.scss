@@ -55,9 +55,9 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem;
-    background: var(--mat-sys-primary, #6a0dad); // tu violeta principal
+    background: #a060a8; 
     color: white;
-    z-index: 2001; // opcional, para que sobresalga el header del panel
+    z-index: 2001; 
 
     h3 {
       margin: 0;

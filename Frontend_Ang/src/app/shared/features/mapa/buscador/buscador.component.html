@@ -31,19 +31,21 @@
     <!-- Tipo de operación -->
     <div class="select-group">
       <label>Tipo de operación</label>
-      <select [(ngModel)]="operation" (change)="cargarStatsZona()">
+      <select [(ngModel)]="operation" (change)="cargarZonas(); cargarStatsZona()">
         <option value="rent">Alquiler</option>
         <option value="sale">Venta</option>
       </select>
     </div>
 
-    <section class="filter-card">
+    <section class="filter-card"
+    *ngIf="stats && !noData && (municipio || distrito || barrio)"
+    >
       <h3 class="card-title">
         <lucide-icon name="Funnel"></lucide-icon>
         Filtros
       </h3>
 
-      <div *ngIf="stats && !noData" class="rangos-grid">
+      <div class="rangos-grid">
         <!-- Precio -->
         <div class="grupo">
           <div class="grupo-titulo">
@@ -136,7 +138,7 @@
 
 
     <!-- Avanzado -->
-    <div class="advanced">
+    <div class="advanced" *ngIf="stats && !noData && (municipio || distrito || barrio)">
       <h4>Filtros avanzados</h4>
       <label>Habitaciones mínimas</label>
       <input type="number" [(ngModel)]="rooms" min="0" />
