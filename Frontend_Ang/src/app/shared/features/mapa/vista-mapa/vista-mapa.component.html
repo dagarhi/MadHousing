@@ -42,6 +42,7 @@
       </button>
     </div>
   </header>
+  <app-map-help [userKey]="userHelpKey"></app-map-help>
 
 
   <!-- 🔹 Contenedor principal del mapa -->
@@ -79,7 +80,10 @@
     (click)="onLookNorth()"
     aria-label="Orientar al norte"
   >
-    <lucide-icon name="navigation-2"></lucide-icon>
+    <lucide-icon
+      name="navigation-2"
+      [style.transform]="'rotate(' + compassAngle + 'deg)'"
+    ></lucide-icon>
   </button>
   <button class="map-fab" (click)="limpiarMapa()" aria-label="Limpiar mapa">
     <lucide-icon name="brush-cleaning"></lucide-icon>

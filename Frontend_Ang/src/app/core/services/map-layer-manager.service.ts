@@ -6,6 +6,7 @@ import { HeatValueMapService } from './heat-value-map.service';
 import { PinsLayerService } from './pins-layer.service';
 import { ChoroplethLayerService } from './choroplethlayer.service';
 import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
+import { BehaviorSubject } from 'rxjs';
 
 export type Modo = 'coropletico' | 'heat' | 'chinchetas';
 type ChoroAggMode = 'count' | 'avgPrice' | 'avgUnitPrice' | 'avgScore';
@@ -20,6 +21,7 @@ export class MapLayerManager {
   private choroIdField: string = 'CODIGOINE';
   private choroMetric: ChoroAggMode = 'avgScore';
   private choroOperation: ChoroOp = 'all';
+  readonly bearing$ = new BehaviorSubject<number>(0); 
 
   constructor(
     private readonly mapSvc: MapService,
@@ -31,6 +33,13 @@ export class MapLayerManager {
   async init(container: HTMLElement) {
     await this.mapSvc.initMap(container);
     this.map = this.mapSvc.getMap()!;
+    this.bearing$.next(this.map.getBearing() ?? 0);
+
+    this.map.on('move', () => {
+      if (!this.map) return;
+      this.bearing$.next(this.map.getBearing() ?? 0);
+    });
+    
     (this.heat as any).attach?.(this.map);
     (this.pins as any).attach?.(this.map);
     (this.choro as any).attach?.(this.map);

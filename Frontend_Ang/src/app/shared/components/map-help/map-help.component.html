@@ -1,0 +1,52 @@
+<!-- Botón de información, fijo arriba-izquierda bajo el header -->
+<button
+  *ngIf="showInfoButton"
+  mat-raised-button
+  class="map-info-btn"
+  (click)="onInfoClick()"
+>
+  <lucide-icon name="info"></lucide-icon>
+  <span>Sobre MadHousing</span>
+</button>
+
+<!-- Diálogo con el tutorial -->
+<ng-template #helpDialog>
+  <mat-card class="map-help-card">
+    <div class="map-help-header">
+      <h2>Cómo usar MadHousing</h2>
+      <button mat-icon-button mat-dialog-close>
+        <lucide-icon name="x"></lucide-icon>
+      </button>
+    </div>
+
+    <div class="map-help-body">
+      <p>
+        Aquí tienes una pequeña guía rápida para usar la aplicación:
+      </p>
+      <ul>
+        <li>
+          Usa la barra superior para abrir los menús:
+          <strong>Favoritos, Historial, Estadísticas, Comparador</strong> y
+          el <strong>Buscador</strong>.
+        </li>
+        <li>Muevete por el mapa con el click izquierdo, y rota el mapa con el derecho.</li>
+        <li>Para buscar pisos deberás usar el menú superior de <strong> Buscador </strong>, 
+        aplicando los filtros y zonas que más desees.</li>
+        <li>En la parte superior izquierda verás tres iconos, que representan tres tipos de mapas:</li>
+        <ul>
+          <li>Mapa <strong> Coroplético</strong> representado por las tres capas, muestra las zonas de la comunidad de madrid por el <strong>valor medio</strong> de una zona.</li>
+          <li><strong>Mapa de calor</strong>, es el que viene seleccionado de base y representa la cantidad de pisos en una zona, cuanto más pisos hay, más rojo se vuelve la zona.</li>
+          <li>Mapa de <strong>chinchetas</strong>, el cual te mostrará la ubicación del piso y sus datos al clickar sobre el.</li>
+        </ul>
+        <li>Para consultar los datos de los colores del <strong> mapa Coroplético</strong>, deberás pulsar el botón de leyenda situado abajo a la izquierda</li>
+        <li>
+          El botón de la escoba limpia el mapa y el de la brújula orienta al norte.
+        </li>
+      </ul>
+    </div>
+
+    <div class="map-help-actions">
+      <button mat-stroked-button mat-dialog-close>Cerrar</button>
+    </div>
+  </mat-card>
+</ng-template>

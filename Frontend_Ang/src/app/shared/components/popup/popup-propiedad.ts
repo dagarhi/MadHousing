@@ -6,6 +6,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { Propiedad } from '../../../core/models/propiedad.model';
 import { FavoritosService } from '../../../core/services/favoritos.service';
 import { MapService } from '../../../core/services/map.service';
+import { PALETTE_RDYLGN, BACKEND_SCORE_DOMAIN, interpolatePalette} from '../../../core/styles/score-colors';
 
 @Component({
   selector: 'app-popup-propiedad',
@@ -52,6 +53,44 @@ export class PopupPropiedadComponent implements OnInit, OnDestroy {
     if (op === 'rent') return 'Alquiler';
     if (op === 'sale') return 'Venta';
     return op;
+  }
+  private asNum(v: any): number | undefined {
+    if (typeof v === 'number') return Number.isFinite(v) ? v : undefined;
+    if (v == null) return undefined;
+    const n = Number(String(v).trim().replace(',', '.'));
+    return Number.isFinite(n) ? n : undefined;
+  }
+
+
+  get displayScore(): number | null {
+    if (!this.piso) return null;
+    const raw = this.piso.score ?? this.piso.score_intrinseco;
+    const s = this.asNum(raw);
+    return s ?? null;
+  }
+
+
+  get scoreBgColor(): string | null {
+    const s = this.displayScore;
+    if (s == null) return null;
+
+    const domain = BACKEND_SCORE_DOMAIN;
+    const tRaw = (s - domain.min) / (domain.max - domain.min || 1);
+    const t = Math.max(0, Math.min(1, tRaw)); 
+
+    return interpolatePalette(PALETTE_RDYLGN, t);
+  }
+
+
+  get scoreTextColor(): string {
+    const s = this.displayScore;
+    if (s == null) return '#111827';
+
+    const domain = BACKEND_SCORE_DOMAIN;
+    const tRaw = (s - domain.min) / (domain.max - domain.min || 1);
+    const t = Math.max(0, Math.min(1, tRaw));
+
+    return t < 0.45 ? '#111827' : '#f9fafb';
   }
   onClosePopup(): void {
     this.mapSvc.cerrarPopup();
