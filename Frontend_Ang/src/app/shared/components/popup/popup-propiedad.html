@@ -25,6 +25,18 @@
 
     </div>
   </div>
+  <div class="score" *ngIf="displayScore !== null">
+    <span class="score-label">Score</span>
+    <span
+      class="score-value"
+      [ngStyle]="{
+        'background-color': scoreBgColor,
+        'color': scoreTextColor
+      }"
+    >
+      {{ displayScore | number:'1.0-0' }} / 100
+    </span>
+  </div>
 
   <div class="main">
     <div class="price">

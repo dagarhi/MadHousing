@@ -13,7 +13,7 @@
 
   .toggle {
     background: var(--mat-sys-primary);
-    color: var(--mat-sys-on-primary);
+    color: black;
     border: none;
     border-radius: 50%;
     width: 40px;
@@ -35,13 +35,13 @@
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     padding: 0.75rem 1rem;
-    width: 200px;
+    width: 500px;
     transition: all 0.25s ease;
-    font-size: 0.85rem;
+    font-size: 1rem;
 
     h4 {
       margin: 0 0 0.5rem;
-      font-size: 0.9rem;
+      font-size: 1.5rem;
       font-weight: 600;
     }
 
