@@ -1,21 +1,27 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { EstadisticasGlobales } from '../models/estadistica.model';
+
+export interface ChartDataPoint {
+  zona: string;
+  valor: number;
+}
 
 @Injectable({ providedIn: 'root' })
 export class EstadisticasService {
   private baseUrl = `${environment.apiBaseUrl}/estadisticas-globales`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
-  obtenerGlobales(): Observable<any> {
-    return this.http.get(this.baseUrl);
+  obtenerGlobales(): Observable<EstadisticasGlobales> {
+    return this.http.get<EstadisticasGlobales>(this.baseUrl);
   }
 
-  obtenerDatosPorOperacion(stats: any, tipo: 'sale' | 'rent', metrica: string) {
+  obtenerDatosPorOperacion(stats: EstadisticasGlobales, tipo: 'sale' | 'rent', metrica: string): ChartDataPoint[] {
     return Object.entries(stats)
-      .map(([zona, valores]: any) => ({
+      .map(([zona, valores]) => ({
         zona,
         valor: Number(valores?.[tipo]?.[metrica] ?? 0),
       }))

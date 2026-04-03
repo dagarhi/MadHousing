@@ -49,7 +49,6 @@ export class PinsLayerService implements OnDestroy {
   private visible = true;
   private selectedId?: string;
 
-  // Mantenemos datos mínimos para cada pin
   private dataById = new Map<string, PinData>();
   private attached = false;
   private lastPopupPropertyCode?: string;
@@ -57,18 +56,15 @@ export class PinsLayerService implements OnDestroy {
   constructor(
     private readonly mapSvc: MapService,
     private readonly popupSvc: PopupPropiedadService,
-  ) {}
+  ) { }
 
-  // Se llama desde el MapLayerManager en el init
   attach(map?: maplibregl.Map) {
-    this.map = map ?? (this.mapSvc as any).getMap?.() ?? this.map;
+    this.map = map ?? this.mapSvc.getMap() ?? this.map;
     if (!this.map) return;
 
     const hasSource = !!this.map.getSource(this.sourceId);
-    const hasLayer  = !!this.map.getLayer(this.layerId);
+    const hasLayer = !!this.map.getLayer(this.layerId);
 
-    // Si creemos que estamos adjuntos pero el estilo ha volado la capa/source,
-    // limpiamos y forzamos a reconstruir
     if (this.attached && (!hasSource || !hasLayer)) {
       if (hasLayer) {
         this.map.off('click', this.layerId, this.handleClick);
@@ -82,10 +78,8 @@ export class PinsLayerService implements OnDestroy {
       this.attached = false;
     }
 
-    // Si ya está todo creado y sigue en el estilo, no hacemos nada
     if (this.attached) return;
 
-    // 1) Fuente GeoJSON vacía
     if (!this.map.getSource(this.sourceId)) {
       this.map.addSource(this.sourceId, {
         type: 'geojson',
@@ -93,10 +87,9 @@ export class PinsLayerService implements OnDestroy {
           type: 'FeatureCollection',
           features: [],
         },
-      } as any);
+      });
     }
 
-    // 2) Capa symbol con los iconos
     if (!this.map.getLayer(this.layerId)) {
       this.map.addLayer({
         id: this.layerId,
@@ -112,10 +105,9 @@ export class PinsLayerService implements OnDestroy {
           'icon-size': 0.9,
           'icon-allow-overlap': true,
         },
-      } as any);
+      });
     }
 
-    // Eventos de interacción
     this.map.on('click', this.layerId, this.handleClick);
     this.map.on('mouseenter', this.layerId, this.handleMouseEnter);
     this.map.on('mouseleave', this.layerId, this.handleMouseLeave);
@@ -153,7 +145,6 @@ export class PinsLayerService implements OnDestroy {
     this.map.setLayoutProperty(this.layerId, 'visibility', visible ? 'visible' : 'none');
   }
 
-  // Sobrecarga como ya tenías: render(map, pisos, opts) o render(pisos, opts)
   render(map: maplibregl.Map, pisos: Propiedad[], opts?: PinsOptions): void;
   render(pisos: Propiedad[], opts?: PinsOptions): void;
   render(a: any, b?: any, c?: any): void {
@@ -168,17 +159,15 @@ export class PinsLayerService implements OnDestroy {
     this.mapSvc.cerrarPopup();
     this.options = { ...this.options, ...opts };
 
-    // Guardamos todos los pisos en el mapa interno
     this.dataById.clear();
     for (const p of pisos ?? []) {
-      const id = (p as any).propertyCode as string;
+      const id = p.propertyCode;
       if (!id) continue;
       const coord = this.getLngLat(p);
       if (!coord) continue;
       this.dataById.set(id, { propiedad: p, coord });
     }
 
-    // Actualizamos la fuente GeoJSON a partir de dataById
     this.rebuildSourceFromData();
     this.syncLayerStyle();
     this.setVisible(this.visible);
@@ -188,24 +177,19 @@ export class PinsLayerService implements OnDestroy {
     this.render(pisos, opts);
   }
 
-  // ========= Métodos usados por otros componentes =========
-
-  // Para saber si un pin ya está pintado (favoritos)
   hasPin(propertyCode: string): boolean {
     return this.dataById.has(propertyCode);
   }
 
-  // Añadir un único pin (por ejemplo desde el drawer de favoritos)
   addOne(
-    p: Propiedad | any,
+    p: Propiedad,
     options?: { fly?: boolean; zoom?: number; openPopup?: boolean },
   ): boolean {
     if (!this.map) return false;
 
-    const id = (p as any).propertyCode as string;
+    const id = p.propertyCode;
     if (!id) return false;
 
-    // Si ya existe, opcionalmente solo hacemos focus
     if (this.dataById.has(id)) {
       if (options?.fly) {
         this.focusOn(id, options.zoom, options.openPopup ?? false);
@@ -213,13 +197,10 @@ export class PinsLayerService implements OnDestroy {
       return false;
     }
 
-    const coord = this.getLngLat(p as Propiedad);
+    const coord = this.getLngLat(p);
     if (!coord) return false;
 
-    this.dataById.set(id, {
-      propiedad: p as Propiedad,
-      coord,
-    });
+    this.dataById.set(id, { propiedad: p, coord });
 
     this.rebuildSourceFromData();
 
@@ -230,7 +211,6 @@ export class PinsLayerService implements OnDestroy {
     return true;
   }
 
-  // Sigue existiendo para favoritos, etc.
   setSelected(propertyCode?: string) {
     this.selectedId = propertyCode;
     this.syncLayerStyle();
@@ -278,8 +258,6 @@ export class PinsLayerService implements OnDestroy {
     this.map.fitBounds(bounds, { padding, duration: 600 });
   }
 
-  // ========= Reconstruir fuente GeoJSON a partir de dataById =========
-
   private rebuildSourceFromData() {
     if (!this.map) return;
     const src = this.map.getSource(this.sourceId) as maplibregl.GeoJSONSource | undefined;
@@ -300,13 +278,8 @@ export class PinsLayerService implements OnDestroy {
       });
     }
 
-    src.setData({
-      type: 'FeatureCollection',
-      features,
-    } as any);
+    src.setData({ type: 'FeatureCollection', features });
   }
-
-  // ========= Eventos de mapa =========
 
   private handleClick = (e: any) => {
     if (!this.map || !e.features?.length) return;
@@ -328,38 +301,22 @@ export class PinsLayerService implements OnDestroy {
     this.map.getCanvas().style.cursor = '';
   };
 
-  // ========= Estilo de la capa (color + seleccionado) =========
-
   private syncLayerStyle() {
     if (!this.map || !this.map.getLayer(this.layerId)) return;
 
     const sizeExpr: any = this.selectedId
-      ? [
-          'case',
-          ['==', ['get', 'id'], this.selectedId],
-          1.1,  
-          0.9,  
-        ]
+      ? ['case', ['==', ['get', 'id'], this.selectedId], 1.1, 0.9]
       : 0.9;
     this.map.setLayoutProperty(this.layerId, 'icon-size', sizeExpr);
   }
 
-  // ========= Utilidades =========
-
   private getLngLat(p: Propiedad): LngLat | null {
-    const lat = Number(p.latitude ?? (p as any).lat ?? p.location?.lat);
-    const lon = Number(
-      p.longitude ??
-        (p as any).lng ??
-        (p as any).lon ??
-        p.location?.lng ??
-        p.location?.lon,
-    );
+    const lat = Number(p.latitude ?? p.location?.lat);
+    const lon = Number(p.longitude ?? p.location?.lng ?? p.location?.lon);
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
     return [lon, lat];
   }
 
-  // Popup HTML de fallback (por si algún día quieres usar popupBuilder)
   private defaultPopupHTML(p: Propiedad) {
     const precio = (p.price ?? 0).toLocaleString('es-ES', {
       style: 'currency',
@@ -367,15 +324,8 @@ export class PinsLayerService implements OnDestroy {
       maximumFractionDigits: 0,
     });
     const tam = p.size ? `${p.size} m²` : '';
-    const dir = [p.address, p.neighborhood, p.district, p.city]
-      .filter(Boolean)
-      .join(' · ');
-    const tipo =
-      p.operation === 'rent'
-        ? 'Alquiler'
-        : p.operation === 'sale'
-        ? 'Venta'
-        : '—';
+    const dir = [p.address, p.neighborhood, p.district, p.city].filter(Boolean).join(' · ');
+    const tipo = p.operation === 'rent' ? 'Alquiler' : p.operation === 'sale' ? 'Venta' : '—';
     const url = p.url ?? '#';
 
     return `
@@ -385,11 +335,7 @@ export class PinsLayerService implements OnDestroy {
           <div class="tipo">${tipo}${tam ? ' · ' + tam : ''}</div>
         </div>
         <div class="direccion">${dir}</div>
-        ${
-          url !== '#'
-            ? `<a class="link" href="${url}" target="_blank" rel="noopener">Ver anuncio</a>`
-            : ''
-        }
+        ${url !== '#' ? `<a class="link" href="${url}" target="_blank" rel="noopener">Ver anuncio</a>` : ''}
       </div>
     `;
   }

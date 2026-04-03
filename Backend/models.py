@@ -1,7 +1,9 @@
 from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Text, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
-from datetime import datetime
+from sqlalchemy.orm import declarative_base, relationship
+from datetime import datetime, timezone
+
+def _utcnow():
+    return datetime.now(timezone.utc)
 
 Base = declarative_base()
 
@@ -30,10 +32,9 @@ class Propiedad(Base):
     score_zona = Column(Float)
     score_planta = Column(Float)
     score_final = Column(Float)
-    fecha_obtencion = Column(DateTime, default=datetime.now)
-    fecha_actualizacion = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    fecha_obtencion = Column(DateTime, default=_utcnow)
+    fecha_actualizacion = Column(DateTime, default=_utcnow, onupdate=_utcnow)
     city = Column(String(100))
-    address = Column(String(255))
 
     def as_dict(self):
         return {
@@ -70,11 +71,10 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, index=True, nullable=False)
     password_hash = Column(String(128), nullable=False)
-    profile = Column(String(50), nullable=True)  # "novato", "intermedio", "avanzado" o lo que quieras
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    profile = Column(String(50), nullable=True)
+    created_at = Column(DateTime, default=_utcnow)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
 
-    # Relaciones de conveniencia (opcional pero muy útil)
     favorites = relationship("Favorite", back_populates="user", cascade="all, delete-orphan")
     search_history = relationship("SearchHistory", back_populates="user", cascade="all, delete-orphan")
 
@@ -85,9 +85,8 @@ class Favorite(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     property_code = Column(String(50), ForeignKey("propiedades.propertyCode"), nullable=False)
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=_utcnow)
 
-    # Relaciones
     user = relationship("User", back_populates="favorites")
     propiedad = relationship("Propiedad")
 
@@ -97,8 +96,7 @@ class SearchHistory(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    # Puedes guardar los parámetros de búsqueda en JSON (texto) o desglosados en columnas
-    query = Column(Text, nullable=True)  # por ejemplo un JSON con la búsqueda
-    created_at = Column(DateTime, default=datetime.now)
+    query = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=_utcnow)
 
     user = relationship("User", back_populates="search_history")

@@ -13,13 +13,13 @@ def get_heatmap(
     operation: str = Query("rent", pattern="^(rent|sale)$"),
     cell_size: float = Query(0.01, gt=0.0001, le=1.0),
     min_count: int = Query(1, ge=1),
-    db: Session = Depends(get_db),   # ✅ usa la sesión del dependency
+    db: Session = Depends(get_db),
 ):
     """
-    Devuelve celdas geográficas (lat/lon) agregadas:
-    - lat, lon: centro de la celda
-    - count: nº de pisos
-    - avg_score: score_intrinseco medio (0..100)
+    Returns aggregated geographical cells (lat/lon):
+    - lat, lon: cell center
+    - count: number of properties
+    - avg_score: average intrinsic score (0..100)
     """
     lat_bucket = func.floor(Propiedad.latitude / cell_size)
     lon_bucket = func.floor(Propiedad.longitude / cell_size)

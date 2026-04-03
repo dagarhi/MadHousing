@@ -19,24 +19,18 @@ from passlib.context import CryptContext
 import os
 import json
 
-# --------------------------------------------------------------
-#                 CONFIGURACIÓN AUTENTICACIÓN
-# --------------------------------------------------------------
-
+# --- Auth Configuration ---
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "cambia-esto-en-produccion")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60  # minutos
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
-
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
-
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
-
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
@@ -45,11 +39,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-
 class LoginRequest(BaseModel):
     username: str
     password: str
-
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -59,19 +51,16 @@ class TokenResponse(BaseModel):
     profile: Optional[str] = None
 
 class FavoriteCreate(BaseModel):
-    property_code: str  # el propertyCode del piso
-
+    property_code: str
 
 class FavoriteOut(BaseModel):
     id: int
     property_code: str
     created_at: datetime
-    propiedad: dict  # devolveremos el as_dict() de la propiedad
-
+    propiedad: dict
 
 class SearchHistoryCreate(BaseModel):
-    query: dict  # aquí meterás los parámetros de búsqueda del frontend
-
+    query: dict
 
 class SearchHistoryOut(BaseModel):
     id: int
@@ -82,21 +71,20 @@ security = HTTPBearer(auto_error=False)
 app = FastAPI(title="Buscador de Pisos API", version="5.0.0")
 app.include_router(heatmap_router)
 
-# --- Configuración CORS para frontend Angular ---
+# --- CORS Configuration ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:4200",
         "http://127.0.0.1:4200",
-        "*",  # si quieres limitarlo más, quita este
+        "*", 
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-# --- Funciones auxiliares ---
+# --- Helper Functions ---
 
 def distancia_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calcula la distancia entre dos coordenadas (km)."""
@@ -106,32 +94,19 @@ def distancia_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
     return 2 * R * asin(sqrt(a))
 
-
 def db_from_request(request: Request):
-    """
-    En esta versión siempre usamos la BD principal.
-    Si en tu database.py mantienes soporte para 'prod'/'test',
-    adapta esta función para pasar el modo correspondiente.
-    """
     yield from get_db()
-
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(db_from_request),
 ):
-    """
-    Extrae el token Bearer del header Authorization usando HTTPBearer,
-    valida el JWT y devuelve el usuario autenticado.
-    """
-    # 1) ¿Ha llegado algo en el header Authorization?
+    """validates JWT and returns current user"""
     if credentials is None:
         raise HTTPException(status_code=401, detail="Token de autenticación no enviado")
 
-    # HTTPBearer ya comprueba que el esquema sea "Bearer"
     token = credentials.credentials
 
-    # 2) Decodificar JWT
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: int = payload.get("user_id")
@@ -141,22 +116,14 @@ def get_current_user(
     except JWTError:
         raise HTTPException(status_code=401, detail="Token inválido")
 
-    # 3) Buscar usuario en BD
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
 
     return user
 
-
 def seed_default_users():
-    """
-    Crea las 3 cuentas por defecto si no existen:
-
-    - novato / novato123
-    - intermedio / intermedio123
-    - avanzado / avanzado123
-    """
+    """Creates default users if they don't exist"""
     gen = get_db()
     db = next(gen)
     try:
@@ -184,31 +151,19 @@ def seed_default_users():
         except StopIteration:
             pass
 
-
 @app.on_event("startup")
 def on_startup():
-    """Inicializa las tablas y crea los usuarios por defecto."""
     init_db()
     seed_default_users()
     print("✅ Base de datos inicializada correctamente")
 
-
-# --------------------------------------------------------------
-#                       AUTENTICACIÓN
-# --------------------------------------------------------------
+# --- Authentication ---
 
 @app.post("/auth/login", response_model=TokenResponse)
 def login(
     credentials: LoginRequest,
     db: Session = Depends(db_from_request),
 ):
-    """
-    Login sencillo con JSON:
-    {
-        "username": "novato",
-        "password": "novato123"
-    }
-    """
     user = db.query(User).filter(User.username == credentials.username).first()
     if not user:
         raise HTTPException(status_code=400, detail="Usuario o contraseña incorrectos")
@@ -227,17 +182,12 @@ def login(
         profile=user.profile,
     )
 
-
-# --------------------------------------------------------------
-#                 ENDPOINTS PRINCIPALES EXISTENTES
-# --------------------------------------------------------------
+# --- Property Endpoints ---
 
 @app.get("/")
 def read_root():
     return {"message": "🏠 API Buscador de Pisos dinámica", "status": "active"}
 
-
-# 🔍 Buscar propiedades (sin zonas predefinidas)
 @app.get("/buscar")
 def buscar_propiedades(
     municipio: str = Query(..., description="Municipio (obligatorio)"),
@@ -254,35 +204,19 @@ def buscar_propiedades(
     per_page: int = Query(20, le=100),
     db: Session = Depends(db_from_request),
 ):
-    """
-    Busca propiedades filtrando por municipio, distrito y barrio usando
-    los campos city, district y neighborhood de la tabla Propiedad.
-
-    - municipio: filtra por city (obligatorio).
-    - distrito: refina por district (opcional).
-    - barrio: refina por neighborhood (opcional).
-
-    Además aplica filtros numéricos (precio, tamaño, habitaciones, ascensor) y paginación.
-    """
-    # Normalizar a minúsculas / quitar espacios
+    """Search properties with filters and pagination."""
     municipio = municipio.strip().lower()
     distrito = distrito.strip().lower() if distrito else None
     barrio = barrio.strip().lower() if barrio else None
 
     query = db.query(Propiedad).filter(Propiedad.operation == operation)
-
-    # 1) Filtro base: municipio (city)
     query = query.filter(Propiedad.city.ilike(f"%{municipio}%"))
 
-    # 2) Refinar por distrito si viene
     if distrito:
         query = query.filter(Propiedad.district.ilike(f"%{distrito}%"))
-
-    # 3) Refinar por barrio si viene
     if barrio:
         query = query.filter(Propiedad.neighborhood.ilike(f"%{barrio}%"))
 
-    # Filtros numéricos
     if min_price is not None:
         query = query.filter(Propiedad.price >= min_price)
     if max_price is not None:
@@ -303,7 +237,6 @@ def buscar_propiedades(
     fin = inicio + per_page
     props_page = props_filtradas[inicio:fin]
 
-    # Estadísticas básicas
     precios = [p.price for p in props_filtradas if p.price is not None]
     tamanos = [p.size for p in props_filtradas if p.size is not None]
     scores = [p.score_intrinseco for p in props_filtradas if p.score_intrinseco is not None]
@@ -335,18 +268,10 @@ def buscar_propiedades(
         "stats": stats,
     }
 
-
-# 🌍 Zonas jerárquicas automáticas (para el buscador)
 @app.get("/zonas-jerarquicas")
 def obtener_zonas_jerarquicas(
-    operation: Optional[str] = Query(
-        None,
-        description="Filtrar zonas que tienen al menos una propiedad de este tipo de operación (rent/sale)"
-    ),
-    municipio: Optional[str] = Query(
-        None,
-        description="Filtrar por municipio (city) si se desea"
-    ),
+    operation: Optional[str] = Query(None),
+    municipio: Optional[str] = Query(None),
     db: Session = Depends(db_from_request),
 ):
     jerarquia = defaultdict(lambda: defaultdict(set))
@@ -357,11 +282,8 @@ def obtener_zonas_jerarquicas(
         Propiedad.neighborhood,
     ).distinct()
 
-    # 🔹 Filtrado por operación (rent / sale)
     if operation:
         query = query.filter(Propiedad.operation == operation)
-
-    # 🔹 Filtrado por municipio si lo quieres limitar (ej. "madrid")
     if municipio:
         muni_norm = municipio.strip().lower()
         query = query.filter(Propiedad.city.ilike(f"%{muni_norm}%"))
@@ -378,7 +300,6 @@ def obtener_zonas_jerarquicas(
 
         jerarquia[city][district].add(neighborhood)
 
-    # Convertir sets a listas ordenadas
     result = {}
     for city, distritos in jerarquia.items():
         result[city] = {}
@@ -388,7 +309,6 @@ def obtener_zonas_jerarquicas(
 
     return result
 
-# 🌐 Buscar todo (sin filtros de zona)
 @app.get("/buscar-todo")
 def buscar_todo(
     operation: Optional[str] = Query(None),
@@ -412,13 +332,9 @@ def buscar_todo(
         "origen": "base_local",
     }
 
-
-# 📊 Estadísticas globales agrupadas por distrito
 @app.get("/estadisticas-globales")
 def estadisticas_por_zona(db: Session = Depends(db_from_request)):
     props = db.query(Propiedad).all()
-
-    # zona -> op -> [propiedades]
     agrupado = defaultdict(lambda: defaultdict(list))
 
     for p in props:
@@ -446,19 +362,13 @@ def estadisticas_por_zona(db: Session = Depends(db_from_request)):
 
     return resultado
 
-# --------------------------------------------------------------
-#                      FAVORITOS POR USUARIO
-# --------------------------------------------------------------
+# --- Favorites ---
 
 @app.get("/favoritos", response_model=List[FavoriteOut])
 def listar_favoritos(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(db_from_request),
 ):
-    """
-    Devuelve la lista de favoritos del usuario autenticado,
-    incluyendo los datos de la propiedad.
-    """
     favoritos = (
         db.query(Favorite, Propiedad)
         .join(Propiedad, Favorite.property_code == Propiedad.propertyCode)
@@ -486,14 +396,10 @@ def crear_favorito(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(db_from_request),
 ):
-    """
-    Crea un favorito para el usuario autenticado a partir de un property_code.
-    """
     prop = db.query(Propiedad).filter(Propiedad.propertyCode == body.property_code).first()
     if not prop:
         raise HTTPException(status_code=404, detail="Propiedad no encontrada")
 
-    # Evitar duplicados (opcional pero recomendable)
     existente = (
         db.query(Favorite)
         .filter(
@@ -503,7 +409,6 @@ def crear_favorito(
         .first()
     )
     if existente:
-        # Ya existía, simplemente lo devolvemos
         return FavoriteOut(
             id=existente.id,
             property_code=existente.property_code,
@@ -532,9 +437,6 @@ def eliminar_favorito(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(db_from_request),
 ):
-    """
-    Elimina un favorito del usuario autenticado.
-    """
     fav = (
         db.query(Favorite)
         .filter(
@@ -551,18 +453,13 @@ def eliminar_favorito(
     db.commit()
     return
 
-# --------------------------------------------------------------
-#                  HISTORIAL DE BÚSQUEDAS POR USUARIO
-# --------------------------------------------------------------
+# --- History ---
 
 @app.get("/historial", response_model=List[SearchHistoryOut])
 def listar_historial(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(db_from_request),
 ):
-    """
-    Devuelve el historial de búsqueda del usuario autenticado.
-    """
     registros = (
         db.query(SearchHistory)
         .filter(SearchHistory.user_id == current_user.id)
@@ -591,10 +488,6 @@ def crear_historial(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(db_from_request),
 ):
-    """
-    Crea una nueva entrada de historial para el usuario autenticado.
-    'query' puede ser cualquier dict con los filtros usados en la búsqueda.
-    """
     r = SearchHistory(
         user_id=current_user.id,
         query=json.dumps(body.query),
@@ -615,9 +508,6 @@ def eliminar_historial(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(db_from_request),
 ):
-    """
-    Elimina una entrada del historial del usuario autenticado.
-    """
     r = (
         db.query(SearchHistory)
         .filter(
@@ -633,7 +523,6 @@ def eliminar_historial(
     db.delete(r)
     db.commit()
     return
-
 
 if __name__ == "__main__":
     import uvicorn

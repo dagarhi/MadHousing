@@ -6,13 +6,9 @@ from models import Propiedad
 from services.idealista_api import IdealistaAPI
 from services.scoring import valoracion_intrinseca, generar_huella_digital
 
-
-
-# Zonas y operaciones a actualizar (igual que tu script actual)
 ZONAS = ["madrid", "alcorcon"]
 OPERACIONES = ["rent", "sale"]
 
-# Coordenadas predefinidas (copiado de main.py)
 CENTROS = {
     "madrid": ("40.4168,-3.7038", 10000),
     "alcorcon": ("40.3459,-3.8249", 5000),
@@ -24,13 +20,41 @@ CENTROS = {
     "bellasvistas": ("40.4489,-3.7088", 3000),
 }
 
+CITY_CORRECTIONS = {
+    "mostol": "mostoles",
+    "alcorcon": "alcorcon",
+    "fuenlabrad": "fuenlabrada",
+    "getafe": "getafe",
+    "leganes": "leganes",
+    "pozuelo": "pozuelo de alarcon",
+    "roz": "las rozas de madrid",
+    "alcobend": "alcobendas",
+    "parla": "parla",
+    "coslada": "coslada",
+    "torrejon": "torrejon de ardoz",
+    "san sebastian": "san sebastian de los reyes",
+    "alcala": "alcala de henares",
+    "rivas": "rivas vaciamadrid",
+    "majadahonda": "majadahonda",
+    "boadilla": "boadilla del monte",
+    "arroyomolinos": "arroyomolinos",
+    "villaviciosa": "villaviciosa de odon",
+}
+
+def normalise_city(city_val: str, district_val: str, neigh_val: str) -> str:
+    if city_val.lower() != "madrid":
+        return city_val
+    txt = f"{district_val} {neigh_val}".lower()
+    for key, corrected in CITY_CORRECTIONS.items():
+        if key in txt:
+            return corrected
+    return city_val
 
 def seed_zona(db, api: IdealistaAPI, zona: str, operation: str):
-    """Replica la lógica de /seed-idealista pero sin FastAPI."""
+    """Fetches data from Idealista for a given zone and operation, saving it to the DB."""
     center, distance_m = CENTROS.get(zona.lower(), ("40.4168,-3.7038", 8000))
     print(f"   → centro={center} distancia={distance_m}m (zona={zona}, op={operation})")
 
-    # Idealista usa km en el parámetro distance (como en tu main.py)
     datos = api.search_by_area(
         center=center,
         distance=distance_m,
@@ -49,51 +73,13 @@ def seed_zona(db, api: IdealistaAPI, zona: str, operation: str):
         if lat is None or lon is None:
             continue
 
-        # --- Corrección del municipio (copiado de main.py) ---
+        # Correct municipality names
         city_val = e.get("municipality") or ""
         district_val = e.get("district") or ""
         neigh_val = e.get("neighborhood") or ""
 
-        if city_val.lower() == "madrid":
-            txt = f"{district_val} {neigh_val}".lower()
-            if "mostol" in txt:
-                city_val = "mostoles"
-            elif "alcorcon" in txt:
-                city_val = "alcorcon"
-            elif "fuenlabrad" in txt:
-                city_val = "fuenlabrada"
-            elif "getafe" in txt:
-                city_val = "getafe"
-            elif "leganes" in txt:
-                city_val = "leganes"
-            elif "pozuelo" in txt:
-                city_val = "pozuelo de alarcon"
-            elif "roz" in txt:
-                city_val = "las rozas de madrid"
-            elif "alcobend" in txt:
-                city_val = "alcobendas"
-            elif "parla" in txt:
-                city_val = "parla"
-            elif "coslada" in txt:
-                city_val = "coslada"
-            elif "torrejon" in txt:
-                city_val = "torrejon de ardoz"
-            elif "san sebastian" in txt:
-                city_val = "san sebastian de los reyes"
-            elif "alcala" in txt:
-                city_val = "alcala de henares"
-            elif "rivas" in txt:
-                city_val = "rivas vaciamadrid"
-            elif "majadahonda" in txt:
-                city_val = "majadahonda"
-            elif "boadilla" in txt:
-                city_val = "boadilla del monte"
-            elif "arroyomolinos" in txt:
-                city_val = "arroyomolinos"
-            elif "villaviciosa" in txt:
-                city_val = "villaviciosa de odon"
+        city_val = normalise_city(city_val, district_val, neigh_val)
 
-        # --- Mapeo Idealista → modelo Propiedad (igual que en main.py) ---
         payload = {
             "propertyCode": str(e.get("propertyCode", "")),
             "price": e.get("price", 0),
@@ -104,7 +90,7 @@ def seed_zona(db, api: IdealistaAPI, zona: str, operation: str):
             "address": e.get("address", ""),
             "district": district_val,
             "neighborhood": neigh_val,
-            "city": city_val,   # 👈 municipio normalizado
+            "city": city_val,
             "latitude": lat,
             "longitude": lon,
             "hasLift": e.get("hasLift", False),
@@ -116,7 +102,6 @@ def seed_zona(db, api: IdealistaAPI, zona: str, operation: str):
         if not payload["propertyCode"]:
             continue
 
-        # Enriquecer con huella y score (como en main.py)
         payload["huella_digital"] = generar_huella_digital(payload)
         payload["score_intrinseco"] = valoracion_intrinseca(payload)
         payload["fecha_actualizacion"] = datetime.now()
@@ -147,9 +132,7 @@ def seed_zona(db, api: IdealistaAPI, zona: str, operation: str):
 
 
 def main():
-    # Asegurar tablas
     init_db()
-
     api = IdealistaAPI()
 
     total_calls = len(ZONAS) * len(OPERACIONES)
@@ -173,7 +156,6 @@ def main():
             finally:
                 db.close()
 
-            # Pausa para no ser agresivos con Idealista
             time.sleep(5)
 
     print("\n🎯 Actualización completada.\n")

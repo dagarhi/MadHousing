@@ -12,6 +12,10 @@ export type Modo = 'coropletico' | 'heat' | 'chinchetas';
 type ChoroAggMode = 'count' | 'avgPrice' | 'avgUnitPrice' | 'avgScore';
 type ChoroOp = 'venta' | 'alquiler' | 'all';
 
+interface attachableLayer {
+  attach?(map: maplibregl.Map): void;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MapLayerManager {
   private map?: maplibregl.Map;
@@ -21,14 +25,14 @@ export class MapLayerManager {
   private choroIdField: string = 'CODIGOINE';
   private choroMetric: ChoroAggMode = 'avgScore';
   private choroOperation: ChoroOp = 'all';
-  readonly bearing$ = new BehaviorSubject<number>(0); 
+  readonly bearing$ = new BehaviorSubject<number>(0);
 
   constructor(
     private readonly mapSvc: MapService,
     private readonly heat: HeatValueMapService,
     private readonly pins: PinsLayerService,
     private readonly choro: ChoroplethLayerService,
-  ) {}
+  ) { }
 
   async init(container: HTMLElement) {
     await this.mapSvc.initMap(container);
@@ -39,13 +43,11 @@ export class MapLayerManager {
       if (!this.map) return;
       this.bearing$.next(this.map.getBearing() ?? 0);
     });
-    
-    (this.heat as any).attach?.(this.map);
-    (this.pins as any).attach?.(this.map);
-    (this.choro as any).attach?.(this.map);
-    if (typeof window !== 'undefined') {
-      (window as any).map = this.map;
-    }
+
+    // Safely attach sub-services
+    (this.heat as unknown as attachableLayer).attach?.(this.map);
+    (this.pins as unknown as attachableLayer).attach?.(this.map);
+    (this.choro as unknown as attachableLayer).attach?.(this.map);
   }
 
   setMode(m: Modo) {
@@ -53,6 +55,7 @@ export class MapLayerManager {
     this.mode = m;
     this.render();
   }
+
   setData(pisos: Propiedad[]) {
     this.data = Array.isArray(pisos) ? pisos : [];
     this.render();
@@ -61,7 +64,6 @@ export class MapLayerManager {
   private render() {
     if (!this.map) return;
 
-    // Oculta todo por defecto
     this.choro.setVisible(false);
     this.heat.setVisible(false);
     this.pins.setVisible(false);
@@ -75,9 +77,9 @@ export class MapLayerManager {
         this.heat.render(this.data, {
           highOnTop: true,
           radiusRange: { min: 18, max: 38 },
-          opacity: 0.8,                     
-          blur: 0.2,    
-          maxZoom: 24,                     
+          opacity: 0.8,
+          blur: 0.2,
+          maxZoom: 24,
         });
         break;
       }
@@ -123,38 +125,39 @@ export class MapLayerManager {
   clearAll(): void {
     if (!this.map) return;
 
-    // 0) Vacía el snapshot para que no se re-pinte al siguiente render
     this.data = [];
-
-    // 1) Cierra popups y markers “legacy” del MapService (por si se usaron)
     this.mapSvc.cerrarPopup?.();
     this.mapSvc.limpiarMarkers?.();
     this.mapSvc.clearChoropleth?.();
 
-    // 2) Pide a cada servicio que limpie lo suyo (lo hace mejor que por prefijo)
     this.pins.clear();
     this.heat.clear();
     this.choro.clear();
 
-    // 3) Como extra, quita cualquier popup suelto del DOM
     document.querySelectorAll('.maplibregl-popup').forEach(el => el.remove());
-
-    // 4) Fallback: barre capas/sources residuales por prefijo
-    const style = this.map.getStyle();
-    const layerIds = (style?.layers ?? []).map(l => l.id);
-    for (const id of layerIds) {
-      if (/^(heat|heat-value|choropleth-|choro-|pins|pin-)/i.test(id) && this.map.getLayer(id)) {
-        try { this.map.removeLayer(id); } catch {}
-      }
-    }
-    const sourceIds = Object.keys(style?.sources ?? {});
-    for (const id of sourceIds) {
-      if (/^(heat|heat-value|choropleth-|choro-|pins|pin-)/i.test(id) && this.map.getSource(id)) {
-        try { this.map.removeSource(id); } catch {}
-      }
-    }
+    this.cleanResidualLayers();
   }
+
+  private cleanResidualLayers() {
+    if (!this.map) return;
+    const style = this.map.getStyle();
+
+    // Clean layers
+    (style?.layers ?? []).forEach(l => {
+      if (/^(heat|heat-value|choropleth-|choro-|pins|pin-)/i.test(l.id) && this.map!.getLayer(l.id)) {
+        try { this.map!.removeLayer(l.id); } catch { }
+      }
+    });
+
+    // Clean sources
+    Object.keys(style?.sources ?? {}).forEach(id => {
+      if (/^(heat|heat-value|choropleth-|choro-|pins|pin-)/i.test(id) && this.map!.getSource(id)) {
+        try { this.map!.removeSource(id); } catch { }
+      }
+    });
+  }
+
   lookNorth(): void {
-    this.mapSvc.resetNorth(true); 
+    this.mapSvc.resetNorth(true);
   }
 }
