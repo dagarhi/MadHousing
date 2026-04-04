@@ -18,13 +18,13 @@ class Propiedad(Base):
     bathrooms = Column(Integer)
     floor = Column(String(20))
     address = Column(String(255))
-    district = Column(String(100))
+    district = Column(String(100), index=True)
     neighborhood = Column(String(100))
     latitude = Column(Float)
     longitude = Column(Float)
     hasLift = Column(Boolean, default=False)
     exterior = Column(Boolean, default=False)
-    operation = Column(String(10))
+    operation = Column(String(10), index=True)
     huella_digital = Column(String(32))
     es_duplicado = Column(Boolean, default=False)
     propiedad_original = Column(String(50), nullable=True)
@@ -34,7 +34,7 @@ class Propiedad(Base):
     score_final = Column(Float)
     fecha_obtencion = Column(DateTime, default=_utcnow)
     fecha_actualizacion = Column(DateTime, default=_utcnow, onupdate=_utcnow)
-    city = Column(String(100))
+    city = Column(String(100), index=True)
 
     def as_dict(self):
         return {

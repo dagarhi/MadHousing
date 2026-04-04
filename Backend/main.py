@@ -1,15 +1,14 @@
-from fastapi import FastAPI, Depends, HTTPException, Query, Header, Request
+from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import func
 from sqlalchemy.orm import Session
-from database import get_db, init_db
+from database import get_db, init_db, SessionLocal
 from models import Propiedad, User, Favorite, SearchHistory
 from services.idealista_api import IdealistaAPI
 from services.scoring import valoracion_intrinseca, generar_huella_digital
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from math import radians, cos, sin, asin, sqrt
 from collections import defaultdict
-from statistics import mean
-from routers.heatmap_router import router as heatmap_router
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from pydantic import BaseModel
@@ -20,7 +19,9 @@ import os
 import json
 
 # --- Auth Configuration ---
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "cambia-esto-en-produccion")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("JWT_SECRET_KEY environment variable is not set")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
@@ -34,7 +35,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -69,7 +70,6 @@ class SearchHistoryOut(BaseModel):
 
 security = HTTPBearer(auto_error=False)
 app = FastAPI(title="Buscador de Pisos API", version="5.0.0")
-app.include_router(heatmap_router)
 
 # --- CORS Configuration ---
 app.add_middleware(
@@ -77,7 +77,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:4200",
         "http://127.0.0.1:4200",
-        "*", 
+        *([os.getenv("FRONTEND_URL")] if os.getenv("FRONTEND_URL") else []),
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -94,7 +94,7 @@ def distancia_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
     return 2 * R * asin(sqrt(a))
 
-def db_from_request(request: Request):
+def db_from_request():
     yield from get_db()
 
 def get_current_user(
@@ -124,8 +124,7 @@ def get_current_user(
 
 def seed_default_users():
     """Creates default users if they don't exist"""
-    gen = get_db()
-    db = next(gen)
+    db = SessionLocal()
     try:
         defaults = [
             ("novato", "novato123", "novato"),
@@ -146,10 +145,7 @@ def seed_default_users():
         db.commit()
         print("✅ Usuarios por defecto verificados/creados")
     finally:
-        try:
-            next(gen)
-        except StopIteration:
-            pass
+        db.close()
 
 @app.on_event("startup")
 def on_startup():
@@ -230,31 +226,25 @@ def buscar_propiedades(
     if hasLift is not None:
         query = query.filter(Propiedad.hasLift == hasLift)
 
-    props_filtradas = query.all()
+    # Count + aggregated stats in a single DB query
+    agg = query.with_entities(
+        func.count(Propiedad.propertyCode),
+        func.min(Propiedad.price),
+        func.max(Propiedad.price),
+        func.min(Propiedad.size),
+        func.max(Propiedad.size),
+        func.min(Propiedad.score_intrinseco),
+        func.max(Propiedad.score_intrinseco),
+    ).one()
 
-    total = len(props_filtradas)
-    inicio = (page - 1) * per_page
-    fin = inicio + per_page
-    props_page = props_filtradas[inicio:fin]
-
-    precios = [p.price for p in props_filtradas if p.price is not None]
-    tamanos = [p.size for p in props_filtradas if p.size is not None]
-    scores = [p.score_intrinseco for p in props_filtradas if p.score_intrinseco is not None]
-
+    total = agg[0]
     stats = {
-        "price": {
-            "min": min(precios) if precios else 0,
-            "max": max(precios) if precios else 0,
-        },
-        "size": {
-            "min": min(tamanos) if tamanos else 0,
-            "max": max(tamanos) if tamanos else 0,
-        },
-        "score": {
-            "min": min(scores) if scores else 0,
-            "max": max(scores) if scores else 100,
-        },
+        "price": {"min": agg[1] or 0, "max": agg[2] or 0},
+        "size":  {"min": agg[3] or 0, "max": agg[4] or 0},
+        "score": {"min": agg[5] or 0, "max": agg[6] or 100},
     }
+
+    props_page = query.offset((page - 1) * per_page).limit(per_page).all()
 
     return {
         "municipio": municipio,
@@ -334,31 +324,34 @@ def buscar_todo(
 
 @app.get("/estadisticas-globales")
 def estadisticas_por_zona(db: Session = Depends(db_from_request)):
-    props = db.query(Propiedad).all()
-    agrupado = defaultdict(lambda: defaultdict(list))
-
-    for p in props:
-        zona = (p.district or "Desconocido").strip()
-        op = (p.operation or "desconocido").strip()
-        agrupado[zona][op].append(p)
+    rows = (
+        db.query(
+            Propiedad.district,
+            Propiedad.operation,
+            func.count(Propiedad.propertyCode).label("count"),
+            func.avg(Propiedad.price).label("precio_medio"),
+            func.avg(Propiedad.size).label("tamano_medio"),
+            func.avg(Propiedad.score_intrinseco).label("score_medio"),
+            func.min(Propiedad.price).label("precio_min"),
+            func.max(Propiedad.price).label("precio_max"),
+        )
+        .group_by(Propiedad.district, Propiedad.operation)
+        .all()
+    )
 
     resultado = {}
-
-    for zona, por_op in agrupado.items():
-        resultado[zona] = {}
-        for op, lista in por_op.items():
-            precios = [p.price for p in lista if p.price is not None]
-            tamanos = [p.size for p in lista if p.size is not None]
-            scores = [p.score_intrinseco for p in lista if p.score_intrinseco is not None]
-
-            resultado[zona][op] = {
-                "count": len(lista),
-                "precio_medio": mean(precios) if precios else 0,
-                "tamano_medio": mean(tamanos) if tamanos else 0,
-                "score_medio": mean(scores) if scores else 0,
-                "precio_min": min(precios) if precios else 0,
-                "precio_max": max(precios) if precios else 0,
-            }
+    for row in rows:
+        zona = (row.district or "Desconocido").strip()
+        op   = (row.operation or "desconocido").strip()
+        resultado.setdefault(zona, {})
+        resultado[zona][op] = {
+            "count":         row.count,
+            "precio_medio":  row.precio_medio  or 0,
+            "tamano_medio":  row.tamano_medio  or 0,
+            "score_medio":   row.score_medio   or 0,
+            "precio_min":    row.precio_min    or 0,
+            "precio_max":    row.precio_max    or 0,
+        }
 
     return resultado
 
@@ -473,6 +466,7 @@ def listar_historial(
             q = json.loads(r.query) if r.query else {}
         except json.JSONDecodeError:
             q = {}
+            print(f"[historial] ⚠️ JSON inválido en registro id={r.id}")
         resultado.append(
             SearchHistoryOut(
                 id=r.id,
