@@ -1,29 +1,26 @@
+import hashlib
+from models import Propiedad
+
+# --- Constants ---
+SCORE_MIN, SCORE_MAX = 10, 95
+UMBRALES = {
+    "rent": {"min": 700, "max": 2000},       # Total monthly price
+    "sale": {"min": 2500, "max": 7000},      # Price per m²
+}
+
 def valoracion_intrinseca(piso):
     """
-    Calcula un score (10–95) basado en la relación entre precio y tamaño,
-    adaptado al tipo de operación ('rent' o 'sale') y con umbrales para la Comunidad de Madrid.
+    Calculates a score (10–95) based on price/size ratio, adapted for Madrid.
     """
-
     price = piso.get('price', 0)
     size = piso.get('size', 0)
     operation = piso.get('operation', 'rent').lower()
 
     if price <= 0:
-        return 10.0  # valor mínimo por defecto
+        return 10.0
 
-    # Rango común de salida (para evitar 0 o 100)
-    SCORE_MIN, SCORE_MAX = 10, 95
-
-    # --- Parámetros de mercado para Madrid ---
-    UMBRALES = {
-        "rent": {"min": 700, "max": 2000},       # precio total mensual
-        "sale": {"min": 2500, "max": 7000},      # €/m²
-    }
-
-    # --- Selección de umbrales según tipo de operación ---
     u = UMBRALES.get(operation, UMBRALES["rent"])
 
-    # --- Calcular score ---
     if operation == "rent":
         precio_base = price
     else:
@@ -36,7 +33,7 @@ def valoracion_intrinseca(piso):
     elif precio_base >= u["max"]:
         score = SCORE_MIN
     else:
-        # Interpolación inversa dentro del rango
+        # Inverse interpolation
         ratio = (u["max"] - precio_base) / (u["max"] - u["min"])
         score = SCORE_MIN + (SCORE_MAX - SCORE_MIN) * ratio
 
@@ -44,7 +41,7 @@ def valoracion_intrinseca(piso):
 
 
 def generar_huella_digital(piso):
-    import hashlib
+    """Generates a unique hash for the property based on key attributes."""
     elementos = [
         piso.get('address', '').lower().strip(),
         str(int(piso.get('price', 0))),
@@ -56,8 +53,7 @@ def generar_huella_digital(piso):
 
 
 def es_duplicado(db, piso_data):
-    from models import Propiedad
-
+    """Checks if a property already exists in the DB by code or digital footprint."""
     existente = db.query(Propiedad).filter(Propiedad.propertyCode == piso_data['propertyCode']).first()
     if existente:
         return True

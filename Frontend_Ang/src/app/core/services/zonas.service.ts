@@ -2,17 +2,18 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { ZonasJerarquicas } from '../models/zona.model';
 
 @Injectable({ providedIn: 'root' })
 export class ZonasService {
   private baseUrl = `${environment.apiBaseUrl}/zonas-jerarquicas`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getZonasJerarquicas(
     operation?: 'rent' | 'sale',
     municipio?: string
-  ): Observable<any> {
+  ): Observable<ZonasJerarquicas> {
     let params = new HttpParams();
 
     if (operation) {
@@ -22,6 +23,6 @@ export class ZonasService {
       params = params.set('municipio', municipio);
     }
 
-    return this.http.get(this.baseUrl, { params });
+    return this.http.get<ZonasJerarquicas>(this.baseUrl, { params });
   }
 }

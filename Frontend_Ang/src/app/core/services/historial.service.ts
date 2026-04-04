@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-
 import { HistorialItem } from '../models/historial.model';
 import { FiltroBusqueda } from '../models/filtros.model';
 import { environment } from '../../../environments/environment';
@@ -24,7 +23,6 @@ export class HistorialService {
     this.cargarDesdeServidor();
   }
 
-  /** Carga el historial del usuario autenticado desde el backend */
   private cargarDesdeServidor(): void {
     this.http.get<SearchHistoryDto[]>(this.baseUrl).subscribe({
       next: (registros) => {
@@ -34,22 +32,16 @@ export class HistorialService {
         this.historialSubject.next(items);
       },
       error: (err) => {
-        console.error('[HistorialService] Error al cargar historial', err);
+        console.error('[HistorialService] Error loading history', err);
         this.historialSubject.next([]);
       },
     });
   }
 
-  /** Snapshot síncrono */
   get currentHistorial(): HistorialItem[] {
     return this.historialSubject.value;
   }
 
-  /**
-   * Añade una entrada nueva al historial del usuario.
-   * Antes devolvía HistorialItem, ahora es asíncrono (no retorna nada).
-   * Si en algún sitio usabas el return, basta con quitarlo.
-   */
   add(filtros: FiltroBusqueda, resumen?: string): void {
     const body = { query: filtros };
 
@@ -57,30 +49,25 @@ export class HistorialService {
       next: (dto) => {
         const item = this.dtoToItem(dto, resumen);
 
-        // dedupe por hash: si ya hay una búsqueda igual, la quitamos y ponemos esta arriba
+        // Deduplicate by hash
         const hash = item.hash;
         const dedup = this.currentHistorial.filter((h) => h.hash !== hash);
         const nuevo = [item, ...dedup].slice(0, this.MAX);
 
         this.historialSubject.next(nuevo);
       },
-      error: (err) => {
-        console.error('[HistorialService] Error creando entrada de historial', err);
-      },
+      error: (err) => console.error('[HistorialService] Error creating history item', err),
     });
   }
 
   eliminarById(id: string) {
     const numId = Number(id);
-
     this.http.delete(`${this.baseUrl}/${numId}`).subscribe({
       next: () => {
         const nuevo = this.currentHistorial.filter((h) => h.id !== id);
         this.historialSubject.next(nuevo);
       },
-      error: (err) => {
-        console.error('[HistorialService] Error eliminando historial', err);
-      },
+      error: (err) => console.error('[HistorialService] Error deleting history', err),
     });
   }
 
@@ -93,13 +80,12 @@ export class HistorialService {
       if (!Number.isFinite(numId)) return;
 
       this.http.delete(`${this.baseUrl}/${numId}`).subscribe({
-        error: (err) =>
-          console.error('[HistorialService] Error borrando historial (masivo)', err),
+        error: (err) => console.error('[HistorialService] Error deleting history (bulk)', err),
       });
     });
   }
 
-  // -------- helpers de mapeo / presentación --------
+  // --- Helpers ---
 
   private dtoToItem(dto: SearchHistoryDto, resumenOverride?: string): HistorialItem {
     const filtros = (dto.query ?? {}) as FiltroBusqueda;
@@ -117,30 +103,24 @@ export class HistorialService {
 
   private renderResumen(f: FiltroBusqueda): string {
     const partes: string[] = [];
-    const municipio = (f as any).municipio as string | undefined;
-    const op = (f as any).operation as string | undefined;
+    if (f.municipio) partes.push(f.municipio);
+    if (f.operation) partes.push(f.operation === 'rent' ? 'alquiler' : 'venta');
 
-    if (municipio) partes.push(municipio);
-    if (op) partes.push(op === 'rent' ? 'alquiler' : 'venta');
-
-    const r = (label: string, a?: number, b?: number) =>
+    const fmt = (label: string, a?: number, b?: number) =>
       a != null || b != null
         ? `${label} ${a ?? ''}${a != null && b != null ? '–' : ''}${b ?? ''}`.trim()
         : undefined;
 
-    const precio = r('€', (f as any).min_price, (f as any).max_price);
-    const size = r('m²', (f as any).min_size, (f as any).max_size);
-    const score = r('score', (f as any).min_score, (f as any).max_score);
+    const precio = fmt('€', f.min_price, f.max_price);
+    const size = fmt('m²', f.min_size, f.max_size);
+    const score = fmt('score', f.min_score, f.max_score);
 
     if (precio) partes.push(precio);
     if (size) partes.push(size);
     if (score) partes.push(score);
 
-    const rooms = (f as any).rooms;
-    if (rooms != null) partes.push(`${rooms}+ hab`);
-
-    const floor = (f as any).floor;
-    if (floor != null) partes.push(`planta ≥ ${floor}`);
+    if (f.rooms != null) partes.push(`${f.rooms}+ hab`);
+    if (f.floor != null) partes.push(`planta ≥ ${f.floor}`);
 
     return partes.join(' · ') || 'Búsqueda';
   }
@@ -166,7 +146,7 @@ export class HistorialService {
     }
     return String(h);
   }
-  
+
   reloadFromServer(): void {
     this.cargarDesdeServidor();
   }

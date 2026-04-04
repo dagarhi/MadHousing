@@ -18,14 +18,13 @@ export class FavoritosService {
   private favoritosSubject = new BehaviorSubject<Propiedad[]>([]);
   favoritos$ = this.favoritosSubject.asObservable();
 
-  /** Mapa propertyCode -> id de favorito en backend */
+  /** Map propertyCode -> favorite ID in backend */
   private idsPorProperty = new Map<string, number>();
 
   constructor(private http: HttpClient) {
     this.cargarDesdeServidor();
   }
 
-  /** Carga los favoritos del usuario autenticado desde la API */
   private cargarDesdeServidor(): void {
     this.http.get<FavoriteDto[]>(this.baseUrl).subscribe({
       next: (lista) => {
@@ -44,14 +43,13 @@ export class FavoritosService {
         this.favoritosSubject.next(props);
       },
       error: (err) => {
-        console.error('[FavoritosService] Error al cargar favoritos', err);
+        console.error('[FavoritosService] Error loading favorites', err);
         this.idsPorProperty.clear();
         this.favoritosSubject.next([]);
       },
     });
   }
 
-  /** Snapshot síncrono de la lista de favoritos */
   get currentFavoritos(): Propiedad[] {
     return this.favoritosSubject.value;
   }
@@ -61,67 +59,58 @@ export class FavoritosService {
     return this.idsPorProperty.has(String(propertyCode));
   }
 
-  /** Alterna favorito para el piso dado, sincronizado con backend */
   toggleFavorito(piso: Propiedad): void {
-    const propertyCode = String((piso as any).propertyCode ?? '');
+    const propertyCode = piso.propertyCode;
     if (!propertyCode) {
-      console.warn('[FavoritosService] toggleFavorito sin propertyCode');
+      console.warn('[FavoritosService] toggleFavorito called without propertyCode');
       return;
     }
 
-    // Caso 1: ya es favorito -> eliminar
     if (this.idsPorProperty.has(propertyCode)) {
+      // DELETE
       const favId = this.idsPorProperty.get(propertyCode)!;
-
       this.http.delete(`${this.baseUrl}/${favId}`).subscribe({
         next: () => {
           this.idsPorProperty.delete(propertyCode);
           const nuevos = this.currentFavoritos.filter(
-            (p) => String((p as any).propertyCode) !== propertyCode,
+            (p) => p.propertyCode !== propertyCode,
           );
           this.favoritosSubject.next(nuevos);
         },
-        error: (err) => {
-          console.error('[FavoritosService] Error eliminando favorito', err);
-        },
+        error: (err) => console.error('[FavoritosService] Error deleting favorite', err),
       });
-
       return;
     }
 
-    // Caso 2: no es favorito -> crear
+    // CREATE
     this.http
       .post<FavoriteDto>(this.baseUrl, { property_code: propertyCode })
       .subscribe({
         next: (resp) => {
-          const prop = (resp.propiedad as Propiedad) ?? piso;
+          const prop = resp.propiedad ?? piso;
           this.idsPorProperty.set(propertyCode, resp.id);
 
           const actuales = this.currentFavoritos;
           const yaEstaba = actuales.some(
-            (p) => String((p as any).propertyCode) === propertyCode,
+            (p) => p.propertyCode === propertyCode,
           );
           if (!yaEstaba) {
             this.favoritosSubject.next([...actuales, prop]);
           }
         },
-        error: (err) => {
-          console.error('[FavoritosService] Error creando favorito', err);
-        },
+        error: (err) => console.error('[FavoritosService] Error creating favorite', err),
       });
   }
 
-  /** Borra TODOS los favoritos del usuario (frontend + backend, uno a uno) */
   borrarTodos(): void {
     const ids = Array.from(this.idsPorProperty.values());
-
     this.idsPorProperty.clear();
     this.favoritosSubject.next([]);
 
     ids.forEach((id) => {
       this.http.delete(`${this.baseUrl}/${id}`).subscribe({
         error: (err) =>
-          console.error('[FavoritosService] Error borrando favorito (masivo)', err),
+          console.error('[FavoritosService] Error deleting favorite (bulk)', err),
       });
     });
   }
@@ -129,9 +118,9 @@ export class FavoritosService {
   reloadFromServer(): void {
     this.cargarDesdeServidor();
   }
+
   clearLocal(): void {
     this.idsPorProperty.clear();
     this.favoritosSubject.next([]);
   }
-
 }

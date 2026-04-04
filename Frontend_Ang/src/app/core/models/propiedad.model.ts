@@ -25,4 +25,5 @@ export interface Propiedad {
 
   url?: string;
   operation?: 'sale' | 'rent';
+  tipo?: string; // added for compatibility
 }

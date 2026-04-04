@@ -10,14 +10,10 @@ import { Propiedad } from '../models/propiedad.model';
 
 type PolyGeom = Polygon | MultiPolygon;
 
-type AggregationMode =
-  | 'count'
-  | 'avgPrice'
-  | 'avgUnitPrice'
-  | 'avgScore';
+type AggregationMode = 'count' | 'avgPrice' | 'avgUnitPrice' | 'avgScore';
 
 export interface ChoroplethOptions {
-  idField?: string;           // campo ID del polígono (por ejemplo 'id' o 'BARRIO_ID')
+  idField?: string;
   filterOperation?: 'venta' | 'alquiler' | 'all';
   mode?: AggregationMode;
 }
@@ -26,14 +22,11 @@ export interface ChoroplethOptions {
 export class ChoroplethLayerService {
   private map?: MapLibreMap;
 
-  // Polígonos de barrios cargados
   private barrioPolys?: FeatureCollection<PolyGeom>;
   private idField = 'id';
 
-  // Estado visible/oculto
   private visible = false;
 
-  // Últimos datos renderizados + opciones
   private lastData: Propiedad[] = [];
   private currentOptions: Required<ChoroplethOptions> = {
     idField: 'id',
@@ -41,16 +34,13 @@ export class ChoroplethLayerService {
     mode: 'count'
   };
 
-  // Listener styledata (para re-crear capas tras style change)
   private onStyleDataBound?: () => void;
 
-  // IDs de fuente/capas
   private readonly SOURCE_ID = 'choropleth-source';
-  private readonly FILL_ID   = 'choropleth-fill';
-  private readonly LINE_ID   = 'choropleth-outline';
-  private readonly HIT_ID    = 'choropleth-hit';
+  private readonly FILL_ID = 'choropleth-fill';
+  private readonly LINE_ID = 'choropleth-outline';
+  private readonly HIT_ID = 'choropleth-hit';
 
-  // Índice por bbox e extent global
   private indexedPolys?: Array<{
     feat: Feature<PolyGeom>;
     bbox: [number, number, number, number]; // [minX, minY, maxX, maxY]
@@ -58,13 +48,12 @@ export class ChoroplethLayerService {
   }>;
   private extent?: [number, number, number, number];
 
-  // Popup hover
   private popup?: maplibregl.Popup;
   private hoverBound = false;
   private lastHoverTs = 0;
   private readonly HOVER_THROTTLE_MS = 5;
 
-  constructor(private mapSvc: MapService) {}
+  constructor(private mapSvc: MapService) { }
 
   attach() {
     this.map = this.mapSvc.getMap()!;
@@ -86,7 +75,6 @@ export class ChoroplethLayerService {
     this.lastData = [];
   }
 
-  /** Carga/establece los polígonos de barrios */
   setPolygons(polys: FeatureCollection<PolyGeom>, idField = 'id') {
     this.barrioPolys = polys;
     this.idField = idField || 'id';
@@ -96,14 +84,12 @@ export class ChoroplethLayerService {
     }
   }
 
-  /** Visible/oculto sin destruir */
   setVisible(v: boolean) {
     this.visible = v;
     this.applyVisibility();
     if (v && this.lastData.length) this.updateData(this.lastData, this.currentOptions);
   }
 
-  /** Render principal (no fuerza visible) */
   render(pisos: Propiedad[], opts?: ChoroplethOptions) {
     this.lastData = Array.isArray(pisos) ? pisos : [];
     this.currentOptions = {
@@ -115,18 +101,16 @@ export class ChoroplethLayerService {
     this.updateData(this.lastData, this.currentOptions);
   }
 
-  /** Limpia capas+fuente y marca invisible */
   clear() {
     this.visible = false;
-    this.lastData= [];
+    this.lastData = [];
     if (!this.map) return;
-    if (this.map.getLayer(this.HIT_ID))  this.map.removeLayer(this.HIT_ID);
+    if (this.map.getLayer(this.HIT_ID)) this.map.removeLayer(this.HIT_ID);
     if (this.map.getLayer(this.FILL_ID)) this.map.removeLayer(this.FILL_ID);
     if (this.map.getLayer(this.LINE_ID)) this.map.removeLayer(this.LINE_ID);
     if (this.map.getSource(this.SOURCE_ID)) this.map.removeSource(this.SOURCE_ID);
   }
 
-  /** --------- EVENTOS DE MAPA --------- */
   private onStyleData() {
     this.ensureLayers();
     this.applyVisibility();
@@ -138,19 +122,17 @@ export class ChoroplethLayerService {
     const vis = this.visible ? 'visible' : 'none';
     if (this.map.getLayer(this.FILL_ID)) this.map.setLayoutProperty(this.FILL_ID, 'visibility', vis);
     if (this.map.getLayer(this.LINE_ID)) this.map.setLayoutProperty(this.LINE_ID, 'visibility', vis);
-    if (this.map.getLayer(this.HIT_ID))  this.map.setLayoutProperty(this.HIT_ID,  'visibility', vis);
+    if (this.map.getLayer(this.HIT_ID)) this.map.setLayoutProperty(this.HIT_ID, 'visibility', vis);
   }
 
   private ensureLayers() {
     if (!this.map) return;
 
-    // Fuente vacía si no existe
     if (!this.map.getSource(this.SOURCE_ID)) {
       const empty: FeatureCollection<PolyGeom> = { type: 'FeatureCollection', features: [] };
       this.map.addSource(this.SOURCE_ID, { type: 'geojson', data: empty });
     }
 
-    // Relleno (color)
     if (!this.map.getLayer(this.FILL_ID)) {
       const fillColorExpr = colorInterpolateExpr('value', BACKEND_SCORE_DOMAIN, undefined, 12) as unknown as ExpressionSpecification;
 
@@ -160,15 +142,12 @@ export class ChoroplethLayerService {
         source: this.SOURCE_ID,
         layout: { visibility: this.visible ? 'visible' : 'none' },
         paint: {
-          // ✅ expresión tipada como ExpressionSpecification
           'fill-color': fillColorExpr,
-          // barrios sin datos → transparentes (se mantiene)
           'fill-opacity': ['case', ['>', ['get', 'value'], 0], 0.6, 0]
         }
       });
     }
 
-    // Contorno
     if (!this.map.getLayer(this.LINE_ID)) {
       this.map.addLayer({
         id: this.LINE_ID,
@@ -183,7 +162,6 @@ export class ChoroplethLayerService {
       });
     }
 
-    // Capa "hit" para eventos
     if (!this.map.getLayer(this.HIT_ID)) {
       this.map.addLayer({
         id: this.HIT_ID,
@@ -270,25 +248,23 @@ export class ChoroplethLayerService {
     this.map!.on('mouseleave', this.HIT_ID, () => this.popup?.remove());
   }
 
-  /** Renderiza datos (agrega por barrio) y actualiza colores */
   private updateData(pisos: Propiedad[], opts: Required<ChoroplethOptions>) {
     if (!this.map) return;
     if (!this.barrioPolys) {
-      console.warn('[Choropleth] No hay polígonos cargados. Llama a setPolygons(...) antes de render().');
+      console.warn('[Choropleth] No known polygons. Call setPolygons(...) before render().');
       return;
     }
 
     const fc = this.aggregateByPolygons(pisos, opts);
-    const src = this.map.getSource(this.SOURCE_ID) as any;
-    src?.setData?.(fc);
+    const src = this.map.getSource(this.SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
+    src?.setData(fc);
 
-    // dominio robusto p5–p95 dentro del backend y actualización del color
     const values = fc.features.map(f => Number(f.properties?.['value'] ?? 0)).filter(Number.isFinite);
     const isScore = this.currentOptions.mode === 'avgScore';
     const baseDomain = isScore
       ? BACKEND_SCORE_DOMAIN
       : { min: Math.min(...values, 0), max: Math.max(...values, 1) };
-    
+
     const domain = robustDomainFromScores(values, baseDomain, 0.05, 0.95, 0);
 
     const expr = colorInterpolateExpr('value', domain, undefined, 12) as unknown as ExpressionSpecification;
@@ -297,61 +273,59 @@ export class ChoroplethLayerService {
     }
   }
 
-  /** --------- AGREGACIÓN POR BARRIOS (POLÍGONOS) --------- */
   private aggregateByPolygons(pisos: Propiedad[], opts: Required<ChoroplethOptions>): FeatureCollection<PolyGeom> {
     const idField = opts.idField || this.idField;
     if (!this.indexedPolys?.length) {
-      console.warn('[Choropleth] Sin índice espacial (polígonos no establecidos).');
+      console.warn('[Choropleth] No spatial index.');
       return { type: 'FeatureCollection', features: [] };
     }
 
-    // Acumuladores por barrio
     type Acc = {
       count: number;
       sumPrice: number;
       sumUnitPrice: number;
       validUnit: number;
-      sumScore: number;      
-      validScore: number;    
+      sumScore: number;
+      validScore: number;
     };
     const accById = new Map<string, Acc>();
 
-    // Filtro por operación
     const filtered = opts.filterOperation === 'all'
       ? pisos
       : pisos.filter(p => {
-          const raw = (p.operation ?? '').toString().toLowerCase();
-          const norm = raw === 'sale' ? 'venta' : raw === 'rent' ? 'alquiler' : raw;
-          return norm === opts.filterOperation;
-        });
+        const raw = (p.operation ?? '').toString().toLowerCase();
+        const norm = raw === 'sale' ? 'venta' : raw === 'rent' ? 'alquiler' : raw;
+        return norm === opts.filterOperation;
+      });
 
-    // Asigna cada piso al primer polígono candidato (bbox) que lo contenga (PIP)
     for (const p of filtered) {
-      const lon = (p.longitude ?? p.longitude ?? p.longitude ?? p.location?.lng ?? p.location?.lon);
-      const lat = (p.latitude ?? p.latitude ?? p.location?.lat);
-      if (!Number.isFinite(lon!) || !Number.isFinite(lat!)) continue;
+      const lon = Number(p.longitude ?? p.location?.lng ?? p.location?.lon);
+      const lat = Number(p.latitude ?? p.location?.lat);
+      if (!Number.isFinite(lon) || !Number.isFinite(lat)) continue;
 
-      const candidate = this.findFirstContainingPolygon(lon!, lat!);
+      const candidate = this.findFirstContainingPolygon(lon, lat);
       if (!candidate) continue;
       const id = candidate.id;
 
-      const acc = accById.get(id) ?? { count: 0, sumPrice: 0, sumUnitPrice: 0, validUnit: 0, sumScore: 0, validScore: 0 };
+      let acc = accById.get(id);
+      if (!acc) {
+        acc = { count: 0, sumPrice: 0, sumUnitPrice: 0, validUnit: 0, sumScore: 0, validScore: 0 };
+        accById.set(id, acc);
+      }
+
       acc.count += 1;
       if (Number.isFinite(p.price)) acc.sumPrice += Number(p.price);
       if (Number.isFinite(p.price) && Number.isFinite(p.size) && p.size! > 0) {
         acc.sumUnitPrice += (Number(p.price) / Number(p.size));
         acc.validUnit += 1;
       }
-      const s = this.asNum((p as any).score ?? (p as any).score_intrinseco);
+      const s = this.asNum(p.score ?? p.score_intrinseco);
       if (s !== undefined) {
         acc.sumScore += s;
         acc.validScore += 1;
       }
-
-      accById.set(id, acc);
     }
 
-    // Construye FeatureCollection
     const out: FeatureCollection<PolyGeom> = { type: 'FeatureCollection', features: [] };
     for (const { feat, id } of this.indexedPolys!) {
       const acc = accById.get(id);
@@ -360,13 +334,12 @@ export class ChoroplethLayerService {
       const avgUnitPrice = (acc?.validUnit ?? 0) > 0 ? acc!.sumUnitPrice / acc!.validUnit : 0;
       const avgScore = (acc?.validScore ?? 0) > 0 ? acc!.sumScore / acc!.validScore : 0
 
-      // Valor que usamos para colorear (value)
       let value = 0;
       switch (opts.mode) {
         case 'count': value = count; break;
         case 'avgPrice': value = avgPrice; break;
         case 'avgUnitPrice': value = avgUnitPrice; break;
-        case 'avgScore':     value = avgScore; break;
+        case 'avgScore': value = avgScore; break;
       }
 
       out.features.push({
@@ -386,8 +359,6 @@ export class ChoroplethLayerService {
     return out;
   }
 
-  /** --------- UTILIDADES (PIP, bbox, etc.) --------- */
-
   private asNum(v: any): number | undefined {
     if (typeof v === 'number') return Number.isFinite(v) ? v : undefined;
     if (v == null) return undefined;
@@ -395,7 +366,6 @@ export class ChoroplethLayerService {
     return Number.isFinite(n) ? n : undefined;
   }
 
-  /** Encuentra el primer polígono cuyo bbox contiene el punto y luego confirma con PIP */
   private findFirstContainingPolygon(lon: number, lat: number) {
     if (!this.indexedPolys?.length) return undefined;
     const pt = turfPoint([lon, lat]) as any;
@@ -407,7 +377,6 @@ export class ChoroplethLayerService {
     return undefined;
   }
 
-  /** Construye índice por bbox + extent */
   private buildSpatialIndex(fc: FeatureCollection<PolyGeom>, idField: string) {
     const boxes: Array<{ feat: Feature<PolyGeom>; bbox: [number, number, number, number]; id: string }> = [];
 
@@ -443,13 +412,11 @@ export class ChoroplethLayerService {
       if (y > maxY) maxY = y;
     };
 
-    // Recorre recursivamente arrays de coords
     const scan = (coords: any) => {
       for (const c of coords) {
         if (Array.isArray(c[0])) {
           scan(c);
         } else {
-          // Position [lon, lat]
           push(c[0], c[1]);
         }
       }
@@ -466,4 +433,4 @@ export class ChoroplethLayerService {
     }
     return [minX, minY, maxX, maxY];
   }
-}  
+}
