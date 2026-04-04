@@ -26,7 +26,7 @@ export class AdminComponent implements OnInit {
   error: string | null = null;
   confirmDeleteId: number | null = null;
 
-  currentUsername = this.auth.getCurrentUser()?.username ?? '';
+  currentUsername = '';
 
   private readonly apiUrl = environment.apiBaseUrl;
 
@@ -37,6 +37,7 @@ export class AdminComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.currentUsername = this.auth.getCurrentUser()?.username ?? '';
     this.cargarUsuarios();
   }
 
