@@ -12,15 +12,15 @@ interface LoginResponse {
   token_type: string;
   user_id: number;
   username: string;
-  profile?: string | null;
+  role: string;
 }
 
 export interface AuthUser {
   userId: number;
   username: string;
-  profile?: string | null;
+  role: string;
   token: string;
-  expiresAt: number; 
+  expiresAt: number;
 }
 
 const STORAGE_KEY = 'tfg_auth_user';
@@ -75,9 +75,9 @@ export class AuthService {
           const user: AuthUser = {
             userId: res.user_id,
             username: res.username,
-            profile: res.profile,
+            role: res.role,
             token: res.access_token,
-            expiresAt, 
+            expiresAt,
           };
           this.scheduleAutoLogout(expiresAt);
           return user;
@@ -111,6 +111,17 @@ export class AuthService {
       return;
     }
     this.router.navigate(['/inicio']);
+  }
+
+  isAdmin(): boolean {
+    return this.currentUserSubject.value?.role === 'ADMIN';
+  }
+
+  register(username: string, password: string): Observable<{ user_id: number; username: string; role: string }> {
+    return this.http.post<{ user_id: number; username: string; role: string }>(
+      `${this.apiUrl}/auth/register`,
+      { username, password },
+    );
   }
 
   isAuthenticated(): boolean {

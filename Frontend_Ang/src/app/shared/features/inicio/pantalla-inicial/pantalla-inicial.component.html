@@ -32,70 +32,84 @@
       </div>
     </section>
 
-    <!-- Columna derecha: tarjeta de login -->
+    <!-- Columna derecha: tarjeta de login / registro -->
     <section class="inicio__card">
-      <h2 class="inicio__titulo">Acceso</h2>
-      <p class="inicio__subtitulo">
-        Inicia sesión para acceder al mapa y a tus favoritos.
-      </p>
-       <p *ngIf="mensajeSesion" class="inicio__alerta">
-        {{ mensajeSesion }}
-      </p>
 
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
-        <div class="form-group">
-          <label for="username">Usuario</label>
-          <input
-            id="username"
-            type="text"
-            formControlName="username"
-            [class.is-invalid]="hasError('username', 'required')"
-            autocomplete="username"
-          />
-          <div class="error" *ngIf="hasError('username', 'required')">
-            El usuario es obligatorio.
-          </div>
-        </div>
-
-        <div class="form-group">
-        <label for="password">Contraseña</label>
-
-        <div class="password-wrapper">
-          <input
-            id="password"
-            [type]="mostrarPassword ? 'text' : 'password'"
-            formControlName="password"
-            [class.is-invalid]="hasError('password', 'required')"
-            autocomplete="current-password"
-          />
-
-          <button
-            type="button"
-            class="toggle-password"
-            (click)="togglePassword()"
-            [attr.aria-pressed]="mostrarPassword"
-            [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-          >
-            <lucide-icon
-              [name]="mostrarPassword ? 'eye-off' : 'eye'"
-            ></lucide-icon>
-          </button>
-        </div>
-
-        <div class="error" *ngIf="hasError('password', 'required')">
-          La contraseña es obligatoria.
-        </div>
+      <!-- Toggle login / registro -->
+      <div class="modo-toggle">
+        <button [class.activo]="!modoRegistro" (click)="modoRegistro && toggleModo()">Iniciar sesión</button>
+        <button [class.activo]="modoRegistro"  (click)="!modoRegistro && toggleModo()">Crear cuenta</button>
       </div>
 
+      <p *ngIf="mensajeSesion" class="inicio__alerta">{{ mensajeSesion }}</p>
+      <p *ngIf="registroExito" class="inicio__alerta inicio__alerta--ok">{{ registroExito }}</p>
 
-        <button type="submit" [disabled]="cargando || loginForm.invalid">
-          {{ cargando ? 'Iniciando sesión…' : 'Entrar' }}
-        </button>
+      <!-- Formulario de LOGIN -->
+      <ng-container *ngIf="!modoRegistro">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+          <div class="form-group">
+            <label for="username">Usuario</label>
+            <input id="username" type="text" formControlName="username"
+              [class.is-invalid]="hasError('username', 'required')" autocomplete="username" />
+            <div class="error" *ngIf="hasError('username', 'required')">El usuario es obligatorio.</div>
+          </div>
 
-        <p *ngIf="error" class="error error--global">
-          {{ error }}
-        </p>
-      </form>
+          <div class="form-group">
+            <label for="password">Contraseña</label>
+            <div class="password-wrapper">
+              <input id="password" [type]="mostrarPassword ? 'text' : 'password'" formControlName="password"
+                [class.is-invalid]="hasError('password', 'required')" autocomplete="current-password" />
+              <button type="button" class="toggle-password" (click)="togglePassword()"
+                [attr.aria-pressed]="mostrarPassword"
+                [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                <lucide-icon [name]="mostrarPassword ? 'eye-off' : 'eye'"></lucide-icon>
+              </button>
+            </div>
+            <div class="error" *ngIf="hasError('password', 'required')">La contraseña es obligatoria.</div>
+          </div>
+
+          <button type="submit" [disabled]="cargando || loginForm.invalid">
+            {{ cargando ? 'Iniciando sesión…' : 'Entrar' }}
+          </button>
+          <p *ngIf="error" class="error error--global">{{ error }}</p>
+        </form>
+      </ng-container>
+
+      <!-- Formulario de REGISTRO -->
+      <ng-container *ngIf="modoRegistro">
+        <form [formGroup]="registerForm" (ngSubmit)="onRegister()" novalidate>
+          <div class="form-group">
+            <label for="reg-username">Usuario</label>
+            <input id="reg-username" type="text" formControlName="username"
+              [class.is-invalid]="hasErrorReg('username', 'required') || hasErrorReg('username', 'minlength')"
+              autocomplete="username" />
+            <div class="error" *ngIf="hasErrorReg('username', 'required')">El usuario es obligatorio.</div>
+            <div class="error" *ngIf="hasErrorReg('username', 'minlength')">Mínimo 3 caracteres.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-password">Contraseña</label>
+            <div class="password-wrapper">
+              <input id="reg-password" [type]="mostrarPassword ? 'text' : 'password'" formControlName="password"
+                [class.is-invalid]="hasErrorReg('password', 'required') || hasErrorReg('password', 'minlength')"
+                autocomplete="new-password" />
+              <button type="button" class="toggle-password" (click)="togglePassword()"
+                [attr.aria-pressed]="mostrarPassword"
+                [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                <lucide-icon [name]="mostrarPassword ? 'eye-off' : 'eye'"></lucide-icon>
+              </button>
+            </div>
+            <div class="error" *ngIf="hasErrorReg('password', 'required')">La contraseña es obligatoria.</div>
+            <div class="error" *ngIf="hasErrorReg('password', 'minlength')">Mínimo 6 caracteres.</div>
+          </div>
+
+          <button type="submit" [disabled]="cargando || registerForm.invalid">
+            {{ cargando ? 'Creando cuenta…' : 'Registrarse' }}
+          </button>
+          <p *ngIf="error" class="error error--global">{{ error }}</p>
+        </form>
+      </ng-container>
+
     </section>
   </div>
 </div>

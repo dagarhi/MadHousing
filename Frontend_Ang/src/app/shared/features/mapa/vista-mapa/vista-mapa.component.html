@@ -1,11 +1,15 @@
 <div class="vista-mapa">
   <!-- 🔹 Barra superior -->
   <header class="header">
-    <!-- Izquierda: logout -->
+    <!-- Izquierda: logout + admin -->
     <div class="header-left">
       <button mat-button class="logout-btn" (click)="logout()">
         <lucide-icon name="log-out"></lucide-icon>
         <span>Cerrar sesión</span>
+      </button>
+      <button *ngIf="isAdmin" mat-button class="admin-btn" (click)="goToAdmin()">
+        <lucide-icon name="shield"></lucide-icon>
+        <span>Admin</span>
       </button>
     </div>
 
