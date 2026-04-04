@@ -17,6 +17,9 @@ from jose import jwt, JWTError
 from passlib.context import CryptContext
 import os
 import json
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- Auth Configuration ---
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
