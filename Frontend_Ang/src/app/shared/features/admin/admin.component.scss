@@ -1,0 +1,180 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f5f0ff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.admin-panel {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* Header */
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  h1 {
+    flex: 1;
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #4a148c;
+  }
+}
+
+.btn-volver {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid #d1c4e9;
+  border-radius: 9999px;
+  background: #fff;
+  color: #7b1fa2;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    background: #ede7f6;
+    box-shadow: 0 2px 6px rgba(123, 31, 162, 0.15);
+  }
+}
+
+.admin-badge {
+  padding: 0.3rem 0.8rem;
+  background: linear-gradient(135deg, #d100b6, #f500c9);
+  color: #fff;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Content states */
+
+.admin-estado {
+  text-align: center;
+  color: #666;
+  padding: 2rem;
+}
+
+.admin-error {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 0.75rem;
+  color: #b91c1c;
+  font-size: 0.9rem;
+
+  button {
+    border: none;
+    background: transparent;
+    color: #b91c1c;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+}
+
+/* Table */
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+  th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #7b1fa2;
+    background: #f3e5f5;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  td {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    color: #333;
+    border-top: 1px solid #f0e6ff;
+  }
+
+  tr:hover td {
+    background: #faf5ff;
+  }
+}
+
+.col-id    { color: #999; font-size: 0.82rem; }
+.col-date  { color: #666; font-size: 0.85rem; }
+.col-actions { display: flex; align-items: center; gap: 0.4rem; }
+
+/* Role badge */
+
+.role-badge {
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  &--admin {
+    background: #ede7f6;
+    color: #6a1b9a;
+  }
+
+  &--user {
+    background: #e3f2fd;
+    color: #1565c0;
+  }
+}
+
+/* Action buttons */
+
+.btn-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid #e0d4f7;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #7b1fa2;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: #f3e5f5;
+    border-color: #ce93d8;
+  }
+
+  &.btn-delete {
+    color: #c62828;
+    border-color: #ffcdd2;
+
+    &:hover {
+      background: #fef2f2;
+      border-color: #f44336;
+    }
+  }
+}
+
+.confirm-text {
+  font-size: 0.85rem;
+  color: #c62828;
+  font-weight: 500;
+}

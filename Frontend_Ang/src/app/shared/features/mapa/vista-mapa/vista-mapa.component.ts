@@ -1,5 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MapaPrincipalComponent } from '../mapa-principal/mapa-principal.component';
 import { DrawerFavoritosComponent } from '../drawer-favoritos/drawer-favoritos.component';
 import { DrawerHistorialComponent } from '../drawer-historial/drawer-historical.component';
@@ -48,7 +49,15 @@ export class VistaMapaComponent {
   compassAngle = 0;
   private bearingSub?: Subscription;
 
-  constructor(private layers: MapLayerManager, private auth: AuthService,) { }
+  constructor(private layers: MapLayerManager, private auth: AuthService, private router: Router) { }
+
+  get isAdmin(): boolean {
+    return this.auth.isAdmin();
+  }
+
+  goToAdmin(): void {
+    this.router.navigate(['/admin']);
+  }
 
   onResultados(e: { pisos: any[]; filtros: FiltroBusqueda }) {
     this.pisos = e.pisos;

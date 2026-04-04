@@ -4,10 +4,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from database import get_db, init_db, SessionLocal
 from models import Propiedad, User, Favorite, SearchHistory
-from services.idealista_api import IdealistaAPI
-from services.scoring import valoracion_intrinseca, generar_huella_digital
 from datetime import datetime, timedelta, timezone
-from math import radians, cos, sin, asin, sqrt
 from collections import defaultdict
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
@@ -52,7 +49,14 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     user_id: int
     username: str
-    profile: Optional[str] = None
+    role: str
+
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+
+class UpdateUserRequest(BaseModel):
+    role: Optional[str] = None
 
 class FavoriteCreate(BaseModel):
     property_code: str
@@ -89,14 +93,6 @@ app.add_middleware(
 
 # --- Helper Functions ---
 
-def distancia_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Calcula la distancia entre dos coordenadas (km)."""
-    R = 6371
-    dlat = radians(lat2 - lat1)
-    dlon = radians(lon2 - lon1)
-    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
-    return 2 * R * asin(sqrt(a))
-
 def db_from_request():
     yield from get_db()
 
@@ -125,35 +121,35 @@ def get_current_user(
 
     return user
 
-def seed_default_users():
-    """Creates default users if they don't exist"""
+def seed_admin():
+    """Creates the admin user from environment variables if it doesn't exist."""
+    admin_username = os.getenv("ADMIN_USERNAME")
+    admin_password = os.getenv("ADMIN_PASSWORD")
+
+    if not admin_username or not admin_password:
+        print("⚠️  ADMIN_USERNAME o ADMIN_PASSWORD no configurados — cuenta admin no creada")
+        return
+
     db = SessionLocal()
     try:
-        defaults = [
-            ("novato", "novato123", "novato"),
-            ("intermedio", "intermedio123", "intermedio"),
-            ("avanzado", "avanzado123", "avanzado"),
-        ]
-
-        for username, plain_pw, profile in defaults:
-            existing = db.query(User).filter(User.username == username).first()
-            if not existing:
-                user = User(
-                    username=username,
-                    password_hash=get_password_hash(plain_pw),
-                    profile=profile,
-                )
-                db.add(user)
-
-        db.commit()
-        print("✅ Usuarios por defecto verificados/creados")
+        existing = db.query(User).filter(User.username == admin_username).first()
+        if not existing:
+            db.add(User(
+                username=admin_username,
+                password_hash=get_password_hash(admin_password),
+                role="ADMIN",
+            ))
+            db.commit()
+            print(f"✅ Usuario admin '{admin_username}' creado")
+        else:
+            print(f"✅ Usuario admin '{admin_username}' ya existe")
     finally:
         db.close()
 
 @app.on_event("startup")
 def on_startup():
     init_db()
-    seed_default_users()
+    seed_admin()
     print("✅ Base de datos inicializada correctamente")
 
 # --- Authentication ---
@@ -171,15 +167,90 @@ def login(
         raise HTTPException(status_code=400, detail="Usuario o contraseña incorrectos")
 
     access_token = create_access_token(
-        data={"sub": user.username, "user_id": user.id}
+        data={"sub": user.username, "user_id": user.id, "role": user.role}
     )
 
     return TokenResponse(
         access_token=access_token,
         user_id=user.id,
         username=user.username,
-        profile=user.profile,
+        role=user.role,
     )
+
+@app.get("/auth/me", response_model=TokenResponse)
+def me(current_user: User = Depends(get_current_user)):
+    return TokenResponse(
+        access_token="",
+        user_id=current_user.id,
+        username=current_user.username,
+        role=current_user.role,
+    )
+
+def require_admin(current_user: User = Depends(get_current_user)):
+    if current_user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Acceso restringido a administradores")
+    return current_user
+
+@app.post("/auth/register", status_code=201)
+def register(body: RegisterRequest, db: Session = Depends(db_from_request)):
+    if db.query(User).filter(User.username == body.username).first():
+        raise HTTPException(status_code=400, detail="El nombre de usuario ya está en uso")
+    user = User(
+        username=body.username,
+        password_hash=get_password_hash(body.password),
+        role="USER",
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return {"user_id": user.id, "username": user.username, "role": user.role}
+
+# --- Admin Endpoints ---
+
+@app.get("/admin/users")
+def listar_usuarios(
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(db_from_request),
+):
+    users = db.query(User).order_by(User.created_at).all()
+    return [
+        {"id": u.id, "username": u.username, "role": u.role, "created_at": u.created_at}
+        for u in users
+    ]
+
+@app.patch("/admin/users/{user_id}")
+def actualizar_usuario(
+    user_id: int,
+    body: UpdateUserRequest,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(db_from_request),
+):
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="No puedes modificar tu propio rol")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if body.role is not None:
+        if body.role not in ("USER", "ADMIN"):
+            raise HTTPException(status_code=400, detail="Rol inválido. Valores permitidos: USER, ADMIN")
+        user.role = body.role
+    db.commit()
+    return {"id": user.id, "username": user.username, "role": user.role}
+
+@app.delete("/admin/users/{user_id}", status_code=204)
+def eliminar_usuario(
+    user_id: int,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(db_from_request),
+):
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="No puedes eliminar tu propia cuenta")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    db.delete(user)
+    db.commit()
+    return
 
 # --- Property Endpoints ---
 

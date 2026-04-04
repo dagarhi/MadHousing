@@ -1,0 +1,62 @@
+<div class="admin-panel">
+
+  <header class="admin-header">
+    <button class="btn-volver" (click)="volverAlMapa()">
+      <lucide-icon name="arrow-left"></lucide-icon>
+      Volver al mapa
+    </button>
+    <h1>Panel de administración</h1>
+    <span class="admin-badge">{{ currentUsername }}</span>
+  </header>
+
+  <main class="admin-content">
+
+    <div *ngIf="error" class="admin-error">
+      {{ error }}
+      <button (click)="error = null">✕</button>
+    </div>
+
+    <div *ngIf="cargando" class="admin-estado">Cargando usuarios…</div>
+
+    <table *ngIf="!cargando" class="user-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Usuario</th>
+          <th>Rol</th>
+          <th>Registro</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td class="col-id">{{ user.id }}</td>
+          <td class="col-username">{{ user.username }}</td>
+          <td class="col-role">
+            <span [class]="'role-badge role-badge--' + user.role.toLowerCase()">{{ user.role }}</span>
+          </td>
+          <td class="col-date">{{ user.created_at | date:'dd/MM/yyyy' }}</td>
+          <td class="col-actions">
+            <ng-container *ngIf="confirmDeleteId !== user.id; else confirmDelete">
+              <button class="btn-action btn-role" (click)="cambiarRol(user)"
+                [title]="'Cambiar a ' + (user.role === 'ADMIN' ? 'USER' : 'ADMIN')">
+                <lucide-icon name="shield"></lucide-icon>
+              </button>
+              <button class="btn-action btn-delete" (click)="confirmarEliminar(user.id)" title="Eliminar">
+                <lucide-icon name="trash-2"></lucide-icon>
+              </button>
+            </ng-container>
+            <ng-template #confirmDelete>
+              <span class="confirm-text">¿Eliminar?</span>
+              <button class="btn-action btn-delete" (click)="eliminarUsuario(user.id)">Sí</button>
+              <button class="btn-action" (click)="cancelarEliminar()">No</button>
+            </ng-template>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p *ngIf="!cargando && users.length === 0" class="admin-estado">No hay usuarios registrados.</p>
+
+  </main>
+</div>
