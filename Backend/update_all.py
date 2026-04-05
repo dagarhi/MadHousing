@@ -1,182 +1,293 @@
-from datetime import datetime
+import json
 import time
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).parent / ".env")
 
 from database import SessionLocal, init_db
 from models import Propiedad
 from services.idealista_api import IdealistaAPI
 from services.scoring import valoracion_intrinseca, generar_huella_digital
 
+ZONAS = [
+    # ── High-interest zones (2 ops, wide radius) ──────────────────────────────
+    # ── High-interest zones: 7 pages × 2 ops = 14 calls each ────────────────────
+    {
+        "name":       "madrid",
+        "active":     True,
+        "center":     "40.4168,-3.7038",
+        "distance_m": 10000,
+        "pages":      7,           # 7 pages × 2 ops = 14 calls
+        "operations": ["rent", "sale"],
+    },
+    {
+        "name":       "alcorcon",
+        "active":     True,
+        "center":     "40.3459,-3.8249",
+        "distance_m": 5000,
+        "pages":      7,           # 7 pages × 2 ops = 14 calls
+        "operations": ["rent", "sale"],
+    },
+    # ── Madrid districts: 6 pages × 2 ops = 12 calls each (6 × 12 = 72) ────────
+    {
+        "name":       "vallecas",
+        "active":     True,
+        "center":     "40.3895,-3.6570",
+        "distance_m": 4000,
+        "pages":      6,           # 6 pages × 2 ops = 12 calls
+        "operations": ["rent", "sale"],
+    },
+    {
+        "name":       "retiro",
+        "active":     True,
+        "center":     "40.4113,-3.6833",
+        "distance_m": 3000,
+        "pages":      6,
+        "operations": ["rent", "sale"],
+    },
+    {
+        "name":       "arganzuela",
+        "active":     True,
+        "center":     "40.3982,-3.6956",
+        "distance_m": 3000,
+        "pages":      6,
+        "operations": ["rent", "sale"],
+    },
+    {
+        "name":       "moratalaz",
+        "active":     True,
+        "center":     "40.4075,-3.6520",
+        "distance_m": 3000,
+        "pages":      6,
+        "operations": ["rent", "sale"],
+    },
+    {
+        "name":       "usera",
+        "active":     True,
+        "center":     "40.3855,-3.7050",
+        "distance_m": 3000,
+        "pages":      6,
+        "operations": ["rent", "sale"],
+    },
+    {
+        "name":       "bellasvistas",
+        "active":     True,
+        "center":     "40.4489,-3.7088",
+        "distance_m": 3000,
+        "pages":      6,
+        "operations": ["rent", "sale"],
+    },
+]
 
+MONTHLY_BUDGET     = 100   
+MAX_ITEMS_PER_PAGE = 50    
 
-# Zonas y operaciones a actualizar (igual que tu script actual)
-ZONAS = ["madrid", "alcorcon"]
-OPERACIONES = ["rent", "sale"]
+STATE_FILE = Path(__file__).parent / "update_state.json"
 
-# Coordenadas predefinidas (copiado de main.py)
-CENTROS = {
-    "madrid": ("40.4168,-3.7038", 10000),
-    "alcorcon": ("40.3459,-3.8249", 5000),
-    "vallecas": ("40.3895,-3.6570", 4000),
-    "retiro": ("40.4113,-3.6833", 3000),
-    "arganzuela": ("40.3982,-3.6956", 3000),
-    "moratalaz": ("40.4075,-3.6520", 3000),
-    "usera": ("40.3855,-3.7050", 3000),
-    "bellasvistas": ("40.4489,-3.7088", 3000),
+CITY_CORRECTIONS = {
+    "mostol":        "mostoles",
+    "alcorcon":      "alcorcon",
+    "fuenlabrad":    "fuenlabrada",
+    "getafe":        "getafe",
+    "leganes":       "leganes",
+    "pozuelo":       "pozuelo de alarcon",
+    "roz":           "las rozas de madrid",
+    "alcobend":      "alcobendas",
+    "parla":         "parla",
+    "coslada":       "coslada",
+    "torrejon":      "torrejon de ardoz",
+    "san sebastian": "san sebastian de los reyes",
+    "alcala":        "alcala de henares",
+    "rivas":         "rivas vaciamadrid",
+    "majadahonda":   "majadahonda",
+    "boadilla":      "boadilla del monte",
+    "arroyomolinos": "arroyomolinos",
+    "villaviciosa":  "villaviciosa de odon",
 }
 
+# ── State persistence ─────────────────────────────────────────────────────────
 
-def seed_zona(db, api: IdealistaAPI, zona: str, operation: str):
-    """Replica la lógica de /seed-idealista pero sin FastAPI."""
-    center, distance_m = CENTROS.get(zona.lower(), ("40.4168,-3.7038", 8000))
-    print(f"   → centro={center} distancia={distance_m}m (zona={zona}, op={operation})")
+def load_state() -> dict:
+    if STATE_FILE.exists():
+        with open(STATE_FILE) as f:
+            return json.load(f)
+    return {}
 
-    # Idealista usa km en el parámetro distance (como en tu main.py)
-    datos = api.search_by_area(
-        center=center,
-        distance=distance_m,
-        operation=operation,
+def save_state(state: dict):
+    with open(STATE_FILE, "w") as f:
+        json.dump(state, f, indent=2, default=str)
+
+WINDOW_DAYS = 30  # Idealista restores calls over a rolling 30-day window
+
+def calls_in_window(state: dict) -> int:
+    """Count API calls made within the last WINDOW_DAYS days."""
+    cutoff = datetime.now() - timedelta(days=WINDOW_DAYS)
+    return sum(
+        entry["n"]
+        for entry in state.get("call_log", [])
+        if datetime.fromisoformat(entry["ts"]) >= cutoff
     )
 
-    if not isinstance(datos, dict) or "elementList" not in datos:
-        raise RuntimeError(f"Respuesta inesperada de Idealista en {zona} ({operation}): {datos}")
+def record_calls(state: dict, n: int):
+    """Append a call record and prune entries older than the window."""
+    cutoff = datetime.now() - timedelta(days=WINDOW_DAYS)
+    state.setdefault("call_log", [])
+    state["call_log"].append({"ts": datetime.now().isoformat(), "n": n})
+    state["call_log"] = [e for e in state["call_log"] if datetime.fromisoformat(e["ts"]) >= cutoff]
 
-    nuevas = 0
-    actualizadas = 0
+def get_last_updated(state: dict, name: str, op: str):
+    ts = state.get("last_updated", {}).get(f"{name}:{op}")
+    return datetime.fromisoformat(ts) if ts else None
 
-    for e in datos.get("elementList", []):
+def set_last_updated(state: dict, name: str, op: str):
+    state.setdefault("last_updated", {})
+    state["last_updated"][f"{name}:{op}"] = datetime.now().isoformat()
+
+# ── Task scheduling ───────────────────────────────────────────────────────────
+
+def build_tasks(state: dict) -> list:
+    """Expand active zones into (zone_cfg, op) pairs, sorted stalest-first."""
+    tasks = [
+        (zone, op)
+        for zone in ZONAS
+        if zone["active"]
+        for op in zone["operations"]
+    ]
+    return sorted(tasks, key=lambda t: get_last_updated(state, t[0]["name"], t[1]) or datetime.min)
+
+# ── DB helpers ────────────────────────────────────────────────────────────────
+
+def normalise_city(city_val: str, district_val: str, neigh_val: str) -> str:
+    if city_val.lower() != "madrid":
+        return city_val
+    txt = f"{district_val} {neigh_val}".lower()
+    for key, corrected in CITY_CORRECTIONS.items():
+        if key in txt:
+            return corrected
+    return city_val
+
+def upsert_properties(db, elements: list, operation: str) -> dict:
+    nuevas = actualizadas = 0
+    for e in elements:
         lat = e.get("latitude")
         lon = e.get("longitude")
         if lat is None or lon is None:
             continue
 
-        # --- Corrección del municipio (copiado de main.py) ---
-        city_val = e.get("municipality") or ""
+        city_val     = e.get("municipality") or ""
         district_val = e.get("district") or ""
-        neigh_val = e.get("neighborhood") or ""
+        neigh_val    = e.get("neighborhood") or ""
 
-        if city_val.lower() == "madrid":
-            txt = f"{district_val} {neigh_val}".lower()
-            if "mostol" in txt:
-                city_val = "mostoles"
-            elif "alcorcon" in txt:
-                city_val = "alcorcon"
-            elif "fuenlabrad" in txt:
-                city_val = "fuenlabrada"
-            elif "getafe" in txt:
-                city_val = "getafe"
-            elif "leganes" in txt:
-                city_val = "leganes"
-            elif "pozuelo" in txt:
-                city_val = "pozuelo de alarcon"
-            elif "roz" in txt:
-                city_val = "las rozas de madrid"
-            elif "alcobend" in txt:
-                city_val = "alcobendas"
-            elif "parla" in txt:
-                city_val = "parla"
-            elif "coslada" in txt:
-                city_val = "coslada"
-            elif "torrejon" in txt:
-                city_val = "torrejon de ardoz"
-            elif "san sebastian" in txt:
-                city_val = "san sebastian de los reyes"
-            elif "alcala" in txt:
-                city_val = "alcala de henares"
-            elif "rivas" in txt:
-                city_val = "rivas vaciamadrid"
-            elif "majadahonda" in txt:
-                city_val = "majadahonda"
-            elif "boadilla" in txt:
-                city_val = "boadilla del monte"
-            elif "arroyomolinos" in txt:
-                city_val = "arroyomolinos"
-            elif "villaviciosa" in txt:
-                city_val = "villaviciosa de odon"
-
-        # --- Mapeo Idealista → modelo Propiedad (igual que en main.py) ---
         payload = {
             "propertyCode": str(e.get("propertyCode", "")),
-            "price": e.get("price", 0),
-            "size": e.get("size", 0),
-            "rooms": e.get("rooms", 0),
-            "bathrooms": e.get("bathrooms", 0),
-            "floor": e.get("floor", ""),
-            "address": e.get("address", ""),
-            "district": district_val,
+            "price":        e.get("price", 0),
+            "size":         e.get("size", 0),
+            "rooms":        e.get("rooms", 0),
+            "bathrooms":    e.get("bathrooms", 0),
+            "floor":        e.get("floor", ""),
+            "address":      e.get("address", ""),
+            "district":     district_val,
             "neighborhood": neigh_val,
-            "city": city_val,   # 👈 municipio normalizado
-            "latitude": lat,
-            "longitude": lon,
-            "hasLift": e.get("hasLift", False),
-            "exterior": e.get("exterior", False),
-            "url": e.get("url", ""),
-            "operation": operation,
+            "city":         normalise_city(city_val, district_val, neigh_val),
+            "latitude":     lat,
+            "longitude":    lon,
+            "hasLift":      e.get("hasLift", False),
+            "exterior":     e.get("exterior", False),
+            "url":          e.get("url", ""),
+            "operation":    operation,
         }
-
         if not payload["propertyCode"]:
             continue
 
-        # Enriquecer con huella y score (como en main.py)
-        payload["huella_digital"] = generar_huella_digital(payload)
-        payload["score_intrinseco"] = valoracion_intrinseca(payload)
-        payload["fecha_actualizacion"] = datetime.now()
-        payload["fecha_obtencion"] = datetime.now()
+        payload["huella_digital"]      = generar_huella_digital(payload)
+        payload["score_intrinseco"]    = valoracion_intrinseca(payload)
+        payload["fecha_actualizacion"] = datetime.now(timezone.utc)
+        payload["fecha_obtencion"]     = datetime.now(timezone.utc)
 
-        existe = (
-            db.query(Propiedad)
-            .filter(Propiedad.propertyCode == payload["propertyCode"])
-            .first()
-        )
+        existe = db.query(Propiedad).filter(
+            Propiedad.propertyCode == payload["propertyCode"]
+        ).first()
 
         db.merge(Propiedad(**payload))
-        if existe:
-            actualizadas += 1
-        else:
-            nuevas += 1
+        actualizadas += bool(existe)
+        nuevas       += not bool(existe)
 
     db.commit()
-    total_guardadas = nuevas + actualizadas
+    return {"nuevas": nuevas, "actualizadas": actualizadas}
 
-    return {
-        "zona": zona,
-        "operation": operation,
-        "total_guardadas": total_guardadas,
-        "nuevas": nuevas,
-        "actualizadas": actualizadas,
-    }
-
+# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
-    # Asegurar tablas
     init_db()
+    state = load_state()
+    api   = IdealistaAPI()
 
-    api = IdealistaAPI()
+    used      = calls_in_window(state)
+    remaining = MONTHLY_BUDGET - used
 
-    total_calls = len(ZONAS) * len(OPERACIONES)
-    print(f"\n🚀 Iniciando actualización directa contra Idealista ({total_calls} llamadas)\n")
+    print(f"\n📊 Budget: {used}/{MONTHLY_BUDGET} llamadas usadas en los últimos 30 días ({remaining} restantes)")
 
-    for i, zona in enumerate(ZONAS, start=1):
-        for op in OPERACIONES:
-            print(f"[{i}/{len(ZONAS)}] ⏳ Actualizando {zona.upper()} ({op})...")
-            db = SessionLocal()
-            try:
-                res = seed_zona(db, api, zona, op)
-                print(
-                    f"✅ {zona} ({op}): "
-                    f"{res['total_guardadas']} guardadas | "
-                    f"{res['nuevas']} nuevas | "
-                    f"{res['actualizadas']} actualizadas"
-                )
-            except Exception as e:
-                db.rollback()
-                print(f"❌ Error en {zona} ({op}): {e}")
-            finally:
-                db.close()
+    if remaining < 1:
+        print("⛔ Sin llamadas disponibles. Vuelve cuando se restauren más.")
+        return
 
-            # Pausa para no ser agresivos con Idealista
-            time.sleep(5)
+    tasks_run = tasks_skipped = 0
 
-    print("\n🎯 Actualización completada.\n")
+    for zone, op in build_tasks(state):
+        name  = zone["name"]
+        pages = zone["pages"]
+
+        if remaining < pages:
+            print(f"\n⚠️  Solo quedan {remaining} llamadas — insuficientes para {name} ({pages} páginas). Parando.")
+            break
+
+        last = get_last_updated(state, name, op)
+        print(f"\n⏳ {name.upper()} ({op}) — última vez: {last.strftime('%Y-%m-%d %H:%M') if last else 'nunca'}")
+
+        db = SessionLocal()
+        try:
+            search_kwargs = dict(
+                operation=op,
+                max_items=MAX_ITEMS_PER_PAGE,
+                num_pages=pages,
+            )
+            if "location_id" in zone:
+                search_kwargs["locationId"] = zone["location_id"]
+            else:
+                search_kwargs["center"]   = zone["center"]
+                search_kwargs["distance"] = zone["distance_m"]
+
+            datos = api.search_by_area(**search_kwargs)
+
+            if not isinstance(datos, dict) or "elementList" not in datos:
+                print(f"  ❌ Respuesta inesperada: {datos}")
+                tasks_skipped += 1
+                continue
+
+            pages_used = datos.get("pages_used", 0)
+            res = upsert_properties(db, datos["elementList"], op)
+            print(f"  ✅ {res['nuevas']} nuevas | {res['actualizadas']} actualizadas "
+                  f"| total recibidas: {len(datos['elementList'])} | páginas usadas: {pages_used}/{pages}")
+
+            record_calls(state, pages_used)
+            set_last_updated(state, name, op)
+            remaining  -= pages_used
+            tasks_run  += 1
+
+        except Exception as e:
+            db.rollback()
+            print(f"  ❌ Error: {e}")
+            tasks_skipped += 1
+        finally:
+            db.close()
+            save_state(state)  # persist after every task — progress never lost
+
+        time.sleep(2)
+
+    print(f"\n🎯 Run completado: {tasks_run} tareas actualizadas, {tasks_skipped} con error.")
+    print(f"📊 Llamadas usadas (últimos 30 días): {calls_in_window(state)}/{MONTHLY_BUDGET}\n")
 
 
 if __name__ == "__main__":

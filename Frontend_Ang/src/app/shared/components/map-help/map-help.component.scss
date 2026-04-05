@@ -1,0 +1,60 @@
+/* El host se posiciona respecto a .vista-mapa */
+:host {
+  position: absolute;
+  top: 64px;   
+  right: 16px;
+  z-index: 900; 
+}
+
+/* Botón info */
+.map-info-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-inline: 0.75rem;
+
+  font-size: 0.85rem;
+  line-height: 1;
+
+  lucide-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Diálogo / tarjeta de ayuda */
+.map-help-card {
+  min-width: 320px;
+  max-width: 480px;
+  padding: 1.25rem 1.5rem;
+}
+
+.map-help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+}
+
+.map-help-body {
+  font-size: 0.95rem;
+  line-height: 1.4;
+
+  ul {
+    margin: 0.75rem 0 0;
+    padding-left: 1.25rem;
+  }
+}
+
+.map-help-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}

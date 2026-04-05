@@ -35,7 +35,7 @@ export class DrawerShellComponent implements OnChanges {
 
   @HostBinding('class.open') get isOpen() { return this.opened; }
 
-  constructor(private renderer: Renderer2) {}
+  constructor(private renderer: Renderer2) { }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['opened']) {
@@ -47,11 +47,10 @@ export class DrawerShellComponent implements OnChanges {
     }
   }
 
-  /** Cierre programático reutilizable */
   private closeInternal() {
     if (!this.opened) return;
     this.opened = false;
-    this.openedChange.emit(false); // 🔴 CLAVE
+    this.openedChange.emit(false);
   }
 
   onCloseClick(event: MouseEvent) {
@@ -63,7 +62,6 @@ export class DrawerShellComponent implements OnChanges {
     if (!this.disableBackdropClose) this.closeInternal();
   }
 
-  /** Cerrar con ESC */
   @HostListener('document:keydown.escape')
   onEsc() {
     this.closeInternal();

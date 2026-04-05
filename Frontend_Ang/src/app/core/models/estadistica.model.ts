@@ -3,6 +3,7 @@ export interface EstadisticaZona {
   tamano_medio?: number;
   score_medio?: number;
   count?: number;
+  [key: string]: number | undefined;
 }
 
 export interface EstadisticasGlobales {

@@ -1,4 +1,5 @@
 import requests
+import requests.exceptions
 import os
 import time
 from dotenv import load_dotenv
@@ -6,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class IdealistaAPI:
-    """Cliente para la API de Idealista."""
+    """Client for the Idealista API."""
 
     def __init__(self):
         self.api_key = os.getenv("IDEALISTA_API_KEY")
@@ -25,9 +26,37 @@ class IdealistaAPI:
             response.raise_for_status()
             self.token = response.json().get("access_token")
             return self.token
-        except Exception as e:
+        except requests.exceptions.RequestException as e:
             print(f"[Idealista] ❌ Error obteniendo token: {e}")
             return None
+        except Exception as e:
+            print(f"[Idealista] ❌ Error inesperado: {e}")
+            raise
+
+    def _paginate(self, params_base, num_pages):
+        headers = {"Authorization": f"Bearer {self.token}"}
+        all_results = []
+        pages_used = 0
+        for page in range(1, num_pages + 1):
+            params = {**params_base, "numPage": page}
+            try:
+                resp = requests.post(
+                    "https://api.idealista.com/3.5/es/search",
+                    headers=headers,
+                    data=params,
+                    timeout=20,
+                )
+                resp.raise_for_status()
+                pages_used += 1
+                batch = resp.json().get("elementList", [])
+                if not batch:
+                    break
+                all_results.extend(batch)
+                time.sleep(1.5)
+            except requests.exceptions.RequestException as e:
+                print(f"[Idealista] ⚠️ Error en página {page}: {e}")
+                break
+        return all_results, pages_used
 
     def search_by_area(
         self,
@@ -39,11 +68,10 @@ class IdealistaAPI:
         max_items=50,
         num_pages=3,
     ):
-        """Busca propiedades por coordenadas o locationId."""
+        """Search properties by coordinates or locationId."""
         if not (self.token or self.get_access_token()):
             return {"error": "No se pudo obtener token de acceso"}
 
-        headers = {"Authorization": f"Bearer {self.token}"}
         params_base = {
             "country": "es",
             "operation": operation,
@@ -60,63 +88,24 @@ class IdealistaAPI:
         else:
             return {"error": "Debe indicarse locationId o center+distance"}
 
-        all_results = []
-        for page in range(1, num_pages + 1):
-            params = {**params_base, "numPage": page}
-            try:
-                resp = requests.post(
-                    "https://api.idealista.com/3.5/es/search",
-                    headers=headers,
-                    data=params,
-                    timeout=20,
-                )
-                resp.raise_for_status()
-                batch = resp.json().get("elementList", [])
-                if not batch:
-                    break
-                all_results.extend(batch)
-                time.sleep(0.5)
-            except Exception as e:
-                print(f"[Idealista] ⚠️ Error en página {page}: {e}")
-                break
-
-        print(f"[Idealista] ✅ Total resultados obtenidos: {len(all_results)}")
-        return {"elementList": all_results, "total": len(all_results)}
+        all_results, pages_used = self._paginate(params_base, num_pages)
+        print(f"[Idealista] ✅ Total resultados obtenidos: {len(all_results)} ({pages_used} páginas usadas)")
+        return {"elementList": all_results, "total": len(all_results), "pages_used": pages_used}
 
     def search_by_area_name(self, area_name, operation="rent", property_type="homes", max_items=50, num_pages=3):
-        """Búsqueda por nombre de zona (locationId o texto libre)."""
+        """Search properties by free text name."""
         if not (self.token or self.get_access_token()):
             return {"error": "No se pudo obtener token de acceso"}
 
-        headers = {"Authorization": f"Bearer {self.token}"}
         params_base = {
             "country": "es",
             "operation": operation,
             "propertyType": property_type,
             "maxItems": max_items,
             "locale": "es",
-            "q": area_name,  # Idealista permite búsqueda textual
+            "q": area_name,
         }
 
-        all_results = []
-        for page in range(1, num_pages + 1):
-            params = {**params_base, "numPage": page}
-            try:
-                resp = requests.post(
-                    "https://api.idealista.com/3.5/es/search",
-                    headers=headers,
-                    data=params,
-                    timeout=20,
-                )
-                resp.raise_for_status()
-                batch = resp.json().get("elementList", [])
-                if not batch:
-                    break
-                all_results.extend(batch)
-                time.sleep(0.5)
-            except Exception as e:
-                print(f"[Idealista] ⚠️ Error en página {page}: {e}")
-                break
-
-        print(f"[Idealista] ✅ Resultados obtenidos por nombre '{area_name}': {len(all_results)}")
-        return {"elementList": all_results, "total": len(all_results)}
+        all_results, pages_used = self._paginate(params_base, num_pages)
+        print(f"[Idealista] ✅ Resultados obtenidos por nombre '{area_name}': {len(all_results)} ({pages_used} páginas usadas)")
+        return {"elementList": all_results, "total": len(all_results), "pages_used": pages_used}

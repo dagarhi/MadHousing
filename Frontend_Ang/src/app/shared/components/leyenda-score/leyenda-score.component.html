@@ -18,7 +18,12 @@
 
   <!-- Panel de la leyenda -->
   <div class="panel" *ngIf="expanded">
-    <h4>Score medio</h4>
+    <h4>Valor o score</h4>
+    <p>La puntuación o valor que un piso recibe viene dado por dos tipos de asignación según su operación:</p>
+    <ul>
+      <li>Venta: está basado en la relación <strong>€/m²</strong>, cuanto mayor es este valor, peor valoración obtendrá.</li>
+      <li>Alquiler: recibe una valoración fija respecto al precio del inmueble, cuanto más barato es el piso, mejor valoración.</li>
+    </ul>
 
     <div class="barra" [ngStyle]="gradientStyle"></div>
 

@@ -39,6 +39,8 @@ import {
   Navigation2,
   ListOrdered,
   House,
+  Compass,
+  Info
 
   
 } from 'lucide-angular';
@@ -79,7 +81,9 @@ bootstrapApplication(AppComponent, {
         EyeOff,
         Navigation2,
         ListOrdered,
-        House
+        House,
+        Compass,
+        Info
       })
     ),
   ],

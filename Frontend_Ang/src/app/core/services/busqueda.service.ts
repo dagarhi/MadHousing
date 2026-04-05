@@ -5,28 +5,32 @@ import { Observable, lastValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { FiltroBusqueda } from '../models/filtros.model';
 
+interface SearchResponse {
+  propiedades: Propiedad[];
+  total: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class BusquedaService {
   private baseUrl = environment.apiBaseUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
-  buscar(filtros: FiltroBusqueda): Observable<any> {
+  buscar(filtros: FiltroBusqueda): Observable<SearchResponse> {
     const params = new HttpParams({
       fromObject: Object.entries(filtros)
         .filter(([_, v]) => v !== undefined && v !== null && v !== '')
         .reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {}),
     });
 
-  return this.http.get(`${this.baseUrl}/buscar`, { params });
-}
+    return this.http.get<SearchResponse>(`${this.baseUrl}/buscar`, { params });
+  }
 
-  buscarTodasPaginas(paramsBase: any): Promise<Propiedad[]> {
+  async buscarTodasPaginas(paramsBase: FiltroBusqueda): Promise<Propiedad[]> {
     const per_page = 100;
     let page = 1;
     let acumulado: Propiedad[] = [];
 
-    // ✅ Sanitizar: quitar undefined, null, '', y también false en booleanos (p.ej. hasLift)
     const sanitize = (obj: Record<string, any>) =>
       Object.fromEntries(
         Object.entries(obj).filter(([_, v]) =>
@@ -34,7 +38,7 @@ export class BusquedaService {
         )
       );
 
-    const base = sanitize(paramsBase);
+    const base = sanitize(paramsBase as any);
 
     const buildParams = (extra: Record<string, any>) =>
       new HttpParams({
@@ -47,8 +51,8 @@ export class BusquedaService {
       try {
         while (true) {
           const params = buildParams({ page, per_page });
-          const res: any = await lastValueFrom(this.http.get(`${this.baseUrl}/buscar`, { params }));
-          const chunk = Array.isArray(res?.propiedades) ? res.propiedades : [];
+          const res = await lastValueFrom(this.http.get<SearchResponse>(`${this.baseUrl}/buscar`, { params }));
+          const chunk = res?.propiedades || [];
           acumulado = acumulado.concat(chunk);
           const total = res?.total ?? chunk.length;
           if (page * per_page >= total || chunk.length === 0) break;
@@ -77,11 +81,11 @@ export class BusquedaService {
             } as any,
           });
 
-          const res: any = await lastValueFrom(
-            this.http.get(`${this.baseUrl}/buscar-todo`, { params })
+          const res = await lastValueFrom(
+            this.http.get<SearchResponse>(`${this.baseUrl}/buscar-todo`, { params })
           );
 
-          const chunk = Array.isArray(res?.propiedades) ? res.propiedades : [];
+          const chunk = res?.propiedades || [];
           acumulado = acumulado.concat(chunk);
 
           const total = res?.total ?? chunk.length;
@@ -94,4 +98,4 @@ export class BusquedaService {
       }
     });
   }
-  }
+}

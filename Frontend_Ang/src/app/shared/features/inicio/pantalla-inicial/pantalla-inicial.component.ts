@@ -14,10 +14,13 @@ import { LucideAngularModule } from 'lucide-angular';
 })
 export class PantallaInicialComponent implements OnInit {
   loginForm: FormGroup;
+  registerForm: FormGroup;
+
+  modoRegistro = false;
   cargando = false;
   error: string | null = null;
   mensajeSesion: string | null = null;
-
+  registroExito: string | null = null;
   mostrarPassword = false;
 
   constructor(
@@ -29,6 +32,10 @@ export class PantallaInicialComponent implements OnInit {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
       password: ['', [Validators.required]],
+    });
+    this.registerForm = this.fb.group({
+      username: ['', [Validators.required, Validators.minLength(3)]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
     });
   }
 
@@ -44,19 +51,23 @@ export class PantallaInicialComponent implements OnInit {
     }
   }
 
+  toggleModo(): void {
+    this.modoRegistro = !this.modoRegistro;
+    this.error = null;
+    this.registroExito = null;
+    this.loginForm.reset();
+    this.registerForm.reset();
+  }
+
   onSubmit(): void {
     if (this.cargando) return;
-
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;
     }
-
     this.error = null;
     this.cargando = true;
-
     const { username, password } = this.loginForm.value;
-
     this.auth.login(username, password).subscribe({
       next: () => {
         this.cargando = false;
@@ -70,9 +81,36 @@ export class PantallaInicialComponent implements OnInit {
     });
   }
 
-  // Helpers para mostrar errores en el template
+  onRegister(): void {
+    if (this.cargando) return;
+    if (this.registerForm.invalid) {
+      this.registerForm.markAllAsTouched();
+      return;
+    }
+    this.error = null;
+    this.cargando = true;
+    const { username, password } = this.registerForm.value;
+    this.auth.register(username, password).subscribe({
+      next: () => {
+        this.cargando = false;
+        this.registroExito = 'Cuenta creada. Ya puedes iniciar sesión.';
+        this.modoRegistro = false;
+        this.loginForm.patchValue({ username });
+      },
+      error: (err) => {
+        this.cargando = false;
+        this.error = err.error?.detail ?? 'Error al registrar. Inténtalo de nuevo.';
+      },
+    });
+  }
+
   hasError(controlName: string, error: string): boolean {
     const control = this.loginForm.get(controlName);
+    return !!control && control.touched && control.hasError(error);
+  }
+
+  hasErrorReg(controlName: string, error: string): boolean {
+    const control = this.registerForm.get(controlName);
     return !!control && control.touched && control.hasError(error);
   }
 

@@ -132,31 +132,24 @@
     }
   }
 
-  // Versión modo oscuro
-  &.dark {
-    background: #020617;
-    color: #e5e7eb;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  .score {
+    margin-top: 0.25rem;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
 
-    .address .location {
-      color: #9ca3af;
+    .score-label {
+      font-weight: 500;
+      color: #6b7280;
     }
 
-    .price .size {
-      color: #9ca3af;
-    }
+    .score-value {
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      font-weight: 600;
 
-    .operation {
-      background: #111827;
-      color: #93c5fd;
-    }
-
-    .footer .link {
-      color: #93c5fd;
-    }
-
-    .fav-btn:hover {
-      background: rgba(148, 163, 184, 0.25);
     }
   }
+  
 }
