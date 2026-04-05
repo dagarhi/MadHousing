@@ -36,6 +36,7 @@ class IdealistaAPI:
     def _paginate(self, params_base, num_pages):
         headers = {"Authorization": f"Bearer {self.token}"}
         all_results = []
+        pages_used = 0
         for page in range(1, num_pages + 1):
             params = {**params_base, "numPage": page}
             try:
@@ -46,15 +47,16 @@ class IdealistaAPI:
                     timeout=20,
                 )
                 resp.raise_for_status()
+                pages_used += 1
                 batch = resp.json().get("elementList", [])
                 if not batch:
                     break
                 all_results.extend(batch)
-                time.sleep(0.5)
+                time.sleep(1.5)
             except requests.exceptions.RequestException as e:
                 print(f"[Idealista] ⚠️ Error en página {page}: {e}")
                 break
-        return all_results
+        return all_results, pages_used
 
     def search_by_area(
         self,
@@ -86,9 +88,9 @@ class IdealistaAPI:
         else:
             return {"error": "Debe indicarse locationId o center+distance"}
 
-        all_results = self._paginate(params_base, num_pages)
-        print(f"[Idealista] ✅ Total resultados obtenidos: {len(all_results)}")
-        return {"elementList": all_results, "total": len(all_results)}
+        all_results, pages_used = self._paginate(params_base, num_pages)
+        print(f"[Idealista] ✅ Total resultados obtenidos: {len(all_results)} ({pages_used} páginas usadas)")
+        return {"elementList": all_results, "total": len(all_results), "pages_used": pages_used}
 
     def search_by_area_name(self, area_name, operation="rent", property_type="homes", max_items=50, num_pages=3):
         """Search properties by free text name."""
@@ -104,6 +106,6 @@ class IdealistaAPI:
             "q": area_name,
         }
 
-        all_results = self._paginate(params_base, num_pages)
-        print(f"[Idealista] ✅ Resultados obtenidos por nombre '{area_name}': {len(all_results)}")
-        return {"elementList": all_results, "total": len(all_results)}
+        all_results, pages_used = self._paginate(params_base, num_pages)
+        print(f"[Idealista] ✅ Resultados obtenidos por nombre '{area_name}': {len(all_results)} ({pages_used} páginas usadas)")
+        return {"elementList": all_results, "total": len(all_results), "pages_used": pages_used}
