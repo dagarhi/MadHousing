@@ -31,6 +31,7 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
 
   // mapa-principal.component.ts
   async ngAfterViewInit() {
+    await new Promise<void>(resolve => setTimeout(resolve, 0));
     await this.manager.init(this.mapContainer.nativeElement);
     this.ready = true; 
 

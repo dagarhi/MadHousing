@@ -40,7 +40,8 @@ import {
   ListOrdered,
   House,
   Compass,
-  Info
+  Info,
+  Shield
 
   
 } from 'lucide-angular';
@@ -83,7 +84,8 @@ bootstrapApplication(AppComponent, {
         ListOrdered,
         House,
         Compass,
-        Info
+        Info,
+        Shield
       })
     ),
   ],

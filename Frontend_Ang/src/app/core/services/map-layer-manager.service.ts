@@ -107,6 +107,7 @@ export class MapLayerManager {
     this.pins.clear();
     this.choro.clear();
     this.mapSvc.destroy?.();
+    this.map = undefined;
   }
 
   setChoroplethPolygons(geojson: FeatureCollection<Polygon | MultiPolygon>, idField = 'CODIGOINE') {

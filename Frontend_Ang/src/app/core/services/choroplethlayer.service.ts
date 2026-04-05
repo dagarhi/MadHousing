@@ -104,6 +104,7 @@ export class ChoroplethLayerService {
   clear() {
     this.visible = false;
     this.lastData = [];
+    this.hoverBound = false;
     if (!this.map) return;
     if (this.map.getLayer(this.HIT_ID)) this.map.removeLayer(this.HIT_ID);
     if (this.map.getLayer(this.FILL_ID)) this.map.removeLayer(this.FILL_ID);
