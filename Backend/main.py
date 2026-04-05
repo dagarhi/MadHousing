@@ -159,7 +159,7 @@ def login(
     credentials: LoginRequest,
     db: Session = Depends(db_from_request),
 ):
-    user = db.query(User).filter(User.username == credentials.username).first()
+    user = db.query(User).filter(User.username == credentials.username.strip()).first()
     if not user:
         raise HTTPException(status_code=400, detail="Usuario o contraseña incorrectos")
 
@@ -193,10 +193,10 @@ def require_admin(current_user: User = Depends(get_current_user)):
 
 @app.post("/auth/register", status_code=201)
 def register(body: RegisterRequest, db: Session = Depends(db_from_request)):
-    if db.query(User).filter(User.username == body.username).first():
+    if db.query(User).filter(User.username == body.username.strip()).first():
         raise HTTPException(status_code=400, detail="El nombre de usuario ya está en uso")
     user = User(
-        username=body.username,
+        username=body.username.strip(),
         password_hash=get_password_hash(body.password),
         role="USER",
     )
