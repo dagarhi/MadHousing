@@ -3,6 +3,9 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).parent / ".env")
+
 from database import SessionLocal, init_db
 from models import Propiedad
 from services.idealista_api import IdealistaAPI
@@ -263,13 +266,14 @@ def main():
                 tasks_skipped += 1
                 continue
 
+            pages_used = datos.get("pages_used", 0)
             res = upsert_properties(db, datos["elementList"], op)
             print(f"  ✅ {res['nuevas']} nuevas | {res['actualizadas']} actualizadas "
-                  f"| total recibidas: {len(datos['elementList'])}")
+                  f"| total recibidas: {len(datos['elementList'])} | páginas usadas: {pages_used}/{pages}")
 
-            record_calls(state, pages)
+            record_calls(state, pages_used)
             set_last_updated(state, name, op)
-            remaining  -= pages
+            remaining  -= pages_used
             tasks_run  += 1
 
         except Exception as e:
