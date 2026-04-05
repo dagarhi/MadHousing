@@ -41,6 +41,7 @@ export class MapService {
       this.map!.once('load', () => { this.mapaCargado = true; resolve(); });
     });
     await this.loadPinsIcons();
+    this.map.resize();
   }
 
   getMap(): maplibregl.Map | undefined {
