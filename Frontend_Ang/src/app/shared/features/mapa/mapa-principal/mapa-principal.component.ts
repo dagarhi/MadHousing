@@ -1,10 +1,9 @@
-import { Component, AfterViewInit, OnChanges, OnDestroy, Input, ViewChild, ElementRef, SimpleChanges } from '@angular/core';
+import { Component, AfterViewInit, OnChanges, OnDestroy, Input, Output, EventEmitter, ViewChild, ElementRef, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { LucideAngularModule } from 'lucide-angular';
-import { Propiedad } from '../../../../core/models/propiedad.model'; 
-import { MapLayerManager, Modo } from '../../../../core/services/map-layer-manager.service'; 
+import { Propiedad } from '../../../../core/models/propiedad.model';
+import { MapLayerManager, Modo } from '../../../../core/services/map-layer-manager.service';
+import { MapControlsComponent } from '../../../components/map-controls/map-controls.component';
 import { HttpClient } from '@angular/common/http';
 import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 import { Subscription } from 'rxjs';
@@ -12,7 +11,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-mapa-principal',
   standalone: true,
-  imports: [CommonModule, MatButtonToggleModule, MatTooltipModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, MapControlsComponent],
   templateUrl: './mapa-principal.component.html',
   styleUrls: ['./mapa-principal.component.scss'],
 })
@@ -20,6 +19,8 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
   @ViewChild('mapContainer', { static: true }) mapContainer!: ElementRef<HTMLDivElement>;
   @Input() pisos: Propiedad[] = [];
   @Input() modo: Modo = 'heat';
+
+  @Output() clear = new EventEmitter<void>();
 
   private ready = false;
   private subs = new Subscription();
@@ -33,13 +34,13 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
   async ngAfterViewInit() {
     await new Promise<void>(resolve => setTimeout(resolve, 0));
     await this.manager.init(this.mapContainer.nativeElement);
-    this.ready = true; 
+    this.ready = true;
 
     this.http.get<FeatureCollection<Polygon | MultiPolygon>>('assets/municipios_cam.geojson')
       .subscribe(geo => {
-        this.manager.setChoroplethPolygons(geo, 'CODIGOINE'); 
+        this.manager.setChoroplethPolygons(geo, 'CODIGOINE');
         this.manager.setData(this.pisos);
-        this.manager.setMode(this.modo); 
+        this.manager.setMode(this.modo);
       });
   }
 
@@ -55,9 +56,17 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
     this.manager.destroy(); 
   }
 
-  setModo(m: Modo) {
+  setModo(m: Modo): void {
     if (this.modo === m) return;
     this.modo = m;
     this.manager.setMode(m);
+  }
+
+  handleClear(): void {
+    this.clear.emit();
+  }
+
+  handleCenter(): void {
+    this.manager.lookNorth();
   }
 }

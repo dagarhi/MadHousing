@@ -1,5 +1,6 @@
 
 import { bootstrapApplication } from '@angular/platform-browser';
+import { provideAnimations } from '@angular/platform-browser/animations';
 import { AppComponent } from './app/app';
 import { provideRouter } from '@angular/router';
 import { routes } from './app/app.routes';
@@ -9,7 +10,7 @@ import { withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './app/core/interceptors/auth.interceptor';
 
 // 👇 Lucide
-import { BrushCleaning, EyeOff, LucideAngularModule } from 'lucide-angular';
+import { BrushCleaning, EyeOff, LucideAngularModule, ArrowLeft } from 'lucide-angular';
 import {
   Heart,
   HeartOff,
@@ -41,15 +42,15 @@ import {
   House,
   Compass,
   Info,
-  Shield
-
-  
+  Shield,
+  ExternalLink,
 } from 'lucide-angular';
 import { Legend } from 'chart.js';
 
 bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(routes),
+    provideAnimations(),
     provideHttpClient(withInterceptors([authInterceptor])),
     importProvidersFrom(
       LucideAngularModule.pick({
@@ -85,7 +86,9 @@ bootstrapApplication(AppComponent, {
         House,
         Compass,
         Info,
-        Shield
+        Shield,
+        ArrowLeft,
+        ExternalLink,
       })
     ),
   ],

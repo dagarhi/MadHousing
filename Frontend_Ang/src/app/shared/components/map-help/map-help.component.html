@@ -1,12 +1,13 @@
 <!-- Botón de información, fijo arriba-izquierda bajo el header -->
 <button
   *ngIf="showInfoButton"
-  mat-raised-button
+  mat-icon-button
   class="map-info-btn"
+  matTooltip="Sobre MadHousing"
+  matTooltipPosition="left"
   (click)="onInfoClick()"
 >
   <lucide-icon name="info"></lucide-icon>
-  <span>Sobre MadHousing</span>
 </button>
 
 <!-- Diálogo con el tutorial -->
