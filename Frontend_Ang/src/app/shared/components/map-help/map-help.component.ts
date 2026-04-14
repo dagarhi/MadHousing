@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatCardModule } from '@angular/material/card';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
@@ -19,6 +20,7 @@ import { LucideAngularModule } from 'lucide-angular';
     MatButtonModule,
     MatDialogModule,
     MatCardModule,
+    MatTooltipModule,
     LucideAngularModule,
   ],
   templateUrl: './map-help.component.html',
@@ -36,7 +38,6 @@ export class MapHelpComponent implements AfterViewInit {
   constructor(private dialog: MatDialog) {}
 
   private get storageKey(): string {
-    // si no hay userKey por lo que sea, usamos una genérica
     return this.userKey ? `mapHelpSeen:${this.userKey}` : 'mapHelpSeen';
   }
 

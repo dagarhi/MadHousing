@@ -1,0 +1,58 @@
+<div class="mc-wrapper">
+
+  <!-- ── Pill trigger ── -->
+  <button class="mc-pill" (click)="toggle($event)">
+    <span>Capas</span>
+    <svg class="mc-chevron" [class.open]="open"
+         width="13" height="13" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor"
+         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+  </button>
+
+  <!-- ── Dropdown panel ── -->
+  <div class="mc-panel" *ngIf="open" [@slideDown]>
+
+    <!-- Capas -->
+    <div class="mc-section">
+      <button
+        *ngFor="let layer of layers"
+        class="mc-layer-btn"
+        [class.active]="activeLayer === layer.value"
+        (click)="selectLayer(layer.value, $event)">
+        <span class="mc-dot" [class.active]="activeLayer === layer.value"></span>
+        {{ layer.label }}
+      </button>
+    </div>
+
+    <div class="mc-divider"></div>
+
+    <!-- Acciones -->
+    <div class="mc-section">
+
+      <button class="mc-action-btn" (click)="clear($event)">
+        <!-- Brush / limpiar -->
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9.06 11.9l8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.07"/>
+          <path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1 1 6.65 2 8 .98.23-.25.37-.6.37-.96 0-1.67-1.33-3.06-3-3.06"/>
+        </svg>
+        Limpiar
+      </button>
+
+      <button class="mc-action-btn" (click)="center($event)">
+        <!-- Navigation / centrar -->
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+        </svg>
+        Centrar mapa
+      </button>
+
+    </div>
+  </div>
+
+</div>
