@@ -1,6 +1,7 @@
 <div #mapContainer id="map" class="map-container"></div>
 
 <app-map-controls
+  appSnapDrag snapId="capas" defaultZone="TL"
   [activeLayer]="modo"
   (layerChange)="setModo($event)"
   (onClear)="handleClear()"

@@ -1,38 +1,36 @@
-<div class="leyenda">
-  <!-- Botón flotante para abrir/cerrar la leyenda -->
-  <button
-    class="toggle"
-    (click)="toggle()"
-    [attr.aria-label]="expanded ? 'Cerrar leyenda de score' : 'Mostrar leyenda de score'"
-  >
-    <!-- Icono de "leyenda/lista" cuando está cerrado -->
-    <lucide-icon
-      *ngIf="!expanded"
-      name="list-ordered"
-      aria-hidden="true"
-    ></lucide-icon>
+<div class="leyenda" [class.open-up]="openUpward" [class.align-right]="alignRight">
 
-    <!-- Icono de "X" cuando está abierto -->
-    <lucide-icon *ngIf="expanded" name="x" aria-hidden="true"></lucide-icon>
+  <button class="toggle" (click)="toggle()"
+    [attr.aria-label]="expanded ? 'Cerrar leyenda' : 'Mostrar leyenda de score'">
+    <lucide-icon [name]="expanded ? 'x' : 'list-ordered'" [size]="15" aria-hidden="true"></lucide-icon>
+    <span *ngIf="!expanded">Leyenda</span>
   </button>
 
-  <!-- Panel de la leyenda -->
   <div class="panel" *ngIf="expanded">
-    <h4>Valor o score</h4>
-    <p>La puntuación o valor que un piso recibe viene dado por dos tipos de asignación según su operación:</p>
-    <ul>
-      <li>Venta: está basado en la relación <strong>€/m²</strong>, cuanto mayor es este valor, peor valoración obtendrá.</li>
-      <li>Alquiler: recibe una valoración fija respecto al precio del inmueble, cuanto más barato es el piso, mejor valoración.</li>
-    </ul>
+    <p class="panel__title">Score del piso</p>
 
-    <div class="barra" [ngStyle]="gradientStyle"></div>
+    <div class="panel__gradient" [ngStyle]="gradientStyle"></div>
 
-    <div class="labels">
+    <div class="panel__labels">
       <span>0</span>
       <span>25</span>
       <span>50</span>
       <span>75</span>
       <span>100</span>
     </div>
+
+    <div class="panel__divider"></div>
+
+    <div class="panel__rows">
+      <div class="panel__row">
+        <span class="panel__badge panel__badge--sale">Venta</span>
+        <span class="panel__info">Relación €/m² — menor es mejor</span>
+      </div>
+      <div class="panel__row">
+        <span class="panel__badge panel__badge--rent">Alquiler</span>
+        <span class="panel__info">Precio total — más barato, mejor score</span>
+      </div>
+    </div>
   </div>
+
 </div>

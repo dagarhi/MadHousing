@@ -28,6 +28,9 @@ import {
   Euro,
   ChevronsDown,
   ChevronsUp,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Ruler,
   Sparkles,
   Layers,
@@ -44,6 +47,7 @@ import {
   Info,
   Shield,
   ExternalLink,
+  Calculator,
 } from 'lucide-angular';
 import { Legend } from 'chart.js';
 
@@ -89,6 +93,10 @@ bootstrapApplication(AppComponent, {
         Shield,
         ArrowLeft,
         ExternalLink,
+        ChevronDown,
+        ChevronLeft,
+        ChevronRight,
+        Calculator,
       })
     ),
   ],

@@ -11,7 +11,8 @@
   flex-direction: column;
 
   .header {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
     gap: 0.75rem;
     height: 56px;
@@ -24,25 +25,42 @@
   .header-left {
     display: flex;
     align-items: center;
+    justify-self: start;
   }
 
   .header-center {
-    flex: 1;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-self: center;
   }
 
-  .header-title {
-    margin: 0;
-    font-size: 2rem;
-    font-weight: 600;
-    font-style: italic;
-    color: black;
+  .header-logo {
+    height: 36px;
+    width: auto;
+  }
+
+  .header-brand {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1;
+  }
+
+  .brand-mad {
+    color: #ede9fe;
+  }
+
+  .brand-housing {
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 400;
   }
 
   .header-right {
     display: flex;
     align-items: center;
     gap: 0.25rem;
+    justify-self: end;
   }
 
   .header button[mat-button] {

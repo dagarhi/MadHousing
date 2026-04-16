@@ -14,6 +14,7 @@ import { FiltroBusqueda } from '../../../../core/models/filtros.model';
 import { MapLayerManager } from '../../../../core/services/map-layer-manager.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { MapHelpComponent } from '../../../components/map-help/map-help.component';
+import { SnapDragDirective } from '../../../directives/snap-drag.directive';
 
 @Component({
   selector: 'app-vista-mapa',
@@ -29,6 +30,7 @@ import { MapHelpComponent } from '../../../components/map-help/map-help.componen
     LeyendaScoreComponent,
     LucideAngularModule,
     MapHelpComponent,
+    SnapDragDirective,
   ],
   templateUrl: './vista-mapa.component.html',
   styleUrls: ['./vista-mapa.component.scss'],
