@@ -175,6 +175,115 @@
   }
 }
 
+// ── Calculadora de hipoteca ───────────────────────────────────────────────────
+
+.calc-section {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 0.45rem;
+}
+
+.calc-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0.2rem 0;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-align: left;
+
+  span { flex: 1; }
+
+  lucide-icon { flex-shrink: 0; }
+
+  &:hover { color: #374151; }
+}
+
+.calc-chevron {
+  transition: transform 0.2s ease;
+  &.open { transform: rotate(180deg); }
+}
+
+.calc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-top: 0.55rem;
+}
+
+.calc-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.calc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.calc-label {
+  font-size: 0.68rem;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.calc-input {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 0.25rem 0.35rem;
+  font-family: inherit;
+  font-size: 0.78rem;
+  color: #111827;
+  background: #f9fafb;
+  box-sizing: border-box;
+  appearance: textfield;
+
+  &:focus {
+    outline: none;
+    border-color: #a78bfa;
+    background: #ffffff;
+  }
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button { opacity: 1; }
+}
+
+.calc-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+}
+
+.calc-result {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  &__label {
+    font-size: 0.72rem;
+    color: #9ca3af;
+  }
+
+  &__value {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #111827;
+
+    &--interest { color: #6b7280; font-weight: 500; }
+  }
+}
+
 // ── Footer ───────────────────────────────────────────────────────────────────
 
 .footer {

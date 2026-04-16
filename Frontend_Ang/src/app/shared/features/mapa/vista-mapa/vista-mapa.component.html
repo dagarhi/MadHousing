@@ -13,9 +13,12 @@
       </button>
     </div>
 
-    <!-- Centro: título -->
+    <!-- Centro: logo + nombre -->
     <div class="header-center">
-      <h3 class="header-title">MadHousing</h3>
+      <img src="assets/icons/madhousing_header.svg" alt="MadHousing" class="header-logo">
+      <span class="header-brand">
+        <span class="brand-mad">Mad</span><span class="brand-housing">Housing</span>
+      </span>
     </div>
 
     <!-- Derecha: resto de acciones -->
@@ -46,7 +49,7 @@
       </button>
     </div>
   </header>
-  <app-map-help [userKey]="userHelpKey"></app-map-help>
+  <app-map-help appSnapDrag snapId="help" defaultZone="TR" [userKey]="userHelpKey"></app-map-help>
 
 
   <!-- 🔹 Contenedor principal del mapa -->
@@ -69,5 +72,5 @@
   </app-buscador>
 
   <!-- 🔹 Controles flotantes -->
-  <app-leyenda-score></app-leyenda-score>
+  <app-leyenda-score appSnapDrag snapId="leyenda" defaultZone="BL"></app-leyenda-score>
 </div>

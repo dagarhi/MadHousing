@@ -4,6 +4,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { Propiedad } from '../../../../core/models/propiedad.model';
 import { MapLayerManager, Modo } from '../../../../core/services/map-layer-manager.service';
 import { MapControlsComponent } from '../../../components/map-controls/map-controls.component';
+import { SnapDragDirective } from '../../../directives/snap-drag.directive';
 import { HttpClient } from '@angular/common/http';
 import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 import { Subscription } from 'rxjs';
@@ -11,7 +12,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-mapa-principal',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, MapControlsComponent],
+  imports: [CommonModule, LucideAngularModule, MapControlsComponent, SnapDragDirective],
   templateUrl: './mapa-principal.component.html',
   styleUrls: ['./mapa-principal.component.scss'],
 })

@@ -3,8 +3,8 @@ import {
   Output,
   EventEmitter,
   Input,
-  HostListener,
   ElementRef,
+  HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -52,21 +52,28 @@ export class MapControlsComponent {
   @Output() onClear     = new EventEmitter<void>();
   @Output() onCenter    = new EventEmitter<void>();
 
-  open = false;
+  open       = false;
+  openUpward = false;
+  alignRight = false;
   readonly layers = LAYERS;
 
-  constructor(private el: ElementRef) {}
-
-  @HostListener('document:click', ['$event'])
-  onDocClick(e: MouseEvent): void {
-    if (!this.el.nativeElement.contains(e.target as Node)) {
-      this.open = false;
-    }
-  }
+  constructor(private el: ElementRef<HTMLElement>) {}
 
   toggle(e: MouseEvent): void {
     e.stopPropagation();
     this.open = !this.open;
+    if (this.open) this.calcDirection();
+  }
+
+  @HostListener('transitionend', ['$event'])
+  onSnap(e: TransitionEvent): void {
+    if (e.propertyName === 'left' && this.open) this.calcDirection();
+  }
+
+  private calcDirection(): void {
+    const rect = this.el.nativeElement.getBoundingClientRect();
+    this.openUpward = (window.innerHeight - rect.bottom) < 180;
+    this.alignRight = (window.innerWidth  - rect.left)   < 170;
   }
 
   selectLayer(layer: Modo, e: MouseEvent): void {

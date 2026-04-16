@@ -171,3 +171,232 @@ body {
 .cdk-overlay-backdrop.cdk-overlay-dark-backdrop {
   background: rgba(15, 23, 42, 0.25);
 }
+
+// El backdrop del tutorial cubre los botones flotantes (z-index: 1500)
+.cdk-overlay-container:has(.help-dialog-backdrop) {
+  z-index: 1600;
+}
+.help-dialog-backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.help-dialog-panel {
+  .mat-mdc-dialog-surface {
+    border-radius: 18px !important;
+    padding: 0;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+    overflow: hidden;
+  }
+}
+
+// ── Tutorial carousel (estilos globales: MatDialog renderiza fuera del host) ──
+.tutorial {
+  width: 440px;
+  padding: 1.5rem 1.75rem 1.25rem;
+  background: #ffffff;
+  border-radius: 18px;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.tutorial__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.tutorial__counter {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.tutorial__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(15, 23, 42, 0.06);
+  border-radius: 999px;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s;
+
+  &:hover { background: rgba(15, 23, 42, 0.12); }
+}
+
+.tutorial__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 200px;
+  transition: opacity 0.14s ease;
+
+  &.fading { opacity: 0; }
+}
+
+.tutorial__icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: #f3f0ff;
+  color: #7c3aed;
+  margin-bottom: 1.25rem;
+  flex-shrink: 0;
+}
+
+.tutorial__title {
+  margin: 0 0 0.65rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.tutorial__desc {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: #4b5563;
+  max-width: 340px;
+}
+
+.tutorial__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #374151;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  padding: 0;
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) {
+    border-color: #a78bfa;
+    color: #7c3aed;
+    background: #f3f0ff;
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+}
+
+.tutorial__dots {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  border: none;
+  background: #d1d5db;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s, transform 0.2s;
+
+  &.dot--active {
+    background: #7c3aed;
+    transform: scale(1.35);
+  }
+
+  &:hover:not(.dot--active) {
+    background: #a78bfa;
+  }
+}
+
+.tutorial__footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.25rem;
+}
+
+.btn-start {
+  padding: 0.55rem 2rem;
+  border: none;
+  border-radius: 999px;
+  background: #7c3aed;
+  color: #ffffff;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: #6d28d9; }
+}
+
+.btn-skip {
+  border: none;
+  background: none;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.78rem;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.4rem;
+
+  &:hover { color: #6b7280; }
+}
+
+// ── Snap drag: cursor ─────────────────────────────────────────────────────────
+[appSnapDrag]         { cursor: grab; }
+[appSnapDrag] button,
+[appSnapDrag] a       { cursor: pointer; }
+
+// ── Snap drag: overlay de zonas ───────────────────────────────────────────────
+.snap-zones-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1499;
+}
+
+.snap-zone-ghost {
+  position: absolute;
+  border-radius: 999px;
+  border: 2px dashed rgba(160, 96, 168, 0.35);
+  background: rgba(160, 96, 168, 0.06);
+  box-sizing: border-box;
+  transition: background 0.15s, border-color 0.15s;
+
+  &--active {
+    border-color: rgba(160, 96, 168, 0.8);
+    background: rgba(160, 96, 168, 0.18);
+  }
+
+  // Zona ocupada por otro botón: indica que habrá intercambio
+  &--occupied {
+    border-color: rgba(234, 179, 8, 0.6);
+    background: rgba(234, 179, 8, 0.08);
+  }
+
+  &--occupied#{&}--active {
+    border-color: rgba(234, 179, 8, 0.9);
+    background: rgba(234, 179, 8, 0.2);
+  }
+}
