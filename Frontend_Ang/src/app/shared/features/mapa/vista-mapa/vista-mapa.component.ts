@@ -13,8 +13,10 @@ import { Propiedad } from '../../../../core/models/propiedad.model';
 import { FiltroBusqueda } from '../../../../core/models/filtros.model';
 import { MapLayerManager } from '../../../../core/services/map-layer-manager.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ThemeService } from '../../../../core/services/theme.service';
+import { environment } from '../../../../../environments/environment';
 import { MapHelpComponent } from '../../../components/map-help/map-help.component';
-import { Subscription } from 'rxjs';
+import { SnapDragDirective } from '../../../directives/snap-drag.directive';
 
 @Component({
   selector: 'app-vista-mapa',
@@ -30,6 +32,7 @@ import { Subscription } from 'rxjs';
     LeyendaScoreComponent,
     LucideAngularModule,
     MapHelpComponent,
+    SnapDragDirective,
   ],
   templateUrl: './vista-mapa.component.html',
   styleUrls: ['./vista-mapa.component.scss'],
@@ -46,10 +49,12 @@ export class VistaMapaComponent {
 
   pisos: Propiedad[] = [];
 
-  compassAngle = 0;
-  private bearingSub?: Subscription;
-
-  constructor(private layers: MapLayerManager, private auth: AuthService, private router: Router) { }
+  constructor(
+    private layers: MapLayerManager,
+    private auth: AuthService,
+    private router: Router,
+    readonly theme: ThemeService,
+  ) { }
 
   get isAdmin(): boolean {
     return this.auth.isAdmin();
@@ -91,33 +96,18 @@ export class VistaMapaComponent {
     this.layers.clearAll();
   }
 
+  toggleTheme(): void {
+    this.theme.toggle();
+    const style = this.theme.isDark ? environment.mapStyleDark : environment.mapStyleLight;
+    this.layers.changeMapStyle(style);
+  }
+
   logout(): void {
     this.auth.logout();
   }
 
-  onLookNorth(): void {
-    this.layers.lookNorth();
-  }
-
   ngOnInit(): void {
-    this.bearingSub = this.layers.bearing$.subscribe(bearing => {
-      const target = -bearing;
-      const prev = this.compassAngle;
-      let delta = target - prev;
-
-      if (delta > 180) {
-        delta -= 360;
-      } else if (delta < -180) {
-        delta += 360;
-      }
-
-      this.compassAngle = prev + delta;
-    });
     const user = this.auth.getCurrentUser();
     this.userHelpKey = user ? `uid-${user.userId}` : '';
-  }
-
-  ngOnDestroy(): void {
-    this.bearingSub?.unsubscribe();
   }
 }

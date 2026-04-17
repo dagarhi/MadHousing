@@ -1,62 +1,137 @@
-:host {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  z-index: 1500;
-}
+// Posición gestionada por SnapDragDirective
 
 .leyenda {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  gap: 0.5rem;
+}
 
-  .toggle {
-    background: var(--mat-sys-primary);
-    color: black;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    cursor: pointer;
-    font-size: 1.1rem;
-    box-shadow: var(--app-elev-shadow);
-    transition: background 0.2s ease;
+// ── Botón ─────────────────────────────────────────────────────────────────────
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #b570be, #a060a8);
+  color: #ffffff;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(160, 96, 168, 0.45);
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  letter-spacing: 0.01em;
 
-    &:hover { filter: brightness(0.95); }
+  lucide-icon { flex-shrink: 0; }
+
+  &:hover {
+    background: linear-gradient(135deg, #9a50a8, #8a4090);
+    box-shadow: 0 6px 18px rgba(160, 96, 168, 0.55);
+    transform: scale(1.05);
+  }
+}
+
+// ── Panel ─────────────────────────────────────────────────────────────────────
+.panel {
+  position: absolute;
+  // Por defecto: abre hacia arriba, alinea a izquierda
+  bottom: calc(100% + 0.6rem);
+  top: auto;
+  left: 0;
+  right: auto;
+
+  .open-up & {
+    bottom: calc(100% + 0.6rem);
+    top: auto;
   }
 
-  .panel {
-    position: absolute;
-    bottom: 50px;
-    left: 0;
-    background: var(--app-card);
-    color: var(--app-on-bg);
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    padding: 0.75rem 1rem;
-    width: 500px;
-    transition: all 0.25s ease;
-    font-size: 1rem;
+  // Abre hacia abajo (posiciones TL/TR/ML/MR)
+  .leyenda:not(.open-up) & {
+    top: calc(100% + 0.6rem);
+    bottom: auto;
+  }
 
-    h4 {
-      margin: 0 0 0.5rem;
-      font-size: 1.5rem;
-      font-weight: 600;
+  // Alinea al borde derecho del botón
+  .align-right & {
+    left: auto;
+    right: 0;
+  }
+  width: 280px;
+  background: var(--panel-bg, #ffffff);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+  padding: 1rem 1.1rem;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  box-sizing: border-box;
+
+  &__title {
+    margin: 0 0 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--panel-text, #111827);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__gradient {
+    height: 10px;
+    border-radius: 999px;
+    margin-bottom: 0.3rem;
+  }
+
+  &__labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--panel-text-faint, #9ca3af);
+    margin-bottom: 0;
+  }
+
+  &__divider {
+    height: 1px;
+    background: var(--panel-border, #f1f5f9);
+    margin: 0.75rem 0;
+  }
+
+  &__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  &__badge {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.18rem 0.5rem;
+    border-radius: 999px;
+
+    &--sale {
+      background: #f0fdf4;
+      color: #15803d;
     }
 
-    .barra {
-      height: 10px;
-      border-radius: 6px;
-      margin-bottom: 0.3rem;
-    }
-
-    .labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.75rem;
-      color: var(--app-elev-shadow);
+    &--rent {
+      background: #eff6ff;
+      color: #1d4ed8;
     }
   }
 
+  &__info {
+    font-size: 0.76rem;
+    color: var(--panel-text-muted, #6b7280);
+    line-height: 1.3;
+  }
 }

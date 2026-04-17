@@ -1,15 +1,71 @@
 <div #mapContainer id="map" class="map-container"></div>
 
-<div class="map-controls">
-  <mat-button-toggle-group [value]="modo" (change)="setModo($event.value)" aria-label="Capas">
-    <mat-button-toggle value="coropletico" matTooltip="Coroplético">
-      <lucide-icon name="layers" size="20"></lucide-icon>
-    </mat-button-toggle>
-    <mat-button-toggle value="heat" matTooltip="Heat map">
-      <lucide-icon name="flame" size="20"></lucide-icon>
-    </mat-button-toggle>
-    <mat-button-toggle value="chinchetas" matTooltip="Chinchetas">
-      <lucide-icon name="map-pin" size="20"></lucide-icon>
-    </mat-button-toggle>
-  </mat-button-toggle-group>
+<div class="map-loading-overlay" *ngIf="manager.tileLoading$ | async" aria-label="Cargando mapa" role="status">
+  <div class="map-loading-spinner"></div>
+</div>
+
+<app-map-controls
+  appSnapDrag snapId="capas" defaultZone="TL"
+  [activeLayer]="modo"
+  [radiusActive]="radiusActive"
+  (layerChange)="setModo($event)"
+  (onClear)="handleClear()"
+  (onCenter)="handleCenter()"
+  (onRadiusToggle)="toggleRadiusMode()">
+</app-map-controls>
+
+<!-- Radius drawing hint -->
+<div class="radius-hint" *ngIf="radiusMode && !radiusCenter" role="status">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <line x1="22" y1="12" x2="18" y2="12"/>
+    <line x1="6"  y1="12" x2="2"  y2="12"/>
+    <line x1="12" y1="6"  x2="12" y2="2"/>
+    <line x1="12" y1="22" x2="12" y2="18"/>
+  </svg>
+  Haz clic en el mapa para definir el centro
+</div>
+
+<!-- Radius control panel -->
+<div class="radius-panel" *ngIf="radiusCenter" appSnapDrag snapId="radio" defaultZone="BR">
+  <div class="radius-panel__header">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" class="radius-panel__icon">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="22" y1="12" x2="18" y2="12"/>
+      <line x1="6"  y1="12" x2="2"  y2="12"/>
+      <line x1="12" y1="6"  x2="12" y2="2"/>
+      <line x1="12" y1="22" x2="12" y2="18"/>
+    </svg>
+    <span class="radius-panel__title">Radio de búsqueda</span>
+  </div>
+
+  <div class="radius-panel__options">
+    <button
+      *ngFor="let km of radiusOptions"
+      class="radius-panel__opt"
+      [class.active]="radiusKm === km"
+      (click)="setRadius(km)">
+      {{ km < 1 ? (km * 1000) + ' m' : km + ' km' }}
+    </button>
+  </div>
+
+  <div class="radius-panel__bottom">
+    <span class="radius-panel__count" *ngIf="filteredCount !== null">
+      <span class="radius-panel__count-num">{{ filteredCount }}</span>
+      prop.
+    </span>
+    <button class="radius-panel__clear" (click)="clearRadius()">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+      Borrar
+    </button>
+  </div>
 </div>

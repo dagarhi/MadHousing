@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { MapPreloadService } from '../../../../core/services/map-preload.service';
 import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
@@ -28,6 +29,7 @@ export class PantallaInicialComponent implements OnInit {
     private router: Router,
     private auth: AuthService,
     private route: ActivatedRoute,
+    private preload: MapPreloadService,
   ) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
@@ -44,6 +46,9 @@ export class PantallaInicialComponent implements OnInit {
       this.router.navigate(['/mapa']);
       return;
     }
+
+    // Precarga tiles del mapa y datos en segundo plano mientras el usuario hace login
+    this.preload.preload();
 
     const reason = this.route.snapshot.queryParamMap.get('reason');
     if (reason === 'expired') {

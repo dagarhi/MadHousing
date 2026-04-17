@@ -11,38 +11,57 @@
   flex-direction: column;
 
   .header {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
     gap: 0.75rem;
     height: 56px;
     padding: 0 1rem;
-    background: #a060a8;
+    background: var(--header-bg, #a060a8);
     color: #ffffff;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    transition: background 0.25s ease;
   }
 
   .header-left {
     display: flex;
     align-items: center;
+    justify-self: start;
   }
 
   .header-center {
-    flex: 1;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-self: center;
   }
 
-  .header-title {
-    margin: 0;
-    font-size: 2rem;
-    font-weight: 600;
-    font-style: italic;
-    color: black;
+  .header-logo {
+    height: 36px;
+    width: auto;
+  }
+
+  .header-brand {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1;
+  }
+
+  .brand-mad {
+    color: #ede9fe;
+  }
+
+  .brand-housing {
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 400;
   }
 
   .header-right {
     display: flex;
     align-items: center;
     gap: 0.25rem;
+    justify-self: end;
   }
 
   .header button[mat-button] {
@@ -57,14 +76,19 @@
     line-height: normal;
     border-radius: 999px;
     border: none;
-    background: rgba(0, 0, 0, 0.7);
+    background: var(--header-btn-bg, rgba(0, 0, 0, 0.18));
     color: #ffffff;
     font-size: 0.85rem;
     text-transform: none;
   }
 
   .header button[mat-button]:hover {
-    background: rgba(37, 37, 37, 0.774);
+    background: var(--header-btn-hover, rgba(0, 0, 0, 0.30));
+  }
+
+  .header .theme-btn {
+    padding: 0 0.6rem;
+    min-width: 40px;
   }
 
   .header .logout-btn {
@@ -77,8 +101,7 @@
   }
 
   .header lucide-icon {
-    width: 18px;
-    height: 18px;
+    flex-shrink: 0;
   }
 
   .mapa-container {
@@ -88,35 +111,3 @@
   }
 }
 
-.map-fab {
-  position: absolute;
-  left: 16px;
-  top: 140px;
-  z-index: 10;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 1px solid #bb48ca;
-  background: #7b4183;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 6px rgba(253, 253, 253, 0.15);
-  cursor: pointer;
-}
-
-.map-fab:hover {
-  background: #432e44;
-}
-
-.map-fab-north {
-  bottom: 4.5rem; // por encima del de limpiar / reset, etc.
-  position: absolute;
-  top: 200px;
-  left: 16px;
-}
-
-.map-fab-north lucide-icon {
-  transition: transform 160ms ease-out;
-  transform-origin: center;
-}

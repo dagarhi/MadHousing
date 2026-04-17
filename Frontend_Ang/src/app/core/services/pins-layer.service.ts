@@ -238,8 +238,7 @@ export class PinsLayerService implements OnDestroy {
         return;
       }
       const isDark =
-        document.documentElement.classList.contains('dark') ||
-        document.body.classList.contains('dark');
+        document.documentElement.getAttribute('data-theme') === 'dark';
 
       this.popupSvc.open(rec.propiedad, [lng, lat], isDark);
       this.lastPopupPropertyCode = propertyCode;
