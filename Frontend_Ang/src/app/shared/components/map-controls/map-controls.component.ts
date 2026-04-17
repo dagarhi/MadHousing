@@ -48,9 +48,12 @@ const LAYERS: LayerOption[] = [
 export class MapControlsComponent {
   @Input() activeLayer: Modo = 'heat';
 
-  @Output() layerChange = new EventEmitter<Modo>();
-  @Output() onClear     = new EventEmitter<void>();
-  @Output() onCenter    = new EventEmitter<void>();
+  @Input() radiusActive: boolean = false;
+
+  @Output() layerChange     = new EventEmitter<Modo>();
+  @Output() onClear         = new EventEmitter<void>();
+  @Output() onCenter        = new EventEmitter<void>();
+  @Output() onRadiusToggle  = new EventEmitter<void>();
 
   open       = false;
   openUpward = false;
@@ -91,5 +94,11 @@ export class MapControlsComponent {
   center(e: MouseEvent): void {
     e.stopPropagation();
     this.onCenter.emit();
+  }
+
+  toggleRadius(e: MouseEvent): void {
+    e.stopPropagation();
+    this.onRadiusToggle.emit();
+    this.open = false;
   }
 }

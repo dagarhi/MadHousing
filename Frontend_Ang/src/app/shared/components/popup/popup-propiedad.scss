@@ -4,11 +4,16 @@
   width: 272px;
   padding: 1rem;
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--panel-bg, #ffffff);
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 13px;
   line-height: 1.4;
+  transition: background 0.25s ease;
+}
+
+:host.dark {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
 }
 
 .popup {
@@ -53,7 +58,7 @@
     margin: 0;
     font-size: 0.88rem;
     font-weight: 600;
-    color: #111827;
+    color: var(--panel-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -62,7 +67,7 @@
   &__zone {
     margin: 0.2rem 0 0;
     font-size: 0.72rem;
-    color: #9ca3af;
+    color: var(--panel-text-faint);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -73,7 +78,7 @@
 
 .divider {
   height: 1px;
-  background: #f1f5f9;
+  background: var(--panel-border);
   margin: 0 -1rem;
 }
 
@@ -95,12 +100,12 @@
 .price__amount {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--panel-text);
 }
 
 .price__period {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: var(--panel-text-faint);
 }
 
 .badge {
@@ -130,7 +135,7 @@
   display: flex;
   gap: 0.3rem;
   font-size: 0.78rem;
-  color: #6b7280;
+  color: var(--panel-text-muted);
   margin-top: -0.2rem;
 
   &__sep {
@@ -151,7 +156,7 @@
   &__label {
     font-size: 0.72rem;
     font-weight: 500;
-    color: #9ca3af;
+    color: var(--panel-text-faint);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -163,7 +168,7 @@
 
   &__track {
     height: 5px;
-    background: #f1f5f9;
+    background: var(--panel-border);
     border-radius: 999px;
     overflow: hidden;
   }
@@ -178,7 +183,7 @@
 // ── Calculadora de hipoteca ───────────────────────────────────────────────────
 
 .calc-section {
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--panel-border);
   padding-top: 0.45rem;
 }
 
@@ -194,7 +199,7 @@
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--panel-text-muted);
   text-align: left;
 
   span { flex: 1; }
@@ -230,26 +235,26 @@
 
 .calc-label {
   font-size: 0.68rem;
-  color: #9ca3af;
+  color: var(--panel-text-faint);
   white-space: nowrap;
 }
 
 .calc-input {
   width: 100%;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--panel-input-border);
   border-radius: 6px;
   padding: 0.25rem 0.35rem;
   font-family: inherit;
   font-size: 0.78rem;
-  color: #111827;
-  background: #f9fafb;
+  color: var(--panel-text);
+  background: var(--panel-input-bg);
   box-sizing: border-box;
   appearance: textfield;
 
   &:focus {
     outline: none;
     border-color: #a78bfa;
-    background: #ffffff;
+    background: var(--panel-bg);
   }
 
   &::-webkit-inner-spin-button,
@@ -260,7 +265,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  background: #f8fafc;
+  background: var(--panel-result-bg);
   border-radius: 8px;
   padding: 0.5rem 0.6rem;
 }
@@ -272,15 +277,15 @@
 
   &__label {
     font-size: 0.72rem;
-    color: #9ca3af;
+    color: var(--panel-text-faint);
   }
 
   &__value {
     font-size: 0.82rem;
     font-weight: 700;
-    color: #111827;
+    color: var(--panel-text);
 
-    &--interest { color: #6b7280; font-weight: 500; }
+    &--interest { color: var(--panel-text-muted); font-weight: 500; }
   }
 }
 
@@ -291,7 +296,7 @@
   align-items: center;
   justify-content: space-between;
   padding-top: 0.5rem;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--panel-border);
   margin-top: 0.1rem;
 }
 
@@ -306,7 +311,7 @@
   border-radius: 8px;
   font-size: 0.78rem;
   line-height: 1;
-  color: #6b7280;
+  color: var(--panel-text-muted);
   font-family: inherit;
 
   lucide-icon {
@@ -314,8 +319,8 @@
   }
 
   &:hover {
-    background: #f8fafc;
-    color: #374151;
+    background: var(--panel-item-hover);
+    color: var(--panel-text);
   }
 }
 

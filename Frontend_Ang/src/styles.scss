@@ -20,6 +20,24 @@ html, :root {
   --app-card:          var(--mat-sys-surface-container);
   --app-border:        var(--mat-sys-outline-variant);
   --app-elev-shadow:   0 6px 16px rgba(0,0,0,.08);
+
+  /* 🔹 Header */
+  --header-bg:         #a060a8;
+  --header-btn-bg:     rgba(0,0,0,.18);
+  --header-btn-hover:  rgba(0,0,0,.30);
+
+  /* 🔹 Paneles flotantes (leyenda, capas, popup) */
+  --panel-bg:          #ffffff;
+  --panel-text:        #111827;
+  --panel-text-muted:  #6b7280;
+  --panel-text-faint:  #9ca3af;
+  --panel-border:      #f1f5f9;
+  --panel-input-bg:    #f9fafb;
+  --panel-input-border:#e5e7eb;
+  --panel-result-bg:   #f8fafc;
+  --panel-item-hover:  rgba(0,0,0,.04);
+  --panel-active-bg:   #f5eef7;
+  --panel-active-text: #7a3a88;
 }
 
 /* Tema oscuro cuando html[data-theme=dark] o .dark-theme (overlays) */
@@ -40,6 +58,24 @@ html, :root {
   --app-card:          var(--mat-sys-surface-container-highest);
   --app-border:        var(--mat-sys-outline-variant);
   --app-elev-shadow:   0 8px 20px rgba(0,0,0,.40);
+
+  /* 🔹 Header oscuro: casi negro con toque índigo */
+  --header-bg:         #1e1e2e;
+  --header-btn-bg:     rgba(255,255,255,.10);
+  --header-btn-hover:  rgba(255,255,255,.18);
+
+  /* 🔹 Paneles flotantes oscuros */
+  --panel-bg:          #1e1e2e;
+  --panel-text:        #e5e7eb;
+  --panel-text-muted:  #9ca3af;
+  --panel-text-faint:  #6b7280;
+  --panel-border:      rgba(255,255,255,.08);
+  --panel-input-bg:    #2a2a3e;
+  --panel-input-border:rgba(255,255,255,.12);
+  --panel-result-bg:   #16162a;
+  --panel-item-hover:  rgba(255,255,255,.06);
+  --panel-active-bg:   rgba(160,96,168,.20);
+  --panel-active-text: #c084fc;
 }
 
 /* Base de la app */
@@ -52,6 +88,14 @@ body {
 
 /* Ejemplos globales opcionales */
 .card-like { background: var(--app-card); box-shadow: var(--app-elev-shadow); border: 1px solid var(--app-border); }
+
+/* Quitar el outline de foco del canvas de MapLibre (sale al pulsar Escape u otras teclas) */
+.maplibregl-canvas-container:focus,
+.maplibregl-canvas-container *:focus,
+.maplibregl-canvas:focus,
+canvas:focus {
+  outline: none !important;
+}
 
 /* Quitar la caja por defecto de TODOS los popups de MapLibre */
 .maplibregl-popup {
@@ -361,6 +405,31 @@ body {
   padding: 0.4rem;
 
   &:hover { color: #6b7280; }
+}
+
+// ── Tutorial: dark mode ───────────────────────────────────────────────────────
+:root[data-theme="dark"] {
+  .tutorial {
+    background: #1e1e2e;
+  }
+  .tutorial__counter { color: #6b7280; }
+  .tutorial__close {
+    background: rgba(255,255,255,.08);
+    color: #e5e7eb;
+    &:hover { background: rgba(255,255,255,.14); }
+  }
+  .tutorial__icon-wrap { background: rgba(124,58,237,.18); color: #a78bfa; }
+  .tutorial__title { color: #f3f4f6; }
+  .tutorial__desc  { color: #9ca3af; }
+  .nav-btn {
+    border-color: rgba(255,255,255,.12);
+    background: #2a2a3e;
+    color: #d1d5db;
+    &:hover:not(:disabled) { border-color: #a78bfa; color: #a78bfa; background: rgba(124,58,237,.15); }
+  }
+  .dot { background: rgba(255,255,255,.2); &.dot--active { background: #a78bfa; } }
+  .btn-start { background: #7c3aed; &:hover { background: #6d28d9; } }
+  .btn-skip { color: #6b7280; &:hover { color: #9ca3af; } }
 }
 
 // ── Snap drag: cursor ─────────────────────────────────────────────────────────

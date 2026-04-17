@@ -1,7 +1,7 @@
 <div class="mc-wrapper" [class.open-up]="openUpward" [class.align-right]="alignRight">
 
   <!-- ── Pill trigger ── -->
-  <button class="mc-pill" (click)="toggle($event)">
+  <button class="mc-pill" [class.mc-pill--radius]="radiusActive" (click)="toggle($event)">
     <span>Capas</span>
     <svg class="mc-chevron" [class.open]="open"
          width="13" height="13" viewBox="0 0 24 24"
@@ -50,6 +50,20 @@
           <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
         </svg>
         Centrar mapa
+      </button>
+
+      <button class="mc-action-btn" [class.active]="radiusActive" (click)="toggleRadius($event)">
+        <!-- Crosshair / radio -->
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="22" y1="12" x2="18" y2="12"/>
+          <line x1="6"  y1="12" x2="2"  y2="12"/>
+          <line x1="12" y1="6"  x2="12" y2="2"/>
+          <line x1="12" y1="22" x2="12" y2="18"/>
+        </svg>
+        Filtro radio
       </button>
 
     </div>

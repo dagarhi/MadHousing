@@ -25,7 +25,9 @@ export class MapLayerManager {
   private choroIdField: string = 'CODIGOINE';
   private choroMetric: ChoroAggMode = 'avgScore';
   private choroOperation: ChoroOp = 'all';
-  readonly bearing$ = new BehaviorSubject<number>(0);
+  readonly bearing$     = new BehaviorSubject<number>(0);
+  /** true mientras los tiles del mapa inicial estén cargando */
+  readonly tileLoading$ = new BehaviorSubject<boolean>(true);
 
   constructor(
     private readonly mapSvc: MapService,
@@ -34,8 +36,8 @@ export class MapLayerManager {
     private readonly choro: ChoroplethLayerService,
   ) { }
 
-  async init(container: HTMLElement) {
-    await this.mapSvc.initMap(container);
+  async init(container: HTMLElement, styleUrl?: string) {
+    await this.mapSvc.initMap(container, styleUrl);
     this.map = this.mapSvc.getMap()!;
     this.bearing$.next(this.map.getBearing() ?? 0);
 
@@ -44,10 +46,33 @@ export class MapLayerManager {
       this.bearing$.next(this.map.getBearing() ?? 0);
     });
 
+    // Resolver carga cuando todos los tiles del viewport estén renderizados
+    this.map.once('idle', () => this.tileLoading$.next(false));
+
     // Safely attach sub-services
     (this.heat as unknown as attachableLayer).attach?.(this.map);
     (this.pins as unknown as attachableLayer).attach?.(this.map);
     (this.choro as unknown as attachableLayer).attach?.(this.map);
+  }
+
+  /**
+   * Cambia el estilo visual del mapa (claro ↔ oscuro).
+   * Re-adjunta sources, layers e iconos una vez que el nuevo estilo ha cargado.
+   */
+  async changeMapStyle(styleUrl: string): Promise<void> {
+    if (!this.map) return;
+    // No activar tileLoading$ aquí: con tiles en caché el evento 'idle' puede
+    // llegar antes de que podamos registrar el listener → spinner permanente.
+    // Durante el toggle el mapa es visible; el usuario ve la transición directamente.
+    this.map.setStyle(styleUrl);
+    await new Promise<void>(resolve => this.map!.once('style.load', resolve));
+    // Los iconos custom (addImage) se pierden al cambiar de estilo
+    await this.mapSvc.loadPinsIcons();
+    // Re-adjuntar sub-servicios (re-añaden sus fuentes y capas)
+    (this.heat as unknown as attachableLayer).attach?.(this.map);
+    (this.pins as unknown as attachableLayer).attach?.(this.map);
+    (this.choro as unknown as attachableLayer).attach?.(this.map);
+    this.render();
   }
 
   setMode(m: Modo) {
@@ -108,6 +133,7 @@ export class MapLayerManager {
     this.choro.clear();
     this.mapSvc.destroy?.();
     this.map = undefined;
+    this.tileLoading$.next(true);
   }
 
   setChoroplethPolygons(geojson: FeatureCollection<Polygon | MultiPolygon>, idField = 'CODIGOINE') {

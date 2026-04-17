@@ -10,11 +10,29 @@ interface SearchResponse {
   total: number;
 }
 
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutos
+
 @Injectable({ providedIn: 'root' })
 export class BusquedaService {
   private baseUrl = environment.apiBaseUrl;
 
   constructor(private http: HttpClient) { }
+
+  private readCache(key: string): Propiedad[] | null {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const { data, ts } = JSON.parse(raw);
+      if (Date.now() - ts < CACHE_TTL_MS) return data as Propiedad[];
+      localStorage.removeItem(key);
+    } catch { localStorage.removeItem(key); }
+    return null;
+  }
+
+  private writeCache(key: string, data: Propiedad[]): void {
+    try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })); }
+    catch { /* cuota excedida — ignorar */ }
+  }
 
   buscar(filtros: FiltroBusqueda): Observable<SearchResponse> {
     const params = new HttpParams({
@@ -28,8 +46,6 @@ export class BusquedaService {
 
   async buscarTodasPaginas(paramsBase: FiltroBusqueda): Promise<Propiedad[]> {
     const per_page = 100;
-    let page = 1;
-    let acumulado: Propiedad[] = [];
 
     const sanitize = (obj: Record<string, any>) =>
       Object.fromEntries(
@@ -47,55 +63,60 @@ export class BusquedaService {
         ),
       });
 
-    return new Promise(async (resolve, reject) => {
-      try {
-        while (true) {
-          const params = buildParams({ page, per_page });
-          const res = await lastValueFrom(this.http.get<SearchResponse>(`${this.baseUrl}/buscar`, { params }));
-          const chunk = res?.propiedades || [];
-          acumulado = acumulado.concat(chunk);
-          const total = res?.total ?? chunk.length;
-          if (page * per_page >= total || chunk.length === 0) break;
-          page++;
-        }
-        resolve(acumulado);
-      } catch (e) {
-        reject(e);
-      }
-    });
+    // Fetch first page to learn total, then remaining pages in parallel
+    const firstRes = await lastValueFrom(
+      this.http.get<SearchResponse>(`${this.baseUrl}/buscar`, { params: buildParams({ page: 1, per_page }) })
+    );
+    const firstChunk = firstRes?.propiedades || [];
+    const total = firstRes?.total ?? firstChunk.length;
+    const totalPages = Math.ceil(total / per_page);
+
+    if (totalPages <= 1) return firstChunk;
+
+    const remaining = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, i) =>
+        lastValueFrom(
+          this.http.get<SearchResponse>(`${this.baseUrl}/buscar`, { params: buildParams({ page: i + 2, per_page }) })
+        ).then(r => r?.propiedades || [])
+      )
+    );
+
+    return [firstChunk, ...remaining].flat();
   }
 
   async buscarTodo(operation: 'rent' | 'sale'): Promise<Propiedad[]> {
-    const per_page = 500;
-    let page = 1;
-    let acumulado: Propiedad[] = [];
+    const cacheKey = `mh_pisos_${operation}`;
+    const cached = this.readCache(cacheKey);
+    if (cached) return cached;
 
-    return new Promise(async (resolve, reject) => {
-      try {
-        while (true) {
-          const params = new HttpParams({
-            fromObject: {
-              ...(operation ? { operation } : {}),
-              page,
-              per_page,
-            } as any,
-          });
+    const per_page = 2000;
+    const opParam = operation ? { operation } : {};
 
-          const res = await lastValueFrom(
-            this.http.get<SearchResponse>(`${this.baseUrl}/buscar-todo`, { params })
-          );
+    const makeParams = (page: number) =>
+      new HttpParams({ fromObject: { ...opParam, page, per_page } as any });
 
-          const chunk = res?.propiedades || [];
-          acumulado = acumulado.concat(chunk);
+    // Fetch first page to learn total, then remaining pages in parallel
+    const firstRes = await lastValueFrom(
+      this.http.get<SearchResponse>(`${this.baseUrl}/buscar-todo`, { params: makeParams(1) })
+    );
+    const firstChunk = firstRes?.propiedades || [];
+    const total = firstRes?.total ?? firstChunk.length;
+    const totalPages = Math.ceil(total / per_page);
 
-          const total = res?.total ?? chunk.length;
-          if (page * per_page >= total || chunk.length === 0) break;
-          page++;
-        }
-        resolve(acumulado);
-      } catch (e) {
-        reject(e);
-      }
-    });
+    let result = firstChunk;
+
+    if (totalPages > 1) {
+      const remaining = await Promise.all(
+        Array.from({ length: totalPages - 1 }, (_, i) =>
+          lastValueFrom(
+            this.http.get<SearchResponse>(`${this.baseUrl}/buscar-todo`, { params: makeParams(i + 2) })
+          ).then(r => r?.propiedades || [])
+        )
+      );
+      result = [firstChunk, ...remaining].flat();
+    }
+
+    this.writeCache(cacheKey, result);
+    return result;
   }
 }

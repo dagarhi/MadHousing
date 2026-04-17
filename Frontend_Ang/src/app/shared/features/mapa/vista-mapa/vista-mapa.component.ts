@@ -13,6 +13,8 @@ import { Propiedad } from '../../../../core/models/propiedad.model';
 import { FiltroBusqueda } from '../../../../core/models/filtros.model';
 import { MapLayerManager } from '../../../../core/services/map-layer-manager.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ThemeService } from '../../../../core/services/theme.service';
+import { environment } from '../../../../../environments/environment';
 import { MapHelpComponent } from '../../../components/map-help/map-help.component';
 import { SnapDragDirective } from '../../../directives/snap-drag.directive';
 
@@ -47,7 +49,12 @@ export class VistaMapaComponent {
 
   pisos: Propiedad[] = [];
 
-  constructor(private layers: MapLayerManager, private auth: AuthService, private router: Router) { }
+  constructor(
+    private layers: MapLayerManager,
+    private auth: AuthService,
+    private router: Router,
+    readonly theme: ThemeService,
+  ) { }
 
   get isAdmin(): boolean {
     return this.auth.isAdmin();
@@ -87,6 +94,12 @@ export class VistaMapaComponent {
   limpiarMapa() {
     this.pisos = [];
     this.layers.clearAll();
+  }
+
+  toggleTheme(): void {
+    this.theme.toggle();
+    const style = this.theme.isDark ? environment.mapStyleDark : environment.mapStyleLight;
+    this.layers.changeMapStyle(style);
   }
 
   logout(): void {
