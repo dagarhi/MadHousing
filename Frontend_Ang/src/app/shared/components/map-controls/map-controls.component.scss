@@ -13,6 +13,7 @@
 
 // ── Pill trigger ─────────────────────────────────────────────────
 .mc-pill {
+  position: relative; // needed for the ::after radius indicator dot
   display: inline-flex;
   align-items: center;
   gap: 0.35em;
@@ -35,6 +36,25 @@
     box-shadow: 0 6px 18px rgba(160, 96, 168, 0.55);
     transform: scale(1.05);
   }
+
+  // Active radius indicator: pulsing orange dot on the pill
+  &--radius::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #f97316;
+    border: 1.5px solid #fff;
+    animation: radius-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes radius-pulse {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%       { transform: scale(1.3); opacity: 0.75; }
 }
 
 // ── Chevron (rotates when open) ───────────────────────────────────
@@ -55,8 +75,8 @@
   position: absolute;
   top: calc(100% + 0.35em); // por defecto: abre hacia abajo
   left: 0;                  // por defecto: alinea a izquierda
-  background: #fff;
-  border: 0.5px solid rgba(0, 0, 0, 0.11);
+  background: var(--panel-bg, #fff);
+  border: 0.5px solid var(--panel-border, rgba(0, 0, 0, 0.11));
   border-radius: 0.65em;
   overflow: hidden;
   min-width: 8.5em;
@@ -83,7 +103,7 @@
 .mc-divider {
   height: 1px;
   margin: 0.1em 0;
-  background: rgba(0, 0, 0, 0.07);
+  background: var(--panel-border, rgba(0, 0, 0, 0.07));
 }
 
 // ── Layer buttons ────────────────────────────────────────────────
@@ -97,19 +117,19 @@
   background: transparent;
   font-size: 1em;
   font-family: inherit;
-  color: #333;
+  color: var(--panel-text, #333);
   cursor: pointer;
   text-align: left;
   white-space: nowrap;
   transition: background 100ms ease;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--panel-item-hover, rgba(0, 0, 0, 0.04));
   }
 
   &.active {
-    background: #f5eef7;
-    color: #7a3a88;
+    background: var(--panel-active-bg, #f5eef7);
+    color: var(--panel-active-text, #7a3a88);
   }
 }
 
@@ -138,7 +158,7 @@
   background: transparent;
   font-size: 1em;
   font-family: inherit;
-  color: #444;
+  color: var(--panel-text-muted, #444);
   cursor: pointer;
   text-align: left;
   white-space: nowrap;
@@ -152,6 +172,13 @@
   }
 
   &:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--panel-item-hover, rgba(0, 0, 0, 0.04));
+  }
+
+  &.active {
+    background: var(--panel-active-bg, #f5eef7);
+    color: var(--panel-active-text, #7a3a88);
+
+    svg { opacity: 1; }
   }
 }

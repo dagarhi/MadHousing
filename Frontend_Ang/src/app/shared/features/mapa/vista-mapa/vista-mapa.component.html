@@ -23,6 +23,10 @@
 
     <!-- Derecha: resto de acciones -->
     <div class="header-right">
+      <button mat-button class="theme-btn" (click)="toggleTheme()"
+        [attr.aria-label]="theme.isDark ? 'Modo claro' : 'Modo oscuro'">
+        <lucide-icon [name]="theme.isDark ? 'sun' : 'moon'" [size]="18"></lucide-icon>
+      </button>
       <button mat-button (click)="cerrarOtros('favoritos')">
         <lucide-icon name="heart" [size]="18"></lucide-icon>
         Favoritos

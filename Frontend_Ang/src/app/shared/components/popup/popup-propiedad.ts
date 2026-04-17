@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, HostBinding } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -7,6 +7,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { Propiedad } from '../../../core/models/propiedad.model';
 import { FavoritosService } from '../../../core/services/favoritos.service';
 import { MapService } from '../../../core/services/map.service';
+import { ThemeService } from '../../../core/services/theme.service';
 import { PALETTE_RDYLGN, BACKEND_SCORE_DOMAIN, interpolatePalette } from '../../../core/styles/score-colors';
 
 @Component({
@@ -20,6 +21,7 @@ export class PopupPropiedadComponent implements OnInit, OnDestroy {
   @Input() piso!: Propiedad;
   @Input() isDark = false;
   @Input() close?: () => void;
+  @HostBinding('class.dark') get hostDark() { return this.themeSvc.isDark; }
   private sub?: Subscription;
   favoritos: Propiedad[] = [];
 
@@ -29,7 +31,11 @@ export class PopupPropiedadComponent implements OnInit, OnDestroy {
   tipoInteres = 3.5;
   plazo = 30;
 
-  constructor(private favs: FavoritosService, private mapSvc: MapService) { }
+  constructor(
+    private favs: FavoritosService,
+    private mapSvc: MapService,
+    private themeSvc: ThemeService,
+  ) { }
 
   ngOnInit(): void {
     this.favoritos = this.favs.currentFavoritos;

@@ -377,7 +377,7 @@ def obtener_zonas_jerarquicas(
 def buscar_todo(
     operation: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
-    per_page: int = Query(500, le=1000),
+    per_page: int = Query(2000, le=5000),
     db: Session = Depends(db_from_request),
 ):
     """Devuelve todas las propiedades, opcionalmente filtradas por tipo de operación."""

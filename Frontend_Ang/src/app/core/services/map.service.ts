@@ -22,14 +22,15 @@ export class MapService {
   private markers: maplibregl.Marker[] = [];
   private activePopup?: maplibregl.Popup;
 
-  async initMap(container: HTMLElement): Promise<void> {
+  async initMap(container: HTMLElement, styleUrl?: string): Promise<void> {
     if (this.map) return;
 
     this.map = new maplibregl.Map({
       container,
-      style: environment.mapStyleLight,
+      style: styleUrl ?? environment.mapStyleLight,
       center: [-3.7038, 40.4168],
       zoom: 12,
+      maxTileCacheSize: 1000, // más tiles en caché en memoria → menos re-descargas al navegar
     });
 
     // Debug access
@@ -250,7 +251,7 @@ export class MapService {
     </svg>`;
   }
 
-  private async loadPinsIcons(): Promise<void> {
+  async loadPinsIcons(): Promise<void> {
     if (!this.map) return;
 
     const loadIcon = (id: string, url: string) =>
