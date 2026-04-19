@@ -9,16 +9,16 @@
   <div drawer-content>
     <div class="selectors">
       <div class="group">
-        <label>Zona A</label>
-        <select [(ngModel)]="zonaA" (ngModelChange)="onZonaChange()">
+        <label for="comp-zona-a">Zona A</label>
+        <select id="comp-zona-a" [(ngModel)]="zonaA" (ngModelChange)="onZonaChange()">
           <option [ngValue]="null">Selecciona...</option>
           <option *ngFor="let z of zonasConDatos" [ngValue]="z">{{ z }}</option>
         </select>
       </div>
 
       <div class="group">
-        <label>Zona B</label>
-        <select [(ngModel)]="zonaB" (ngModelChange)="onZonaChange()">
+        <label for="comp-zona-b">Zona B</label>
+        <select id="comp-zona-b" [(ngModel)]="zonaB" (ngModelChange)="onZonaChange()">
           <option [ngValue]="null">Selecciona...</option>
           <option *ngFor="let z of zonasConDatos" [ngValue]="z">{{ z }}</option>
         </select>
@@ -26,8 +26,8 @@
     </div>
 
     <div class="operation-toggle">
-      <label>Tipo de operación:</label>
-      <select [(ngModel)]="tipoOperacion" (change)="onOperacionChange()">
+      <label for="comp-operacion">Tipo de operación:</label>
+      <select id="comp-operacion" [(ngModel)]="tipoOperacion" (change)="onOperacionChange()">
         <option value="sale">🏠 Venta</option>
         <option value="rent">🔑 Alquiler</option>
       </select>
