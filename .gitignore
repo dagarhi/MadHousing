@@ -216,4 +216,5 @@ Frontend_Ang/.env
 Backend/venv/
 
 # (Opcional) Config de VSCode
-.vscode/
+.vscode/pisos_local_backup.db
+pisos_local_backup.db
