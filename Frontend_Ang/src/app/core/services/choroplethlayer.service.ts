@@ -325,7 +325,7 @@ export class ChoroplethLayerService implements MapLayer {
         acc.sumUnitPrice += (Number(p.price) / Number(p.size));
         acc.validUnit += 1;
       }
-      const s = this.asNum(p.score ?? p.score_intrinseco);
+      const s = this.asNum(p.score_intrinseco);
       if (s !== undefined) {
         acc.sumScore += s;
         acc.validScore += 1;

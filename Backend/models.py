@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Text, ForeignKey, JSON
 from sqlalchemy.orm import declarative_base, relationship
 from datetime import datetime, timezone
 
@@ -29,9 +29,6 @@ class Propiedad(Base):
     es_duplicado = Column(Boolean, default=False)
     propiedad_original = Column(String(50), nullable=True)
     score_intrinseco = Column(Float)
-    score_zona = Column(Float)
-    score_planta = Column(Float)
-    score_final = Column(Float)
     fecha_obtencion = Column(DateTime, default=_utcnow)
     fecha_actualizacion = Column(DateTime, default=_utcnow, onupdate=_utcnow)
     city = Column(String(100), index=True)
@@ -57,9 +54,6 @@ class Propiedad(Base):
             "es_duplicado": self.es_duplicado,
             "propiedad_original": self.propiedad_original,
             "score_intrinseco": self.score_intrinseco,
-            "score_zona": self.score_zona,
-            "score_planta": self.score_planta,
-            "score_final": self.score_final,
             "fecha_obtencion": self.fecha_obtencion.isoformat() if self.fecha_obtencion else None,
             "fecha_actualizacion": self.fecha_actualizacion.isoformat() if self.fecha_actualizacion else None,
             "city": self.city,
@@ -101,3 +95,11 @@ class SearchHistory(Base):
     created_at = Column(DateTime, default=_utcnow)
 
     user = relationship("User", back_populates="search_history")
+
+
+class ScraperState(Base):
+    __tablename__ = "scraper_state"
+
+    id = Column(String(50), primary_key=True)
+    value = Column(JSON, nullable=False)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
