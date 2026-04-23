@@ -3,21 +3,14 @@ import maplibregl from 'maplibre-gl';
 import { MapService } from './map.service';
 import { Propiedad } from '../models/propiedad.model';
 import { PopupPropiedadService } from './popup-propiedad.service';
+import { MapLayer } from './map-layer.interface';
 
 type LngLat = [number, number];
 
 export interface PinsOptions {
-  sizePx?: number;
   colorByOperation?: boolean;
-  rentColor?: string;
-  saleColor?: string;
-  fallbackColor?: string;
   showPopupOnClick?: boolean;
   popupBuilder?: (p: Propiedad) => string | HTMLElement;
-  popupOffsetY?: number;
-  hoverScale?: number;
-  selectedScale?: number;
-  zIndexBase?: number;
 }
 
 type PinData = {
@@ -25,29 +18,31 @@ type PinData = {
   coord: LngLat;
 };
 
+/** Sentinel used in `icon-size` expressions when no pin is hovered/selected. */
+const NO_ID = '__no_pin__';
+
 @Injectable({ providedIn: 'root' })
-export class PinsLayerService implements OnDestroy {
+export class PinsLayerService implements OnDestroy, MapLayer {
+  readonly id = 'pins';
+  readonly zIndex = 30;
+
   private map?: maplibregl.Map;
 
   private readonly sourceId = 'pins-source';
-  private readonly layerId = 'pins-layer';
+  readonly layerId = 'pins-layer';
 
-  private options: Required<PinsOptions> = {
-    sizePx: 34,
+  private options: Required<Pick<PinsOptions, 'colorByOperation' | 'showPopupOnClick'>> & {
+    popupBuilder: (p: Propiedad) => string | HTMLElement;
+  } = {
     colorByOperation: true,
-    rentColor: '#22c55e',
-    saleColor: '#3b82f6',
-    fallbackColor: '#9ca3af',
     showPopupOnClick: true,
     popupBuilder: (p) => this.defaultPopupHTML(p),
-    popupOffsetY: 14,
-    hoverScale: 1.08,
-    selectedScale: 1.2,
-    zIndexBase: 10,
   };
 
   private visible = true;
+  private hoveredId?: string;
   private selectedId?: string;
+  private popupSuppressed = false;
 
   private dataById = new Map<string, PinData>();
   private attached = false;
@@ -56,7 +51,7 @@ export class PinsLayerService implements OnDestroy {
   constructor(
     private readonly mapSvc: MapService,
     private readonly popupSvc: PopupPropiedadService,
-  ) { }
+  ) {}
 
   attach(map?: maplibregl.Map) {
     this.map = map ?? this.mapSvc.getMap() ?? this.map;
@@ -66,15 +61,9 @@ export class PinsLayerService implements OnDestroy {
     const hasLayer = !!this.map.getLayer(this.layerId);
 
     if (this.attached && (!hasSource || !hasLayer)) {
-      if (hasLayer) {
-        this.map.off('click', this.layerId, this.handleClick);
-        this.map.off('mouseenter', this.layerId, this.handleMouseEnter);
-        this.map.off('mouseleave', this.layerId, this.handleMouseLeave);
-        this.map.removeLayer(this.layerId);
-      }
-      if (hasSource) {
-        this.map.removeSource(this.sourceId);
-      }
+      this.detachHandlers();
+      if (hasLayer) { try { this.map.removeLayer(this.layerId); } catch { } }
+      if (hasSource) { try { this.map.removeSource(this.sourceId); } catch { } }
       this.attached = false;
     }
 
@@ -83,10 +72,7 @@ export class PinsLayerService implements OnDestroy {
     if (!this.map.getSource(this.sourceId)) {
       this.map.addSource(this.sourceId, {
         type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: [],
-        },
+        data: { type: 'FeatureCollection', features: [] },
       });
     }
 
@@ -97,23 +83,36 @@ export class PinsLayerService implements OnDestroy {
         source: this.sourceId,
         layout: {
           'icon-image': [
-            'case',
-            ['==', ['get', 'operation'], 'rent'], 'pin-rent',
-            ['==', ['get', 'operation'], 'sale'], 'pin-sale',
-            'pin-sale'
+            'match', ['get', 'operation'],
+            'rent', 'pin-rent',
+            'sale', 'pin-sale',
+            'pin-sale',
           ],
-          'icon-size': 0.9,
           'icon-allow-overlap': true,
+          'icon-ignore-placement': true,
+          'icon-anchor': 'bottom',
+          'icon-size': this.buildSizeExpr(),
         },
       });
     }
 
-    this.map.on('click', this.layerId, this.handleClick);
-    this.map.on('mouseenter', this.layerId, this.handleMouseEnter);
-    this.map.on('mouseleave', this.layerId, this.handleMouseLeave);
-
+    this.attachHandlers();
     this.attached = true;
-    this.syncLayerStyle();
+
+    // Re-push cached data so style reloads restore pins automatically.
+    if (this.dataById.size > 0) this.rebuildSourceFromData();
+  }
+
+  detach() {
+    if (!this.map || !this.attached) return;
+    this.detachHandlers();
+    if (this.map.getLayer(this.layerId)) {
+      try { this.map.removeLayer(this.layerId); } catch { }
+    }
+    if (this.map.getSource(this.sourceId)) {
+      try { this.map.removeSource(this.sourceId); } catch { }
+    }
+    this.attached = false;
   }
 
   ngOnDestroy() {
@@ -121,21 +120,10 @@ export class PinsLayerService implements OnDestroy {
   }
 
   clear() {
-    if (!this.map) return;
-
-    if (this.map.getLayer(this.layerId)) {
-      this.map.off('click', this.layerId, this.handleClick);
-      this.map.off('mouseenter', this.layerId, this.handleMouseEnter);
-      this.map.off('mouseleave', this.layerId, this.handleMouseLeave);
-      this.map.removeLayer(this.layerId);
-    }
-    if (this.map.getSource(this.sourceId)) {
-      this.map.removeSource(this.sourceId);
-    }
-
+    this.detach();
     this.dataById.clear();
     this.selectedId = undefined;
-    this.attached = false;
+    this.hoveredId = undefined;
     this.mapSvc.cerrarPopup?.();
   }
 
@@ -143,6 +131,11 @@ export class PinsLayerService implements OnDestroy {
     this.visible = visible;
     if (!this.map || !this.map.getLayer(this.layerId)) return;
     this.map.setLayoutProperty(this.layerId, 'visibility', visible ? 'visible' : 'none');
+  }
+
+  /** When true, clicking a pin does not open its popup (used by route mode). */
+  setPopupSuppressed(suppressed: boolean) {
+    this.popupSuppressed = suppressed;
   }
 
   render(map: maplibregl.Map, pisos: Propiedad[], opts?: PinsOptions): void;
@@ -169,7 +162,6 @@ export class PinsLayerService implements OnDestroy {
     }
 
     this.rebuildSourceFromData();
-    this.syncLayerStyle();
     this.setVisible(this.visible);
   }
 
@@ -201,19 +193,18 @@ export class PinsLayerService implements OnDestroy {
     if (!coord) return false;
 
     this.dataById.set(id, { propiedad: p, coord });
-
     this.rebuildSourceFromData();
 
     if (options?.fly) {
       this.focusOn(id, options.zoom, options.openPopup ?? false);
     }
-
     return true;
   }
 
   setSelected(propertyCode?: string) {
+    if (this.selectedId === propertyCode) return;
     this.selectedId = propertyCode;
-    this.syncLayerStyle();
+    this.refreshSizeExpr();
   }
 
   focusOn(propertyCode: string, zoom?: number, withPopup = true) {
@@ -240,7 +231,18 @@ export class PinsLayerService implements OnDestroy {
       const isDark =
         document.documentElement.getAttribute('data-theme') === 'dark';
 
-      this.popupSvc.open(rec.propiedad, [lng, lat], isDark);
+      // Guard against the auto-close fired when opening another pin's popup:
+      // only clear selection if this specific pin is still the selected one.
+      const pinId = propertyCode;
+      this.popupSvc.open(rec.propiedad, [lng, lat], isDark, () => {
+        if (this.selectedId === pinId) {
+          this.selectedId = undefined;
+          this.refreshSizeExpr();
+        }
+        if (this.lastPopupPropertyCode === pinId) {
+          this.lastPopupPropertyCode = undefined;
+        }
+      });
       this.lastPopupPropertyCode = propertyCode;
     }
   }
@@ -257,6 +259,22 @@ export class PinsLayerService implements OnDestroy {
     this.map.fitBounds(bounds, { padding, duration: 600 });
   }
 
+  // ── Internals ─────────────────────────────────────────────────────────────
+
+  private attachHandlers() {
+    if (!this.map) return;
+    this.map.on('click', this.layerId, this.handleClick);
+    this.map.on('mousemove', this.layerId, this.handleMouseMove);
+    this.map.on('mouseleave', this.layerId, this.handleMouseLeave);
+  }
+
+  private detachHandlers() {
+    if (!this.map) return;
+    this.map.off('click', this.layerId, this.handleClick);
+    this.map.off('mousemove', this.layerId, this.handleMouseMove);
+    this.map.off('mouseleave', this.layerId, this.handleMouseLeave);
+  }
+
   private rebuildSourceFromData() {
     if (!this.map) return;
     const src = this.map.getSource(this.sourceId) as maplibregl.GeoJSONSource | undefined;
@@ -266,14 +284,8 @@ export class PinsLayerService implements OnDestroy {
     for (const [id, rec] of this.dataById.entries()) {
       features.push({
         type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: rec.coord,
-        },
-        properties: {
-          id,
-          operation: rec.propiedad.operation,
-        },
+        geometry: { type: 'Point', coordinates: rec.coord },
+        properties: { id, operation: rec.propiedad.operation },
       });
     }
 
@@ -282,6 +294,7 @@ export class PinsLayerService implements OnDestroy {
 
   private handleClick = (e: any) => {
     if (!this.map || !e.features?.length) return;
+    if (this.popupSuppressed) return;
     const f = e.features[0];
     const id: string | undefined = f.properties?.id;
     if (!id) return;
@@ -290,23 +303,51 @@ export class PinsLayerService implements OnDestroy {
     this.focusOn(id, undefined, true);
   };
 
-  private handleMouseEnter = () => {
-    if (!this.map) return;
+  private handleMouseMove = (e: any) => {
+    if (!this.map || !e.features?.length) return;
+    const id: string | undefined = e.features[0].properties?.id;
+    if (!id || id === this.hoveredId) return;
+    this.hoveredId = id;
+    this.refreshSizeExpr();
     this.map.getCanvas().style.cursor = 'pointer';
   };
 
   private handleMouseLeave = () => {
     if (!this.map) return;
     this.map.getCanvas().style.cursor = '';
+    if (this.hoveredId !== undefined) {
+      this.hoveredId = undefined;
+      this.refreshSizeExpr();
+    }
   };
 
-  private syncLayerStyle() {
-    if (!this.map || !this.map.getLayer(this.layerId)) return;
+  /**
+   * Zoom-interpolated icon size, with per-feature hover / selected multipliers.
+   * Layout properties can't read `feature-state`, so we compare `['get', 'id']`
+   * to the currently-hovered/selected IDs and rebuild the expression when they
+   * change. MapLibre allows only one zoom-based `interpolate` per property, so
+   * the id-branching lives inside each stop.
+   */
+  private buildSizeExpr(): any {
+    const hId = this.hoveredId ?? NO_ID;
+    const sId = this.selectedId ?? NO_ID;
+    const stop = (base: number, hover: number, selected: number) => [
+      'case',
+      ['==', ['get', 'id'], sId], selected,
+      ['==', ['get', 'id'], hId], hover,
+      base,
+    ];
+    return [
+      'interpolate', ['linear'], ['zoom'],
+      10, stop(0.5,  0.7,  0.8),
+      14, stop(1.0,  1.2,  1.4),
+      18, stop(1.35, 1.6,  1.8),
+    ];
+  }
 
-    const sizeExpr: any = this.selectedId
-      ? ['case', ['==', ['get', 'id'], this.selectedId], 1.1, 0.9]
-      : 0.9;
-    this.map.setLayoutProperty(this.layerId, 'icon-size', sizeExpr);
+  private refreshSizeExpr() {
+    if (!this.map || !this.map.getLayer(this.layerId)) return;
+    this.map.setLayoutProperty(this.layerId, 'icon-size', this.buildSizeExpr());
   }
 
   private getLngLat(p: Propiedad): LngLat | null {

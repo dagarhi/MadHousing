@@ -103,6 +103,20 @@ print("=" * 50)
 print("  MIGRACIÓN COMPLETADA")
 print("=" * 50)
 
+# ── Reset de sequences ────────────────────────────────────────────────────────
+# Tras bulk_save_objects los IDs conservan su valor original, pero la sequence
+# sigue en 1. El primer INSERT posterior fallaría con duplicate key.
+# Propiedades no lo necesita (PK string).
+
+print("\n🔧  Reajustando sequences de PostgreSQL...")
+with pg_engine.begin() as conn:
+    for tabla, pk in [("users", "id"), ("favorites", "id"), ("search_history", "id")]:
+        conn.execute(text(
+            f"SELECT setval(pg_get_serial_sequence('{tabla}', '{pk}'), "
+            f"COALESCE((SELECT MAX({pk}) FROM {tabla}), 0) + 1, false)"
+        ))
+        print(f"    ✓ {tabla}.{pk}")
+
 # ── Verificación rápida ───────────────────────────────────────────────────────
 
 print("\n🔍  Verificación de conteos:\n")

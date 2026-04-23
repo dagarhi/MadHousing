@@ -7,6 +7,7 @@ import {
   HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LucideAngularModule } from 'lucide-angular';
 import {
   animate,
   style,
@@ -14,6 +15,14 @@ import {
   trigger,
 } from '@angular/animations';
 import { Modo } from '../../../core/services/map-layer-manager.service';
+
+export type PoiKey = 'parks' | 'metro' | 'schools' | 'health' | 'bike';
+
+interface PoiOption {
+  key: PoiKey;
+  label: string;
+  icon: string;
+}
 
 interface LayerOption {
   value: Modo;
@@ -26,10 +35,18 @@ const LAYERS: LayerOption[] = [
   { value: 'chinchetas',  label: 'Chinchetas'  },
 ];
 
+const POIS: PoiOption[] = [
+  { key: 'parks',   label: 'Parques',     icon: 'trees' },
+  { key: 'metro',   label: 'Metro',       icon: 'train-front' },
+  { key: 'schools', label: 'Colegios',    icon: 'graduation-cap' },
+  { key: 'health',  label: 'Sanidad',     icon: 'cross' },
+  { key: 'bike',    label: 'Carril bici', icon: 'bike' },
+];
+
 @Component({
   selector: 'app-map-controls',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
   templateUrl: './map-controls.component.html',
   styleUrls: ['./map-controls.component.scss'],
   animations: [
@@ -49,16 +66,30 @@ export class MapControlsComponent {
   @Input() activeLayer: Modo = 'heat';
 
   @Input() radiusActive: boolean = false;
+  @Input() isochroneOpen: boolean = false;
+  @Input() routeActive: boolean = false;
 
-  @Output() layerChange     = new EventEmitter<Modo>();
-  @Output() onClear         = new EventEmitter<void>();
-  @Output() onCenter        = new EventEmitter<void>();
-  @Output() onRadiusToggle  = new EventEmitter<void>();
+  @Input() poisActive: Record<PoiKey, boolean> = {
+    parks:   false,
+    metro:   false,
+    schools: false,
+    health:  false,
+    bike:    false,
+  };
+
+  @Output() layerChange        = new EventEmitter<Modo>();
+  @Output() onClear            = new EventEmitter<void>();
+  @Output() onCenter           = new EventEmitter<void>();
+  @Output() onRadiusToggle     = new EventEmitter<void>();
+  @Output() onIsochroneToggle  = new EventEmitter<void>();
+  @Output() onRouteToggle      = new EventEmitter<void>();
+  @Output() poiToggle          = new EventEmitter<PoiKey>();
 
   open       = false;
   openUpward = false;
   alignRight = false;
   readonly layers = LAYERS;
+  readonly pois   = POIS;
 
   constructor(private el: ElementRef<HTMLElement>) {}
 
@@ -100,5 +131,22 @@ export class MapControlsComponent {
     e.stopPropagation();
     this.onRadiusToggle.emit();
     this.open = false;
+  }
+
+  toggleIsochrone(e: MouseEvent): void {
+    e.stopPropagation();
+    this.onIsochroneToggle.emit();
+    this.open = false;
+  }
+
+  toggleRoute(e: MouseEvent): void {
+    e.stopPropagation();
+    this.onRouteToggle.emit();
+    this.open = false;
+  }
+
+  togglePoi(key: PoiKey, e: MouseEvent): void {
+    e.stopPropagation();
+    this.poiToggle.emit(key);
   }
 }

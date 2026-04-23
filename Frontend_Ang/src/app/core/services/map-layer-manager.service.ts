@@ -5,16 +5,18 @@ import { MapService } from './map.service';
 import { HeatValueMapService } from './heat-value-map.service';
 import { PinsLayerService } from './pins-layer.service';
 import { ChoroplethLayerService } from './choroplethlayer.service';
+import { RadiusLayerService } from './radius-layer.service';
+import { IsochroneLayerService } from './isochrone-layer.service';
+import { RouteLayerService } from './route-layer.service';
+import { ParksLayerService } from './parks-layer.service';
+import { MetroLayerService } from './metro-layer.service';
+import { MapLayer } from './map-layer.interface';
 import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 import { BehaviorSubject } from 'rxjs';
 
 export type Modo = 'coropletico' | 'heat' | 'chinchetas';
 type ChoroAggMode = 'count' | 'avgPrice' | 'avgUnitPrice' | 'avgScore';
 type ChoroOp = 'venta' | 'alquiler' | 'all';
-
-interface attachableLayer {
-  attach?(map: maplibregl.Map): void;
-}
 
 @Injectable({ providedIn: 'root' })
 export class MapLayerManager {
@@ -25,16 +27,62 @@ export class MapLayerManager {
   private choroIdField: string = 'CODIGOINE';
   private choroMetric: ChoroAggMode = 'avgScore';
   private choroOperation: ChoroOp = 'all';
+
   readonly bearing$     = new BehaviorSubject<number>(0);
-  /** true mientras los tiles del mapa inicial estén cargando */
   readonly tileLoading$ = new BehaviorSubject<boolean>(true);
+
+  private styleSwapInFlight?: Promise<void>;
+  private pendingStyleUrl?: string;
+
+  /**
+   * Registry of every MapLayer the manager orchestrates. `attach`/`detach`
+   * is driven off this list in `zIndex` order, so adding a new layer
+   * (POIs, radius, iso, route…) only needs one `register()` call.
+   */
+  private readonly layers: MapLayer[] = [];
 
   constructor(
     private readonly mapSvc: MapService,
     private readonly heat: HeatValueMapService,
     private readonly pins: PinsLayerService,
     private readonly choro: ChoroplethLayerService,
-  ) { }
+    private readonly radius: RadiusLayerService,
+    private readonly iso: IsochroneLayerService,
+    private readonly route: RouteLayerService,
+    private readonly parks: ParksLayerService,
+    private readonly metro: MetroLayerService,
+  ) {
+    this.register(this.choro);
+    this.register(this.parks);
+    this.register(this.heat);
+    this.register(this.radius);
+    this.register(this.iso);
+    this.register(this.pins);
+    this.register(this.metro);
+    this.register(this.route);
+  }
+
+  // ── Registry ──────────────────────────────────────────────────────────────
+
+  register(layer: MapLayer): void {
+    if (this.layers.some(l => l.id === layer.id)) return;
+    this.layers.push(layer);
+    this.layers.sort((a, b) => a.zIndex - b.zIndex);
+    if (this.map) layer.attach(this.map);
+  }
+
+  unregister(id: string): void {
+    const idx = this.layers.findIndex(l => l.id === id);
+    if (idx === -1) return;
+    const [layer] = this.layers.splice(idx, 1);
+    layer.detach();
+  }
+
+  getLayer<T extends MapLayer>(id: string): T | undefined {
+    return this.layers.find(l => l.id === id) as T | undefined;
+  }
+
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   async init(container: HTMLElement, styleUrl?: string) {
     await this.mapSvc.initMap(container, styleUrl);
@@ -46,34 +94,74 @@ export class MapLayerManager {
       this.bearing$.next(this.map.getBearing() ?? 0);
     });
 
-    // Resolver carga cuando todos los tiles del viewport estén renderizados
     this.map.once('idle', () => this.tileLoading$.next(false));
 
-    // Safely attach sub-services
-    (this.heat as unknown as attachableLayer).attach?.(this.map);
-    (this.pins as unknown as attachableLayer).attach?.(this.map);
-    (this.choro as unknown as attachableLayer).attach?.(this.map);
+    this.attachAll();
   }
 
   /**
-   * Cambia el estilo visual del mapa (claro ↔ oscuro).
-   * Re-adjunta sources, layers e iconos una vez que el nuevo estilo ha cargado.
+   * Light ↔ dark style toggle. Detaches every registered layer, swaps the
+   * style (which also wipes icons), awaits `style.load`, re-registers pin
+   * icons, then re-attaches every layer in zIndex order. Each layer's
+   * `attach()` pushes its cached data, so no data re-fetch is needed.
    */
   async changeMapStyle(styleUrl: string): Promise<void> {
     if (!this.map) return;
-    // No activar tileLoading$ aquí: con tiles en caché el evento 'idle' puede
-    // llegar antes de que podamos registrar el listener → spinner permanente.
-    // Durante el toggle el mapa es visible; el usuario ve la transición directamente.
-    this.map.setStyle(styleUrl);
-    await new Promise<void>(resolve => this.map!.once('style.load', resolve));
-    // Los iconos custom (addImage) se pierden al cambiar de estilo
-    await this.mapSvc.loadPinsIcons();
-    // Re-adjuntar sub-servicios (re-añaden sus fuentes y capas)
-    (this.heat as unknown as attachableLayer).attach?.(this.map);
-    (this.pins as unknown as attachableLayer).attach?.(this.map);
-    (this.choro as unknown as attachableLayer).attach?.(this.map);
+
+    // Serialize concurrent calls: if a swap is in flight, queue the latest URL
+    // and wait for the running swap to finish — then apply the pending one.
+    if (this.styleSwapInFlight) {
+      this.pendingStyleUrl = styleUrl;
+      return;
+    }
+
+    this.styleSwapInFlight = this.runStyleSwap(styleUrl).finally(() => {
+      this.styleSwapInFlight = undefined;
+      const next = this.pendingStyleUrl;
+      this.pendingStyleUrl = undefined;
+      if (next && next !== styleUrl) this.changeMapStyle(next);
+    });
+    await this.styleSwapInFlight;
+  }
+
+  private async runStyleSwap(styleUrl: string): Promise<void> {
+    if (!this.map) return;
+
+    this.detachAll();
+
+    // `diff: false` forces a full reload so `style.load` is guaranteed to fire.
+    // With default `diff: true`, MapLibre may apply style patches silently
+    // without emitting the event, leaving the await hanging forever.
+    this.map.setStyle(styleUrl, { diff: false });
+    await this.waitForStyleLoad(3000);
+
+    try {
+      await this.mapSvc.loadPinsIcons();
+    } catch (err) {
+      console.error('[MapLayerManager] loadPinsIcons failed', err);
+    }
+
+    this.attachAll();
     this.render();
   }
+
+  private waitForStyleLoad(timeoutMs: number): Promise<void> {
+    return new Promise<void>(resolve => {
+      if (!this.map) { resolve(); return; }
+      let done = false;
+      const onLoad = () => { if (done) return; done = true; resolve(); };
+      this.map.once('style.load', onLoad);
+      setTimeout(() => {
+        if (done) return;
+        done = true;
+        this.map?.off('style.load', onLoad);
+        console.warn('[MapLayerManager] style.load timeout — proceeding anyway');
+        resolve();
+      }, timeoutMs);
+    });
+  }
+
+  // ── Mode / data ───────────────────────────────────────────────────────────
 
   setMode(m: Modo) {
     if (this.mode === m) return;
@@ -84,6 +172,19 @@ export class MapLayerManager {
   setData(pisos: Propiedad[]) {
     this.data = Array.isArray(pisos) ? pisos : [];
     this.render();
+  }
+
+  setChoroplethPolygons(geojson: FeatureCollection<Polygon | MultiPolygon>, idField = 'CODIGOINE') {
+    this.choroIdField = idField;
+    this.choro.setPolygons(geojson, idField);
+    if (this.mode === 'coropletico') {
+      this.choro.setVisible(true);
+      this.choro.render(this.data, {
+        idField: this.choroIdField,
+        mode: this.choroMetric,
+        filterOperation: this.choroOperation,
+      });
+    }
   }
 
   private render() {
@@ -127,27 +228,7 @@ export class MapLayerManager {
     }
   }
 
-  destroy() {
-    this.heat.clear();
-    this.pins.clear();
-    this.choro.clear();
-    this.mapSvc.destroy?.();
-    this.map = undefined;
-    this.tileLoading$.next(true);
-  }
-
-  setChoroplethPolygons(geojson: FeatureCollection<Polygon | MultiPolygon>, idField = 'CODIGOINE') {
-    this.choroIdField = idField;
-    this.choro.setPolygons(geojson, idField);
-    if (this.mode === 'coropletico') {
-      this.choro.setVisible(true);
-      this.choro.render(this.data, {
-        idField: this.choroIdField,
-        mode: this.choroMetric,
-        filterOperation: this.choroOperation,
-      });
-    }
-  }
+  // ── Cleanup ───────────────────────────────────────────────────────────────
 
   clearAll(): void {
     if (!this.map) return;
@@ -157,34 +238,30 @@ export class MapLayerManager {
     this.mapSvc.limpiarMarkers?.();
     this.mapSvc.clearChoropleth?.();
 
-    this.pins.clear();
-    this.heat.clear();
-    this.choro.clear();
+    for (const layer of this.layers) layer.clear();
 
     document.querySelectorAll('.maplibregl-popup').forEach(el => el.remove());
-    this.cleanResidualLayers();
   }
 
-  private cleanResidualLayers() {
-    if (!this.map) return;
-    const style = this.map.getStyle();
-
-    // Clean layers
-    (style?.layers ?? []).forEach(l => {
-      if (/^(heat|heat-value|choropleth-|choro-|pins|pin-)/i.test(l.id) && this.map!.getLayer(l.id)) {
-        try { this.map!.removeLayer(l.id); } catch { }
-      }
-    });
-
-    // Clean sources
-    Object.keys(style?.sources ?? {}).forEach(id => {
-      if (/^(heat|heat-value|choropleth-|choro-|pins|pin-)/i.test(id) && this.map!.getSource(id)) {
-        try { this.map!.removeSource(id); } catch { }
-      }
-    });
+  destroy() {
+    for (const layer of this.layers) layer.clear();
+    this.mapSvc.destroy?.();
+    this.map = undefined;
+    this.tileLoading$.next(true);
   }
 
   lookNorth(): void {
     this.mapSvc.resetNorth(true);
+  }
+
+  // ── Internals ─────────────────────────────────────────────────────────────
+
+  private attachAll() {
+    if (!this.map) return;
+    for (const layer of this.layers) layer.attach(this.map);
+  }
+
+  private detachAll() {
+    for (const layer of this.layers) layer.detach();
   }
 }

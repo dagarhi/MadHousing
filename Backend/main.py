@@ -65,7 +65,11 @@ class FavoriteOut(BaseModel):
     id: int
     property_code: str
     created_at: datetime
+    nota: str = ""
     propiedad: dict
+
+class FavoriteUpdate(BaseModel):
+    nota: str
 
 class SearchHistoryCreate(BaseModel):
     query: dict
@@ -451,6 +455,7 @@ def listar_favoritos(
                 id=fav.id,
                 property_code=fav.property_code,
                 created_at=fav.created_at,
+                nota=fav.nota or "",
                 propiedad=prop.as_dict() if prop else {},
             )
         )
@@ -480,6 +485,7 @@ def crear_favorito(
             id=existente.id,
             property_code=existente.property_code,
             created_at=existente.created_at,
+            nota=existente.nota or "",
             propiedad=prop.as_dict(),
         )
 
@@ -495,6 +501,7 @@ def crear_favorito(
         id=fav.id,
         property_code=fav.property_code,
         created_at=fav.created_at,
+        nota=fav.nota or "",
         propiedad=prop.as_dict(),
     )
 
@@ -519,6 +526,38 @@ def eliminar_favorito(
     db.delete(fav)
     db.commit()
     return
+
+@app.patch("/favoritos/{favorite_id}", response_model=FavoriteOut)
+def actualizar_favorito(
+    favorite_id: int,
+    body: FavoriteUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(db_from_request),
+):
+    fav = (
+        db.query(Favorite)
+        .filter(
+            Favorite.id == favorite_id,
+            Favorite.user_id == current_user.id,
+        )
+        .first()
+    )
+
+    if not fav:
+        raise HTTPException(status_code=404, detail="Favorito no encontrado")
+
+    fav.nota = body.nota
+    db.commit()
+    db.refresh(fav)
+
+    prop = db.query(Propiedad).filter(Propiedad.propertyCode == fav.property_code).first()
+    return FavoriteOut(
+        id=fav.id,
+        property_code=fav.property_code,
+        created_at=fav.created_at,
+        nota=fav.nota or "",
+        propiedad=prop.as_dict() if prop else {},
+    )
 
 # --- History ---
 

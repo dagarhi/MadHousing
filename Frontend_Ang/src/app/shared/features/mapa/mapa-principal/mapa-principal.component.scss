@@ -122,6 +122,381 @@
   to   { opacity: 1; transform: translateX(-50%) translateY(0);   }
 }
 
+// ── Isochrone control panel ───────────────────────────────────────────────────
+.iso-panel {
+  position: absolute;
+  z-index: 1500;
+  background: var(--panel-bg, #ffffff);
+  border: 1px solid var(--panel-border, rgba(0, 0, 0, 0.11));
+  border-radius: 12px;
+  padding: 0.7rem 0.85rem 0.75rem;
+  min-width: 210px;
+  max-width: 230px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  user-select: none;
+  font-family: inherit;
+  color: var(--panel-text, #111827);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.55rem;
+  }
+
+  &__icon { flex-shrink: 0; color: #2d6a4f; }
+
+  &__title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--panel-text, #111827);
+  }
+
+  // Transport mode buttons row
+  &__modes {
+    display: flex;
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
+  }
+
+  &__mode-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.25rem;
+    border: 1px solid var(--panel-border, rgba(0, 0, 0, 0.14));
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    color: var(--panel-text-muted, #6b7280);
+    transition: background 100ms, border-color 100ms, color 100ms;
+
+    lucide-icon { display: inline-flex; }
+
+    &:hover { background: var(--panel-item-hover, rgba(0, 0, 0, 0.06)); }
+
+    &.active {
+      background: rgba(45, 106, 79, 0.12);
+      border-color: #2d6a4f;
+      color: #2d6a4f;
+    }
+  }
+
+  // Time range checkboxes — vertical stack
+  &__ranges {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--panel-border, rgba(0, 0, 0, 0.07));
+  }
+
+  &__range-lbl {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.75rem;
+    color: var(--panel-text, #111827);
+    cursor: pointer;
+
+    input[type="checkbox"] {
+      accent-color: #2d6a4f;
+      cursor: pointer;
+      margin: 0;
+    }
+  }
+
+  &__range-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    display: inline-block;
+
+    &[data-val="600"]  { background: #2d6a4f; }
+    &[data-val="1200"] { background: #52b788; }
+    &[data-val="1800"] { background: #b7e4c7; border: 1px solid #74c69d; }
+  }
+
+  &__status {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    color: var(--panel-text-muted, #6b7280);
+    margin-bottom: 0.1rem;
+  }
+
+  &__place-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    width: 100%;
+    justify-content: center;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid #2d6a4f;
+    border-radius: 6px;
+    background: #e8f5ee;
+    color: #1b4332;
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 100ms;
+
+    &:hover { background: #d8f3dc; }
+  }
+
+  &__spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(45, 106, 79, 0.2);
+    border-top-color: #2d6a4f;
+    border-radius: 50%;
+    animation: map-spin 0.8s linear infinite;
+  }
+
+  &__bottom {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.3rem;
+    padding-top: 0.3rem;
+    border-top: 1px solid var(--panel-border, rgba(0, 0, 0, 0.07));
+  }
+
+  &__count {
+    flex: 1;
+    font-size: 0.72rem;
+    color: var(--panel-text-muted, #6b7280);
+    white-space: nowrap;
+  }
+
+  &__count-num {
+    font-weight: 700;
+    color: #2d6a4f;
+  }
+
+  &__action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.28rem 0.4rem;
+    border: 1px solid var(--panel-border, rgba(0, 0, 0, 0.14));
+    border-radius: 6px;
+    background: transparent;
+    color: var(--panel-text-muted, #6b7280);
+    cursor: pointer;
+    transition: background 100ms, border-color 100ms;
+
+    &:hover { background: var(--panel-item-hover, rgba(0, 0, 0, 0.04)); }
+  }
+
+  &__clear {
+    appearance: none;
+    -webkit-appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.28rem 0.5rem;
+    border: 1px solid var(--panel-border, rgba(0, 0, 0, 0.14));
+    border-radius: 6px;
+    background: transparent;
+    font-size: 0.72rem;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--panel-text-muted, #6b7280);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 100ms, border-color 100ms, color 100ms;
+
+    svg { flex-shrink: 0; }
+
+    &:hover {
+      background: var(--panel-item-hover, rgba(0, 0, 0, 0.04));
+      border-color: var(--panel-text-muted, #6b7280);
+      color: var(--panel-text, #111827);
+    }
+  }
+}
+
+// ── Route control panel ──────────────────────────────────────────────────────
+.route-panel {
+  position: absolute;
+  z-index: 1500;
+  background: var(--panel-bg, #ffffff);
+  border: 1px solid var(--panel-border, rgba(0, 0, 0, 0.11));
+  border-radius: 12px;
+  padding: 0.7rem 0.85rem 0.75rem;
+  min-width: 220px;
+  max-width: 260px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  user-select: none;
+  font-family: inherit;
+  color: var(--panel-text, #111827);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.55rem;
+  }
+
+  &__icon { flex-shrink: 0; color: #2563eb; }
+
+  &__title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--panel-text, #111827);
+  }
+
+  &__modes {
+    display: flex;
+    gap: 0.35rem;
+    margin-bottom: 0.55rem;
+  }
+
+  &__mode-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.25rem;
+    border: 1px solid var(--panel-border, rgba(0, 0, 0, 0.14));
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    color: var(--panel-text-muted, #6b7280);
+    transition: background 100ms, border-color 100ms, color 100ms;
+
+    lucide-icon { display: inline-flex; }
+
+    &:hover { background: var(--panel-item-hover, rgba(0, 0, 0, 0.06)); }
+
+    &.active {
+      background: rgba(37, 99, 235, 0.12);
+      border-color: #2563eb;
+      color: #2563eb;
+    }
+  }
+
+  &__points {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.45rem 0;
+    border-top: 1px solid var(--panel-border, rgba(0, 0, 0, 0.07));
+    border-bottom: 1px solid var(--panel-border, rgba(0, 0, 0, 0.07));
+    margin-bottom: 0.5rem;
+  }
+
+  &__pt {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--panel-text, #111827);
+    min-width: 0;
+  }
+
+  &__pt-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+
+    &[data-kind="origin"] { background: #10b981; }
+    &[data-kind="dest"]   { background: #ef4444; }
+  }
+
+  &__pt-lbl {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &.placeholder {
+      color: var(--panel-text-muted, #6b7280);
+      font-style: italic;
+    }
+  }
+
+  &__summary {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--panel-border, rgba(0, 0, 0, 0.07));
+    margin-bottom: 0.45rem;
+    color: var(--panel-text, #111827);
+
+    strong { color: #2563eb; font-weight: 700; font-size: 0.92rem; }
+  }
+
+  &__bottom {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    justify-content: flex-end;
+  }
+
+  &__action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.28rem 0.45rem;
+    border: 1px solid var(--panel-border, rgba(0, 0, 0, 0.14));
+    border-radius: 6px;
+    background: transparent;
+    color: var(--panel-text-muted, #6b7280);
+    cursor: pointer;
+    transition: background 100ms, border-color 100ms;
+
+    lucide-icon { display: inline-flex; }
+
+    &:hover:not(:disabled) {
+      background: var(--panel-item-hover, rgba(0, 0, 0, 0.06));
+      border-color: var(--panel-text-muted, #6b7280);
+      color: var(--panel-text, #111827);
+    }
+
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+
+  &__clear {
+    appearance: none;
+    -webkit-appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.28rem 0.5rem;
+    border: 1px solid var(--panel-border, rgba(0, 0, 0, 0.14));
+    border-radius: 6px;
+    background: transparent;
+    font-size: 0.72rem;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--panel-text-muted, #6b7280);
+    cursor: pointer;
+    transition: background 100ms, border-color 100ms, color 100ms;
+
+    svg { flex-shrink: 0; }
+
+    &:hover {
+      background: var(--panel-item-hover, rgba(0, 0, 0, 0.06));
+      border-color: var(--panel-text-muted, #6b7280);
+      color: var(--panel-text, #111827);
+    }
+  }
+}
+
 // ── Radius control panel ─────────────────────────────────────────────────────
 .radius-panel {
   position: absolute;

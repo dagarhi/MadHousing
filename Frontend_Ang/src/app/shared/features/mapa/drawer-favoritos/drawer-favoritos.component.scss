@@ -49,6 +49,33 @@
         text-decoration: underline;
       }
     }
+
+    .nota-input {
+      margin-top: 0.5rem;
+      width: 100%;
+      box-sizing: border-box;
+      resize: vertical;
+      font-size: 0.82rem;
+      font-family: inherit;
+      padding: 0.35rem 0.5rem;
+      border: 1px solid var(--mat-sys-outline-variant, rgba(103, 80, 164, 0.3));
+      border-radius: 6px;
+      background: var(--mat-sys-surface-container-low, #f7f2ff);
+      color: var(--mat-sys-on-surface, #1c1b1f);
+      line-height: 1.4;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+
+      &::placeholder {
+        color: var(--mat-sys-on-surface-variant, #49454f);
+        opacity: 0.6;
+      }
+
+      &:focus {
+        border-color: var(--mat-sys-primary, #7c3aed);
+        box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
+      }
+    }
   }
 
   .remove-btn {

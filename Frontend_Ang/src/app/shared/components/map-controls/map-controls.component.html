@@ -2,7 +2,7 @@
 
   <!-- ── Pill trigger ── -->
   <button class="mc-pill" [class.mc-pill--radius]="radiusActive" (click)="toggle($event)">
-    <span>Capas</span>
+    <span>Controles</span>
     <svg class="mc-chevron" [class.open]="open"
          width="13" height="13" viewBox="0 0 24 24"
          fill="none" stroke="currentColor"
@@ -14,58 +14,99 @@
   <!-- ── Dropdown panel ── -->
   <div class="mc-panel" *ngIf="open" [@slideDown]>
 
-    <!-- Capas -->
-    <div class="mc-section">
+    <!-- ── VISTA ── -->
+    <div class="mc-section mc-section--vista">
+      <div class="mc-section-header">
+        <lucide-icon name="layers" [size]="12" class="mc-section-header__icon"></lucide-icon>
+        <span class="mc-section-header__label">Vista</span>
+      </div>
+
       <button
         *ngFor="let layer of layers"
         class="mc-layer-btn"
         [class.active]="activeLayer === layer.value"
         (click)="selectLayer(layer.value, $event)">
-        <span class="mc-dot" [class.active]="activeLayer === layer.value"></span>
+        <span class="mc-radio" [class.active]="activeLayer === layer.value"></span>
         {{ layer.label }}
       </button>
     </div>
 
-    <div class="mc-divider"></div>
+    <!-- ── CONTEXTO ── -->
+    <div class="mc-section mc-section--contexto">
+      <div class="mc-section-header">
+        <lucide-icon name="compass" [size]="12" class="mc-section-header__icon"></lucide-icon>
+        <span class="mc-section-header__label">Contexto</span>
+      </div>
 
-    <!-- Acciones -->
-    <div class="mc-section">
-
-      <button class="mc-action-btn" (click)="clear($event)">
-        <!-- Brush / limpiar -->
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9.06 11.9l8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.07"/>
-          <path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1 1 6.65 2 8 .98.23-.25.37-.6.37-.96 0-1.67-1.33-3.06-3-3.06"/>
-        </svg>
-        Limpiar
+      <button
+        *ngFor="let poi of pois"
+        class="mc-poi-btn"
+        [class.active]="poisActive[poi.key]"
+        (click)="togglePoi(poi.key, $event)">
+        <span class="mc-check" [class.active]="poisActive[poi.key]">
+          <svg *ngIf="poisActive[poi.key]"
+               width="9" height="9" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="3.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </span>
+        <lucide-icon [name]="poi.icon" [size]="13" class="mc-poi-btn__icon"></lucide-icon>
+        {{ poi.label }}
       </button>
+    </div>
 
-      <button class="mc-action-btn" (click)="center($event)">
-        <!-- Navigation / centrar -->
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
-        </svg>
-        Centrar mapa
-      </button>
+    <!-- ── HERRAMIENTAS ── -->
+    <div class="mc-section mc-section--tools">
+      <div class="mc-section-header">
+        <lucide-icon name="wrench" [size]="12" class="mc-section-header__icon"></lucide-icon>
+        <span class="mc-section-header__label">Herramientas</span>
+      </div>
 
-      <button class="mc-action-btn" [class.active]="radiusActive" (click)="toggleRadius($event)">
-        <!-- Crosshair / radio -->
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="22" y1="12" x2="18" y2="12"/>
-          <line x1="6"  y1="12" x2="2"  y2="12"/>
-          <line x1="12" y1="6"  x2="12" y2="2"/>
-          <line x1="12" y1="22" x2="12" y2="18"/>
-        </svg>
-        Filtro radio
-      </button>
+      <div class="mc-tools-row">
+        <button class="mc-tool-btn" [class.active]="radiusActive" (click)="toggleRadius($event)" title="Filtro radio">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="22" y1="12" x2="18" y2="12"/>
+            <line x1="6"  y1="12" x2="2"  y2="12"/>
+            <line x1="12" y1="6"  x2="12" y2="2"/>
+            <line x1="12" y1="22" x2="12" y2="18"/>
+          </svg>
+          <span>Radio</span>
+        </button>
 
+        <button class="mc-tool-btn" [class.active]="isochroneOpen" (click)="toggleIsochrone($event)" title="Isócronas">
+          <lucide-icon name="clock" [size]="13"></lucide-icon>
+          <span>Isócronas</span>
+        </button>
+
+        <button class="mc-tool-btn" [class.active]="routeActive" (click)="toggleRoute($event)" title="Ruta">
+          <lucide-icon name="route" [size]="13"></lucide-icon>
+          <span>Ruta</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── ACCIONES ── -->
+    <div class="mc-section mc-section--actions">
+      <div class="mc-section-header">
+        <lucide-icon name="sparkles" [size]="12" class="mc-section-header__icon"></lucide-icon>
+        <span class="mc-section-header__label">Acciones</span>
+      </div>
+
+      <div class="mc-actions-row">
+        <button class="mc-action-btn" (click)="clear($event)">
+          <lucide-icon name="brush-cleaning" [size]="13"></lucide-icon>
+          Limpiar
+        </button>
+
+        <button class="mc-action-btn" (click)="center($event)">
+          <lucide-icon name="navigation-2" [size]="13"></lucide-icon>
+          Centrar
+        </button>
+      </div>
     </div>
   </div>
 

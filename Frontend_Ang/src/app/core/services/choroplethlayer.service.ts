@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import maplibregl, { Map as MapLibreMap, type ExpressionSpecification } from 'maplibre-gl';
 import type { Feature, FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 import { MapService } from './map.service';
+import { MapLayer } from './map-layer.interface';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import { point as turfPoint } from '@turf/helpers';
 import { BACKEND_SCORE_DOMAIN, robustDomainFromScores, colorInterpolateExpr } from '../styles/score-colors';
@@ -19,7 +20,10 @@ export interface ChoroplethOptions {
 }
 
 @Injectable({ providedIn: 'root' })
-export class ChoroplethLayerService {
+export class ChoroplethLayerService implements MapLayer {
+  readonly id = 'choro';
+  readonly zIndex = 10;
+
   private map?: MapLibreMap;
 
   private barrioPolys?: FeatureCollection<PolyGeom>;
@@ -33,8 +37,6 @@ export class ChoroplethLayerService {
     filterOperation: 'all',
     mode: 'count'
   };
-
-  private onStyleDataBound?: () => void;
 
   private readonly SOURCE_ID = 'choropleth-source';
   private readonly FILL_ID = 'choropleth-fill';
@@ -50,29 +52,29 @@ export class ChoroplethLayerService {
 
   private popup?: maplibregl.Popup;
   private hoverBound = false;
+  private onHoverMove?: (e: any) => void;
+  private onHoverLeave?: () => void;
   private lastHoverTs = 0;
   private readonly HOVER_THROTTLE_MS = 5;
 
   constructor(private mapSvc: MapService) { }
 
-  attach() {
-    this.map = this.mapSvc.getMap()!;
+  attach(map?: MapLibreMap) {
+    this.map = map ?? this.mapSvc.getMap() ?? this.map;
     if (!this.map) return;
-
-    this.onStyleDataBound = this.onStyleData.bind(this);
-    this.map.on('styledata', this.onStyleDataBound);
 
     this.ensureLayers();
     this.applyVisibility();
     if (this.lastData.length) this.updateData(this.lastData, this.currentOptions);
   }
 
-  destroy() {
-    if (this.map && this.onStyleDataBound) this.map.off('styledata', this.onStyleDataBound);
-    this.clear();
-    this.map = undefined;
-    this.onStyleDataBound = undefined;
-    this.lastData = [];
+  detach() {
+    if (!this.map) return;
+    this.detachHover();
+    if (this.map.getLayer(this.HIT_ID))  { try { this.map.removeLayer(this.HIT_ID);  } catch { } }
+    if (this.map.getLayer(this.FILL_ID)) { try { this.map.removeLayer(this.FILL_ID); } catch { } }
+    if (this.map.getLayer(this.LINE_ID)) { try { this.map.removeLayer(this.LINE_ID); } catch { } }
+    if (this.map.getSource(this.SOURCE_ID)) { try { this.map.removeSource(this.SOURCE_ID); } catch { } }
   }
 
   setPolygons(polys: FeatureCollection<PolyGeom>, idField = 'id') {
@@ -104,18 +106,7 @@ export class ChoroplethLayerService {
   clear() {
     this.visible = false;
     this.lastData = [];
-    this.hoverBound = false;
-    if (!this.map) return;
-    if (this.map.getLayer(this.HIT_ID)) this.map.removeLayer(this.HIT_ID);
-    if (this.map.getLayer(this.FILL_ID)) this.map.removeLayer(this.FILL_ID);
-    if (this.map.getLayer(this.LINE_ID)) this.map.removeLayer(this.LINE_ID);
-    if (this.map.getSource(this.SOURCE_ID)) this.map.removeSource(this.SOURCE_ID);
-  }
-
-  private onStyleData() {
-    this.ensureLayers();
-    this.applyVisibility();
-    if (this.lastData.length) this.updateData(this.lastData, this.currentOptions);
+    this.detach();
   }
 
   private applyVisibility() {
@@ -191,7 +182,7 @@ export class ChoroplethLayerService {
     const fmtFixed = (n: number, d = 0) =>
       Number.isFinite(n) ? n.toFixed(d).replace('.', ',') : '—';
 
-    this.map!.on('mousemove', this.HIT_ID, (e: any) => {
+    this.onHoverMove = (e: any) => {
       const now = performance.now();
       if (now - this.lastHoverTs < this.HOVER_THROTTLE_MS) return;
       this.lastHoverTs = now;
@@ -244,9 +235,23 @@ export class ChoroplethLayerService {
       `;
 
       this.popup!.setLngLat(e.lngLat).setHTML(html).addTo(this.map!);
-    });
+    };
 
-    this.map!.on('mouseleave', this.HIT_ID, () => this.popup?.remove());
+    this.onHoverLeave = () => this.popup?.remove();
+
+    this.map!.on('mousemove', this.HIT_ID, this.onHoverMove);
+    this.map!.on('mouseleave', this.HIT_ID, this.onHoverLeave);
+  }
+
+  private detachHover() {
+    if (!this.map) return;
+    if (this.onHoverMove)  this.map.off('mousemove', this.HIT_ID, this.onHoverMove);
+    if (this.onHoverLeave) this.map.off('mouseleave', this.HIT_ID, this.onHoverLeave);
+    this.onHoverMove = undefined;
+    this.onHoverLeave = undefined;
+    this.popup?.remove();
+    this.popup = undefined;
+    this.hoverBound = false;
   }
 
   private updateData(pisos: Propiedad[], opts: Required<ChoroplethOptions>) {

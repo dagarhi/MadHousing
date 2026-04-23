@@ -259,16 +259,14 @@ export class MapService {
         const img = new Image();
         img.onload = () => {
           try {
-            if (!this.map!.hasImage(id)) {
-              this.map!.addImage(id, img as any);
-            }
+            if (this.map!.hasImage(id)) this.map!.removeImage(id);
+            this.map!.addImage(id, img as any, { pixelRatio: 2 });
             resolve();
           } catch (err) {
             console.error('[MapService] Error registering icon', id, err);
             reject(err);
           }
         };
-
         img.onerror = (ev) => {
           console.error('[MapService] Error loading icon', id, url, ev);
           reject(ev);
@@ -277,8 +275,8 @@ export class MapService {
       });
 
     await Promise.all([
-      loadIcon('pin-sale', 'assets/icons/house-fill.svg'),
-      loadIcon('pin-rent', 'assets/icons/key-fill.svg'),
+      loadIcon('pin-rent', 'assets/icons/PisoAlquiler.png'),
+      loadIcon('pin-sale', 'assets/icons/PisoVenta.png'),
     ]);
   }
 
