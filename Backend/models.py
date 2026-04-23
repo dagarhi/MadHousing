@@ -86,6 +86,7 @@ class Favorite(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     property_code = Column(String(50), ForeignKey("propiedades.propertyCode"), nullable=False)
     created_at = Column(DateTime, default=_utcnow)
+    nota = Column(Text, default="", server_default="")
 
     user = relationship("User", back_populates="favorites")
     propiedad = relationship("Propiedad")

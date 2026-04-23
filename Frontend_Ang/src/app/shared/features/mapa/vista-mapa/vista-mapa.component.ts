@@ -39,6 +39,7 @@ import { SnapDragDirective } from '../../../directives/snap-drag.directive';
 })
 export class VistaMapaComponent {
   @ViewChild(BuscadorComponent) buscador!: BuscadorComponent;
+  @ViewChild(MapaPrincipalComponent) mapa?: MapaPrincipalComponent;
 
   mostrarFavoritos = false;
   mostrarHistorial = false;
@@ -94,6 +95,7 @@ export class VistaMapaComponent {
   limpiarMapa() {
     this.pisos = [];
     this.layers.clearAll();
+    this.mapa?.resetFilters();
   }
 
   toggleTheme(): void {

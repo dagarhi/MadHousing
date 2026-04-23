@@ -9,20 +9,20 @@
   <div drawer-content>
     <!-- Selects jerárquicos -->
     <div class="select-group">
-      <label>Ciudad / Municipio</label>
-      <select [(ngModel)]="municipio" (change)="resetDependientes(); cargarStatsZona()">
+      <label for="sel-municipio">Ciudad / Municipio</label>
+      <select id="sel-municipio" [(ngModel)]="municipio" (change)="resetDependientes(); cargarStatsZona()">
         <option [ngValue]="''">Selecciona ciudad</option>
         <option *ngFor="let c of ciudadesOptions" [value]="c">{{ c }}</option>
       </select>
 
-      <label>Distrito</label>
-      <select [(ngModel)]="distrito" (change)="barrio = ''; cargarStatsZona()" [disabled]="!municipio">
+      <label for="sel-distrito">Distrito</label>
+      <select id="sel-distrito" [(ngModel)]="distrito" (change)="barrio = ''; cargarStatsZona()" [disabled]="!municipio">
         <option [ngValue]="''">Selecciona distrito</option>
         <option *ngFor="let d of distritosOptions" [value]="d">{{ d }}</option>
       </select>
 
-      <label>Barrio</label>
-      <select [(ngModel)]="barrio" (change)="cargarStatsZona()" [disabled]="!distrito">
+      <label for="sel-barrio">Barrio</label>
+      <select id="sel-barrio" [(ngModel)]="barrio" (change)="cargarStatsZona()" [disabled]="!distrito">
         <option [ngValue]="''">Selecciona barrio</option>
         <option *ngFor="let b of barriosOptions" [value]="b">{{ b }}</option>
       </select>
@@ -30,8 +30,8 @@
 
     <!-- Tipo de operación -->
     <div class="select-group">
-      <label>Tipo de operación</label>
-      <select [(ngModel)]="operation" (change)="cargarZonas(); cargarStatsZona()">
+      <label for="sel-operation">Tipo de operación</label>
+      <select id="sel-operation" [(ngModel)]="operation" (change)="cargarZonas(); cargarStatsZona()">
         <option value="rent">Alquiler</option>
         <option value="sale">Venta</option>
       </select>

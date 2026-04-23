@@ -8,10 +8,16 @@
   appSnapDrag snapId="capas" defaultZone="TL"
   [activeLayer]="modo"
   [radiusActive]="radiusActive"
+  [isochroneOpen]="isochroneOpen"
+  [routeActive]="routeActive"
+  [poisActive]="poisActive"
   (layerChange)="setModo($event)"
   (onClear)="handleClear()"
   (onCenter)="handleCenter()"
-  (onRadiusToggle)="toggleRadiusMode()">
+  (onRadiusToggle)="toggleRadiusMode()"
+  (onIsochroneToggle)="toggleIsochronePanel()"
+  (onRouteToggle)="toggleRoutePanel()"
+  (poiToggle)="onPoiToggle($event)">
 </app-map-controls>
 
 <!-- Radius drawing hint -->
@@ -26,6 +32,174 @@
     <line x1="12" y1="22" x2="12" y2="18"/>
   </svg>
   Haz clic en el mapa para definir el centro
+</div>
+
+<!-- Isochrone hint toast -->
+<div class="radius-hint" *ngIf="isochroneMode && !isochroneCenter" role="status">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <polyline points="12 6 12 12 16 14"/>
+  </svg>
+  Haz clic en el mapa para calcular isócronas
+</div>
+
+<!-- Isochrone control panel -->
+<div class="iso-panel" *ngIf="isochroneOpen || isochroneCenter" appSnapDrag snapId="isocronas" defaultZone="ML">
+
+  <div class="iso-panel__header">
+    <lucide-icon name="clock" [size]="14" class="iso-panel__icon"></lucide-icon>
+    <span class="iso-panel__title">Isócronas</span>
+  </div>
+
+  <!-- Transport mode -->
+  <div class="iso-panel__modes">
+    <button class="iso-panel__mode-btn"
+            [class.active]="isochroneProfile === 'foot-walking'"
+            (click)="setIsochroneProfile('foot-walking')"
+            title="A pie">
+      <lucide-icon name="footprints" [size]="14"></lucide-icon>
+    </button>
+    <button class="iso-panel__mode-btn"
+            [class.active]="isochroneProfile === 'cycling-regular'"
+            (click)="setIsochroneProfile('cycling-regular')"
+            title="Bicicleta">
+      <lucide-icon name="bike" [size]="14"></lucide-icon>
+    </button>
+    <button class="iso-panel__mode-btn"
+            [class.active]="isochroneProfile === 'driving-car'"
+            (click)="setIsochroneProfile('driving-car')"
+            title="Coche">
+      <lucide-icon name="car" [size]="14"></lucide-icon>
+    </button>
+  </div>
+
+  <!-- Time ranges -->
+  <div class="iso-panel__ranges">
+    <label class="iso-panel__range-lbl" *ngFor="let r of [[600,'10 min'],[1200,'20 min'],[1800,'30 min']]">
+      <input type="checkbox"
+             [checked]="isochroneRanges.has(+r[0])"
+             (change)="toggleIsochroneRange(+r[0])">
+      <span class="iso-panel__range-dot" [attr.data-val]="r[0]"></span>
+      {{ r[1] }}
+    </label>
+  </div>
+
+  <!-- Status / action -->
+  <div class="iso-panel__status" *ngIf="!isochroneCenter && !isochroneLoading">
+    <button class="iso-panel__place-btn" (click)="toggleIsochroneMode()">
+      <lucide-icon name="map-pin" [size]="12"></lucide-icon>
+      {{ isochroneMode ? 'Cancelar' : 'Seleccionar punto' }}
+    </button>
+  </div>
+
+  <div class="iso-panel__status" *ngIf="isochroneLoading">
+    <span class="iso-panel__spinner"></span>
+    <span>Calculando...</span>
+  </div>
+
+  <!-- Bottom row with count + actions -->
+  <div class="iso-panel__bottom" *ngIf="isochroneCenter && !isochroneLoading">
+    <span class="iso-panel__count" *ngIf="isochroneCount !== null">
+      <span class="iso-panel__count-num">{{ isochroneCount }}</span> prop.
+    </span>
+    <button class="iso-panel__action-btn" (click)="toggleIsochroneMode()" title="Mover punto">
+      <lucide-icon name="map-pin" [size]="11"></lucide-icon>
+    </button>
+    <button class="iso-panel__clear" (click)="clearIsochrone()">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+      Borrar
+    </button>
+  </div>
+
+</div>
+
+<!-- Route hint toast -->
+<div class="radius-hint" *ngIf="routeMode && (!routeOrigin || !routeDest)" role="status">
+  <lucide-icon name="route" [size]="14"></lucide-icon>
+  {{ !routeOrigin ? 'Haz clic en el mapa o sobre un piso para fijar el origen' : 'Ahora haz clic para el destino' }}
+</div>
+
+<!-- Route control panel -->
+<div class="route-panel" *ngIf="routeOpen || routeOrigin || routeDest" appSnapDrag snapId="ruta" defaultZone="MR">
+
+  <div class="route-panel__header">
+    <lucide-icon name="route" [size]="14" class="route-panel__icon"></lucide-icon>
+    <span class="route-panel__title">Ruta</span>
+  </div>
+
+  <!-- Transport mode -->
+  <div class="route-panel__modes">
+    <button class="route-panel__mode-btn"
+            [class.active]="routeProfile === 'foot-walking'"
+            (click)="setRouteProfile('foot-walking')"
+            title="A pie">
+      <lucide-icon name="footprints" [size]="14"></lucide-icon>
+    </button>
+    <button class="route-panel__mode-btn"
+            [class.active]="routeProfile === 'cycling-regular'"
+            (click)="setRouteProfile('cycling-regular')"
+            title="Bicicleta">
+      <lucide-icon name="bike" [size]="14"></lucide-icon>
+    </button>
+    <button class="route-panel__mode-btn"
+            [class.active]="routeProfile === 'driving-car'"
+            (click)="setRouteProfile('driving-car')"
+            title="Coche">
+      <lucide-icon name="car" [size]="14"></lucide-icon>
+    </button>
+  </div>
+
+  <!-- Endpoints -->
+  <div class="route-panel__points">
+    <div class="route-panel__pt">
+      <span class="route-panel__pt-dot" data-kind="origin"></span>
+      <span class="route-panel__pt-lbl" [class.placeholder]="!routeOriginLabel">
+        {{ routeOriginLabel || 'Clic para origen…' }}
+      </span>
+    </div>
+    <div class="route-panel__pt">
+      <span class="route-panel__pt-dot" data-kind="dest"></span>
+      <span class="route-panel__pt-lbl" [class.placeholder]="!routeDestLabel">
+        {{ routeDestLabel || 'Clic para destino…' }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="route-panel__summary" *ngIf="routeLoading">
+    <span class="iso-panel__spinner"></span>
+    <span>Calculando ruta…</span>
+  </div>
+  <div class="route-panel__summary" *ngIf="!routeLoading && routeDistanceKm !== null">
+    <span><strong>{{ routeDistanceKm }}</strong> km</span>
+    <span><strong>{{ routeDurationMin }}</strong> min</span>
+  </div>
+
+  <!-- Bottom actions -->
+  <div class="route-panel__bottom">
+    <button class="route-panel__action-btn"
+            (click)="swapRoute()"
+            [disabled]="!routeOrigin || !routeDest"
+            title="Invertir origen y destino">
+      <lucide-icon name="arrow-left-right" [size]="12"></lucide-icon>
+    </button>
+    <button class="route-panel__clear" (click)="clearRoute()">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+      Limpiar
+    </button>
+  </div>
 </div>
 
 <!-- Radius control panel -->

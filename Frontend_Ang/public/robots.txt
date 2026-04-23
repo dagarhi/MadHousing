@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://madhousing.netlify.app/sitemap.xml

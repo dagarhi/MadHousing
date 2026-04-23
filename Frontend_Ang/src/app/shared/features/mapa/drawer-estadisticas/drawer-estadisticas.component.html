@@ -10,12 +10,12 @@
     <div class="controls">
       <!-- Tipo de operación -->
       <div class="group">
-        <label>
+        <label for="est-tipo-operacion">
           <lucide-icon name="house"></lucide-icon>
           Tipo de operación
         </label>
 
-        <select [(ngModel)]="tipoOperacion" (change)="actualizarGrafico()">
+        <select id="est-tipo-operacion" [(ngModel)]="tipoOperacion" (change)="actualizarGrafico()">
           <option value="sale">Venta</option>
           <option value="rent">Alquiler</option>
         </select>
@@ -23,12 +23,12 @@
 
       <!-- Métrica -->
       <div class="group">
-        <label>
+        <label for="est-metrica">
           <lucide-icon name="bar-chart-3"></lucide-icon>
           Métrica
         </label>
 
-        <select [(ngModel)]="metrica" (change)="actualizarGrafico()">
+        <select id="est-metrica" [(ngModel)]="metrica" (change)="actualizarGrafico()">
           <option value="precio_medio">Precio medio (€)</option>
           <option value="tamano_medio">Tamaño medio (m²)</option>
           <option value="score_medio">Score medio</option>

@@ -10,10 +10,16 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(BASE_DIR, "pisos.db")
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{db_path}")
 
-# 🔹 Engine único
-engine = create_engine(DATABASE_URL, future=True)
+_is_sqlite = DATABASE_URL.startswith("sqlite")
 
-# 🔹 SessionLocal única
+engine = create_engine(
+    DATABASE_URL,
+    future=True,
+    connect_args={"check_same_thread": False} if _is_sqlite else {},
+    pool_pre_ping=True,
+    **({} if _is_sqlite else {"pool_size": 5, "max_overflow": 10}),
+)
+
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,

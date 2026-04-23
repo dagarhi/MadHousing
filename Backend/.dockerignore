@@ -1,0 +1,27 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Local state / secrets
+.env
+.env.*
+!.env.example
+
+# SQLite files (no se usan en Cloud Run)
+*.db
+backups/
+
+# Local migration / load-test scripts (no se invocan en runtime)
+migrate_to_postgres.py
+locustfile.py
+update_state.json
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore

@@ -20,13 +20,21 @@
             {{ p.size ? p.size + ' m²' : 'Sin tamaño' }}
           </p>
           <button class="go-btn" (click)="irAlFavorito(p)">
-            <lucide-icon name="map-pin"></lucide-icon>
+            <lucide-icon name="map-pin" [size]="14"></lucide-icon>
             Ir al piso
           </button>
+          <textarea
+            class="nota-input"
+            rows="2"
+            placeholder="Añadir nota..."
+            [value]="favoritos.getNota(p.propertyCode)"
+            (blur)="guardarNota(p, $event)"
+            (keydown.enter)="guardarNotaEnter(p, $event)"
+          ></textarea>
         </div>
 
         <button class="remove-btn" (click)="quitarFavorito(p)">
-          <lucide-icon name="trash-2"></lucide-icon>
+          <lucide-icon name="trash-2" [size]="16"></lucide-icon>
           Quitar
         </button>
       </div>

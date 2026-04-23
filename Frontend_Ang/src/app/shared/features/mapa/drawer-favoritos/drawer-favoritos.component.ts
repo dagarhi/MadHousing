@@ -45,6 +45,21 @@ export class DrawerFavoritosComponent {
     this.opened = value;
     this.openedChange.emit(value);
   }
+  guardarNota(piso: Propiedad, event: Event): void {
+    const nota = (event.target as HTMLTextAreaElement).value;
+    if (!piso.propertyCode) return;
+    this.favoritos.updateNota(String(piso.propertyCode), nota).subscribe({
+      error: (err) => console.error('[DrawerFavoritos] Error guardando nota', err),
+    });
+  }
+
+  guardarNotaEnter(piso: Propiedad, event: Event): void {
+    const ke = event as KeyboardEvent;
+    if (ke.shiftKey) return;
+    ke.preventDefault();
+    (ke.target as HTMLElement).blur();
+  }
+
   irAlFavorito(item: Propiedad) {
     this.onClose();
     const id = String((item as any).propertyCode ?? '');

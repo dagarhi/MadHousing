@@ -11,7 +11,7 @@ export class PopupPropiedadService {
     private readonly env: EnvironmentInjector
   ) {}
 
-  open(piso: Propiedad, lngLat: [number, number], isDark = false) {
+  open(piso: Propiedad, lngLat: [number, number], isDark = false, onClose?: () => void) {
     let cmpRef: ComponentRef<PopupPropiedadComponent> | undefined;
 
     this.mapSvc.abrirPopupEn(
@@ -32,6 +32,7 @@ export class PopupPropiedadService {
           cmpRef.destroy();
           cmpRef = undefined;
         }
+        onClose?.();
       }
     );
   }

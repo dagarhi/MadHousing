@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { Propiedad } from '../models/propiedad.model';
 import { environment } from '../../../environments/environment';
@@ -8,6 +8,7 @@ interface FavoriteDto {
   id: number;
   property_code: string;
   created_at: string;
+  nota: string;
   propiedad: Propiedad;
 }
 
@@ -20,6 +21,8 @@ export class FavoritosService {
 
   /** Map propertyCode -> favorite ID in backend */
   private idsPorProperty = new Map<string, number>();
+  /** Map propertyCode -> nota */
+  private notasPorProperty = new Map<string, string>();
 
   constructor(private http: HttpClient) {
     this.cargarDesdeServidor();
@@ -30,10 +33,12 @@ export class FavoritosService {
       next: (lista) => {
         const props: Propiedad[] = [];
         this.idsPorProperty.clear();
+        this.notasPorProperty.clear();
 
         for (const fav of lista) {
           if (fav.property_code) {
             this.idsPorProperty.set(fav.property_code, fav.id);
+            this.notasPorProperty.set(fav.property_code, fav.nota ?? '');
           }
           if (fav.propiedad) {
             props.push(fav.propiedad);
@@ -45,6 +50,7 @@ export class FavoritosService {
       error: (err) => {
         console.error('[FavoritosService] Error loading favorites', err);
         this.idsPorProperty.clear();
+        this.notasPorProperty.clear();
         this.favoritosSubject.next([]);
       },
     });
@@ -89,6 +95,7 @@ export class FavoritosService {
         next: (resp) => {
           const prop = resp.propiedad ?? piso;
           this.idsPorProperty.set(propertyCode, resp.id);
+          this.notasPorProperty.set(propertyCode, resp.nota ?? '');
 
           const actuales = this.currentFavoritos;
           const yaEstaba = actuales.some(
@@ -102,9 +109,30 @@ export class FavoritosService {
       });
   }
 
+  getNota(propertyCode?: string | null): string {
+    if (!propertyCode) return '';
+    return this.notasPorProperty.get(String(propertyCode)) ?? '';
+  }
+
+  updateNota(propertyCode: string, nota: string): Observable<void> {
+    const id = this.idsPorProperty.get(propertyCode);
+    if (!id) return new Observable((obs) => obs.error('Favorito no encontrado'));
+    return new Observable((obs) => {
+      this.http.patch<FavoriteDto>(`${this.baseUrl}/${id}`, { nota }).subscribe({
+        next: (resp) => {
+          this.notasPorProperty.set(propertyCode, resp.nota ?? '');
+          obs.next();
+          obs.complete();
+        },
+        error: (err) => obs.error(err),
+      });
+    });
+  }
+
   borrarTodos(): void {
     const ids = Array.from(this.idsPorProperty.values());
     this.idsPorProperty.clear();
+    this.notasPorProperty.clear();
     this.favoritosSubject.next([]);
 
     ids.forEach((id) => {
@@ -121,6 +149,7 @@ export class FavoritosService {
 
   clearLocal(): void {
     this.idsPorProperty.clear();
+    this.notasPorProperty.clear();
     this.favoritosSubject.next([]);
   }
 }

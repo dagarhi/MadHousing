@@ -3,6 +3,7 @@ import maplibregl from 'maplibre-gl';
 import type { Feature, FeatureCollection, Point } from 'geojson';
 import { Propiedad } from '../models/propiedad.model';
 import { MapService } from './map.service';
+import { MapLayer } from './map-layer.interface';
 import { PALETTE_RDYLGN } from '../styles/score-colors';
 
 export interface HeatValueOptions {
@@ -95,7 +96,10 @@ function buildHeatmapColorExpression(colors: string[]): any[] {
 }
 
 @Injectable({ providedIn: 'root' })
-export class HeatValueMapService implements OnDestroy {
+export class HeatValueMapService implements OnDestroy, MapLayer {
+  readonly id = 'heat';
+  readonly zIndex = 20;
+
   private map?: maplibregl.Map;
 
   private idBase = `heat-density-${Math.random().toString(36).slice(2, 7)}`;
@@ -110,6 +114,19 @@ export class HeatValueMapService implements OnDestroy {
 
   attach(map?: maplibregl.Map) {
     this.map = map ?? this.mapSvc.getMap() ?? this.map;
+    if (!this.map) return;
+    if (this.map.getLayer(this.layerId)) return;
+    if (this.lastData && this.lastOpts) this.rebuildFromCache();
+  }
+
+  detach() {
+    if (!this.map) return;
+    if (this.map.getLayer(this.layerId)) {
+      try { this.map.removeLayer(this.layerId); } catch { }
+    }
+    if (this.map.getSource(this.sourceId)) {
+      try { this.map.removeSource(this.sourceId); } catch { }
+    }
   }
 
   ngOnDestroy() {
@@ -207,6 +224,28 @@ export class HeatValueMapService implements OnDestroy {
     if (this.map.getLayer(this.layerId)) {
       this.map.setLayoutProperty(this.layerId, 'visibility', visible ? 'visible' : 'none');
     }
+  }
+
+  private rebuildFromCache() {
+    if (!this.map || !this.lastData || !this.lastOpts) return;
+    const resolved = this.lastOpts;
+    this.map.addSource(this.sourceId, { type: 'geojson', data: this.lastData });
+    const paint: any = {
+      'heatmap-weight': ['coalesce', ['get', 'w'], 0],
+      'heatmap-radius': this.buildRadiusExpression(resolved.radiusStops),
+      'heatmap-intensity': this.buildIntensityExpression(resolved.intensityStops),
+      'heatmap-color': buildHeatmapColorExpression(resolved.colorRamp),
+      'heatmap-opacity': resolved.opacity,
+    };
+    this.map.addLayer({
+      id: this.layerId,
+      type: 'heatmap',
+      source: this.sourceId,
+      paint,
+      layout: { visibility: this.currentVisible ? 'visible' : 'none' },
+      minzoom: resolved.minZoom,
+      maxzoom: resolved.maxZoom,
+    });
   }
 
   private resolveOptions(opts: HeatValueOptions): ResolvedHeatValueOptions {
