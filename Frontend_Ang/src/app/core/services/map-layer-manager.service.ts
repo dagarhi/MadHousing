@@ -9,13 +9,17 @@ import { RadiusLayerService } from './radius-layer.service';
 import { IsochroneLayerService } from './isochrone-layer.service';
 import { RouteLayerService } from './route-layer.service';
 import { ParksLayerService } from './parks-layer.service';
-import { MetroLayerService } from './metro-layer.service';
+import { TransportLayerService } from './transport-layer.service';
+import { HealthLayerService } from './health-layer.service';
+import { EducationLayerService } from './education-layer.service';
+import { CommerceLayerService } from './commerce-layer.service';
+import { BikeLayerService } from './bike-layer.service';
 import { MapLayer } from './map-layer.interface';
 import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 import { BehaviorSubject } from 'rxjs';
 
 export type Modo = 'coropletico' | 'heat' | 'chinchetas';
-type ChoroAggMode = 'count' | 'avgPrice' | 'avgUnitPrice' | 'avgScore';
+type ChoroAggMode = 'count' | 'avgPrice' | 'avgUnitPrice' | 'avgScore' | 'avgContexto' | 'avgFinal';
 type ChoroOp = 'venta' | 'alquiler' | 'all';
 
 @Injectable({ providedIn: 'root' })
@@ -25,7 +29,7 @@ export class MapLayerManager {
   private data: Propiedad[] = [];
 
   private choroIdField: string = 'CODIGOINE';
-  private choroMetric: ChoroAggMode = 'avgScore';
+  private choroMetric: ChoroAggMode = 'avgFinal';
   private choroOperation: ChoroOp = 'all';
 
   readonly bearing$     = new BehaviorSubject<number>(0);
@@ -50,15 +54,23 @@ export class MapLayerManager {
     private readonly iso: IsochroneLayerService,
     private readonly route: RouteLayerService,
     private readonly parks: ParksLayerService,
-    private readonly metro: MetroLayerService,
+    private readonly transport: TransportLayerService,
+    private readonly health: HealthLayerService,
+    private readonly education: EducationLayerService,
+    private readonly commerce: CommerceLayerService,
+    private readonly bike: BikeLayerService,
   ) {
     this.register(this.choro);
     this.register(this.parks);
+    this.register(this.bike);
     this.register(this.heat);
     this.register(this.radius);
     this.register(this.iso);
     this.register(this.pins);
-    this.register(this.metro);
+    this.register(this.commerce);
+    this.register(this.education);
+    this.register(this.health);
+    this.register(this.transport);
     this.register(this.route);
   }
 

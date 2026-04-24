@@ -11,7 +11,7 @@ import { Propiedad } from '../models/propiedad.model';
 
 type PolyGeom = Polygon | MultiPolygon;
 
-type AggregationMode = 'count' | 'avgPrice' | 'avgUnitPrice' | 'avgScore';
+type AggregationMode = 'count' | 'avgPrice' | 'avgUnitPrice' | 'avgScore' | 'avgContexto' | 'avgFinal';
 
 export interface ChoroplethOptions {
   idField?: string;
@@ -266,7 +266,8 @@ export class ChoroplethLayerService implements MapLayer {
     src?.setData(fc);
 
     const values = fc.features.map(f => Number(f.properties?.['value'] ?? 0)).filter(Number.isFinite);
-    const isScore = this.currentOptions.mode === 'avgScore';
+    const mode = this.currentOptions.mode;
+    const isScore = mode === 'avgScore' || mode === 'avgContexto' || mode === 'avgFinal';
     const baseDomain = isScore
       ? BACKEND_SCORE_DOMAIN
       : { min: Math.min(...values, 0), max: Math.max(...values, 1) };
@@ -293,6 +294,10 @@ export class ChoroplethLayerService implements MapLayer {
       validUnit: number;
       sumScore: number;
       validScore: number;
+      sumContexto: number;
+      validContexto: number;
+      sumFinal: number;
+      validFinal: number;
     };
     const accById = new Map<string, Acc>();
 
@@ -315,7 +320,12 @@ export class ChoroplethLayerService implements MapLayer {
 
       let acc = accById.get(id);
       if (!acc) {
-        acc = { count: 0, sumPrice: 0, sumUnitPrice: 0, validUnit: 0, sumScore: 0, validScore: 0 };
+        acc = {
+          count: 0, sumPrice: 0, sumUnitPrice: 0, validUnit: 0,
+          sumScore: 0, validScore: 0,
+          sumContexto: 0, validContexto: 0,
+          sumFinal: 0, validFinal: 0,
+        };
         accById.set(id, acc);
       }
 
@@ -325,10 +335,20 @@ export class ChoroplethLayerService implements MapLayer {
         acc.sumUnitPrice += (Number(p.price) / Number(p.size));
         acc.validUnit += 1;
       }
-      const s = this.asNum(p.score ?? p.score_intrinseco);
+      const s = this.asNum(p.score_intrinseco);
       if (s !== undefined) {
         acc.sumScore += s;
         acc.validScore += 1;
+      }
+      const ctx = this.asNum(p.score_contexto);
+      if (ctx !== undefined) {
+        acc.sumContexto += ctx;
+        acc.validContexto += 1;
+      }
+      const fin = this.asNum(p.score_final);
+      if (fin !== undefined) {
+        acc.sumFinal += fin;
+        acc.validFinal += 1;
       }
     }
 
@@ -336,16 +356,20 @@ export class ChoroplethLayerService implements MapLayer {
     for (const { feat, id } of this.indexedPolys!) {
       const acc = accById.get(id);
       const count = acc?.count ?? 0;
-      const avgPrice = count > 0 ? acc!.sumPrice / count : 0;
-      const avgUnitPrice = (acc?.validUnit ?? 0) > 0 ? acc!.sumUnitPrice / acc!.validUnit : 0;
-      const avgScore = (acc?.validScore ?? 0) > 0 ? acc!.sumScore / acc!.validScore : 0
+      const avgPrice     = count > 0 ? acc!.sumPrice / count : 0;
+      const avgUnitPrice = (acc?.validUnit     ?? 0) > 0 ? acc!.sumUnitPrice / acc!.validUnit     : 0;
+      const avgScore     = (acc?.validScore    ?? 0) > 0 ? acc!.sumScore     / acc!.validScore    : 0;
+      const avgContexto  = (acc?.validContexto ?? 0) > 0 ? acc!.sumContexto  / acc!.validContexto : 0;
+      const avgFinal     = (acc?.validFinal    ?? 0) > 0 ? acc!.sumFinal     / acc!.validFinal    : 0;
 
       let value = 0;
       switch (opts.mode) {
-        case 'count': value = count; break;
-        case 'avgPrice': value = avgPrice; break;
+        case 'count':        value = count; break;
+        case 'avgPrice':     value = avgPrice; break;
         case 'avgUnitPrice': value = avgUnitPrice; break;
-        case 'avgScore': value = avgScore; break;
+        case 'avgScore':     value = avgScore; break;
+        case 'avgContexto':  value = avgContexto; break;
+        case 'avgFinal':     value = avgFinal; break;
       }
 
       out.features.push({
@@ -358,7 +382,9 @@ export class ChoroplethLayerService implements MapLayer {
           avgPrice,
           avgUnitPrice,
           value,
-          avgScore
+          avgScore,
+          avgContexto,
+          avgFinal,
         }
       } as any);
     }

@@ -295,9 +295,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
   padding-top: 0.5rem;
   border-top: 1px solid var(--panel-border);
   margin-top: 0.1rem;
+}
+
+.footer__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
 }
 
 .btn-fav {
@@ -333,6 +340,11 @@
   line-height: 1;
   color: #6366f1;
   text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
 
   lucide-icon {
     flex-shrink: 0;

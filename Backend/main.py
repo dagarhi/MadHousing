@@ -1,9 +1,9 @@
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 from database import get_db, init_db, SessionLocal
-from models import Propiedad, User, Favorite, SearchHistory
+from models import Propiedad, POI, User, Favorite, SearchHistory
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -274,6 +274,8 @@ def buscar_propiedades(
     max_size: Optional[float] = Query(None),
     rooms: Optional[int] = Query(None),
     hasLift: Optional[bool] = Query(None),
+    context_min: Optional[float] = Query(None, ge=0, le=100, description="Umbral mínimo de score_contexto"),
+    final_min: Optional[float] = Query(None, ge=0, le=100, description="Umbral mínimo de score_final"),
     page: int = Query(1, ge=1),
     per_page: int = Query(20, le=100),
     db: Session = Depends(db_from_request),
@@ -303,6 +305,10 @@ def buscar_propiedades(
         query = query.filter(Propiedad.rooms >= rooms)
     if hasLift is not None:
         query = query.filter(Propiedad.hasLift == hasLift)
+    if context_min is not None:
+        query = query.filter(Propiedad.score_contexto >= context_min)
+    if final_min is not None:
+        query = query.filter(Propiedad.score_final >= final_min)
 
     # Count + aggregated stats in a single DB query
     agg = query.with_entities(
@@ -313,13 +319,19 @@ def buscar_propiedades(
         func.max(Propiedad.size),
         func.min(Propiedad.score_intrinseco),
         func.max(Propiedad.score_intrinseco),
+        func.min(Propiedad.score_contexto),
+        func.max(Propiedad.score_contexto),
+        func.min(Propiedad.score_final),
+        func.max(Propiedad.score_final),
     ).one()
 
     total = agg[0]
     stats = {
-        "price": {"min": agg[1] or 0, "max": agg[2] or 0},
-        "size":  {"min": agg[3] or 0, "max": agg[4] or 0},
-        "score": {"min": agg[5] or 0, "max": agg[6] or 100},
+        "price":    {"min": agg[1] or 0, "max": agg[2]  or 0},
+        "size":     {"min": agg[3] or 0, "max": agg[4]  or 0},
+        "score":    {"min": agg[5] or 0, "max": agg[6]  or 100},  # score_intrinseco (legacy name)
+        "contexto": {"min": agg[7] or 0, "max": agg[8]  or 100},
+        "final":    {"min": agg[9] or 0, "max": agg[10] or 100},
     }
 
     props_page = query.offset((page - 1) * per_page).limit(per_page).all()
@@ -410,6 +422,8 @@ def estadisticas_por_zona(db: Session = Depends(db_from_request)):
             func.avg(Propiedad.price).label("precio_medio"),
             func.avg(Propiedad.size).label("tamano_medio"),
             func.avg(Propiedad.score_intrinseco).label("score_medio"),
+            func.avg(Propiedad.score_contexto).label("contexto_medio"),
+            func.avg(Propiedad.score_final).label("final_medio"),
             func.min(Propiedad.price).label("precio_min"),
             func.max(Propiedad.price).label("precio_max"),
         )
@@ -423,13 +437,109 @@ def estadisticas_por_zona(db: Session = Depends(db_from_request)):
         op   = (row.operation or "desconocido").strip()
         resultado.setdefault(zona, {})
         resultado[zona][op] = {
-            "count":         row.count,
-            "precio_medio":  row.precio_medio  or 0,
-            "tamano_medio":  row.tamano_medio  or 0,
-            "score_medio":   row.score_medio   or 0,
-            "precio_min":    row.precio_min    or 0,
-            "precio_max":    row.precio_max    or 0,
+            "count":          row.count,
+            "precio_medio":   row.precio_medio   or 0,
+            "tamano_medio":   row.tamano_medio   or 0,
+            "score_medio":    row.score_medio    or 0,
+            "contexto_medio": row.contexto_medio or 0,
+            "final_medio":    row.final_medio    or 0,
+            "precio_min":     row.precio_min     or 0,
+            "precio_max":     row.precio_max     or 0,
         }
+
+    return resultado
+
+# --- POIs ---
+
+POI_CATEGORIES = {"transport", "health", "education", "park", "commerce", "bike"}
+
+@app.get("/pois")
+def listar_pois(
+    response: Response,
+    category: str = Query(..., description="transport | health | education | park | commerce | bike"),
+    bbox: Optional[str] = Query(None, description="lon_min,lat_min,lon_max,lat_max"),
+    db: Session = Depends(db_from_request),
+):
+    """Return POIs of a category as GeoJSON FeatureCollection.
+    Optionally filtered by viewport bbox. Cached 1 week client-side.
+    """
+    if category not in POI_CATEGORIES:
+        raise HTTPException(status_code=400, detail=f"category inválida. Valores: {sorted(POI_CATEGORIES)}")
+
+    params = {"cat": category}
+    bbox_sql = ""
+    if bbox:
+        try:
+            lon_min, lat_min, lon_max, lat_max = [float(x) for x in bbox.split(",")]
+        except ValueError:
+            raise HTTPException(status_code=400, detail="bbox debe ser lon_min,lat_min,lon_max,lat_max")
+        bbox_sql = "AND geom && ST_MakeEnvelope(:lon_min, :lat_min, :lon_max, :lat_max, 4326)"
+        params.update({"lon_min": lon_min, "lat_min": lat_min, "lon_max": lon_max, "lat_max": lat_max})
+
+    rows = db.execute(text(f"""
+        SELECT id, subtype, name, ST_AsGeoJSON(geom) AS g, extra
+          FROM pois
+          WHERE category = :cat
+          {bbox_sql}
+    """), params).fetchall()
+
+    features = []
+    for r in rows:
+        features.append({
+            "type": "Feature",
+            "id": r.id,
+            "geometry": json.loads(r.g),
+            "properties": {
+                "subtype": r.subtype,
+                "name":    r.name,
+                **(r.extra or {}),
+            },
+        })
+
+    response.headers["Cache-Control"] = "public, max-age=604800"  # 1 week
+    return {"type": "FeatureCollection", "features": features}
+
+
+@app.get("/pois/nearby")
+def pois_cercanos(
+    lat: float = Query(..., description="latitud del punto"),
+    lng: float = Query(..., description="longitud del punto"),
+    category: Optional[str] = Query(None, description="filtra por categoría (si se omite, devuelve todas)"),
+    limit: int = Query(3, ge=1, le=20, description="POIs a devolver por categoría"),
+    radius_m: float = Query(2000, ge=50, le=10000, description="radio de búsqueda en metros"),
+    db: Session = Depends(db_from_request),
+):
+    """Return nearest POIs to a point, grouped by category.
+    Used by the 'entorno' drawer in the frontend.
+    """
+    cats = [category] if category else sorted(POI_CATEGORIES)
+    if category and category not in POI_CATEGORIES:
+        raise HTTPException(status_code=400, detail=f"category inválida. Valores: {sorted(POI_CATEGORIES)}")
+
+    wkt = f"SRID=4326;POINT({lng} {lat})"
+    resultado = {}
+    for cat in cats:
+        rows = db.execute(text("""
+            SELECT id, subtype, name,
+                   ST_AsGeoJSON(ST_Centroid(geom)) AS g,
+                   ST_Distance(geom::geography, ST_GeogFromText(:wkt)) AS dist_m
+              FROM pois
+              WHERE category = :cat
+                AND ST_DWithin(geom::geography, ST_GeogFromText(:wkt), :radius)
+              ORDER BY dist_m ASC
+              LIMIT :limit
+        """), {"cat": cat, "wkt": wkt, "radius": radius_m, "limit": limit}).fetchall()
+
+        resultado[cat] = [
+            {
+                "id":       r.id,
+                "subtype":  r.subtype,
+                "name":     r.name,
+                "dist_m":   round(float(r.dist_m), 1),
+                "geometry": json.loads(r.g),
+            }
+            for r in rows
+        ]
 
     return resultado
 

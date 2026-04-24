@@ -1,4 +1,3 @@
-import json
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -6,10 +5,14 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent / ".env")
 
+from geoalchemy2.elements import WKTElement
 from database import SessionLocal, init_db
-from models import Propiedad
+from models import Propiedad, ScraperState
 from services.idealista_api import IdealistaAPI
-from services.scoring import valoracion_intrinseca, generar_huella_digital
+from services.scoring import (
+    valoracion_intrinseca, generar_huella_digital,
+    compute_distances_for_point, compute_score_contexto, compute_score_final,
+)
 
 ZONAS = [
     # ── High-interest zones (2 ops, wide radius) ──────────────────────────────
@@ -81,10 +84,8 @@ ZONAS = [
     },
 ]
 
-MONTHLY_BUDGET     = 100   
-MAX_ITEMS_PER_PAGE = 50    
-
-STATE_FILE = Path(__file__).parent / "update_state.json"
+MONTHLY_BUDGET     = 100
+MAX_ITEMS_PER_PAGE = 50
 
 CITY_CORRECTIONS = {
     "mostol":        "mostoles",
@@ -108,44 +109,68 @@ CITY_CORRECTIONS = {
 }
 
 # ── State persistence ─────────────────────────────────────────────────────────
+#
+# Scraper state lives in the `scraper_state` table (Supabase in prod, local
+# Postgres in dev). Each row is keyed by a string id ('call_log', 'last_updated')
+# and stores a JSON blob under `value`. Ephemeral filesystems (Cloud Run Jobs)
+# can't use a JSON file because the disk resets between runs.
 
 def load_state() -> dict:
-    if STATE_FILE.exists():
-        with open(STATE_FILE) as f:
-            return json.load(f)
-    return {}
+    db = SessionLocal()
+    try:
+        rows = db.query(ScraperState).all()
+        state = {row.id: row.value for row in rows}
+    finally:
+        db.close()
+    state.setdefault("call_log", [])
+    state.setdefault("last_updated", {})
+    return state
 
 def save_state(state: dict):
-    with open(STATE_FILE, "w") as f:
-        json.dump(state, f, indent=2, default=str)
+    db = SessionLocal()
+    try:
+        for key, value in state.items():
+            db.merge(ScraperState(id=key, value=value))
+        db.commit()
+    finally:
+        db.close()
+
+def _parse_ts(ts: str) -> datetime:
+    """Parse ISO timestamp, treating naive values as UTC (legacy state)."""
+    dt = datetime.fromisoformat(ts)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
 
 WINDOW_DAYS = 30  # Idealista restores calls over a rolling 30-day window
 
 def calls_in_window(state: dict) -> int:
     """Count API calls made within the last WINDOW_DAYS days."""
-    cutoff = datetime.now() - timedelta(days=WINDOW_DAYS)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=WINDOW_DAYS)
     return sum(
         entry["n"]
         for entry in state.get("call_log", [])
-        if datetime.fromisoformat(entry["ts"]) >= cutoff
+        if _parse_ts(entry["ts"]) >= cutoff
     )
 
 def record_calls(state: dict, n: int):
     """Append a call record and prune entries older than the window."""
-    cutoff = datetime.now() - timedelta(days=WINDOW_DAYS)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=WINDOW_DAYS)
     state.setdefault("call_log", [])
-    state["call_log"].append({"ts": datetime.now().isoformat(), "n": n})
-    state["call_log"] = [e for e in state["call_log"] if datetime.fromisoformat(e["ts"]) >= cutoff]
+    state["call_log"].append({"ts": datetime.now(timezone.utc).isoformat(), "n": n})
+    state["call_log"] = [e for e in state["call_log"] if _parse_ts(e["ts"]) >= cutoff]
 
 def get_last_updated(state: dict, name: str, op: str):
     ts = state.get("last_updated", {}).get(f"{name}:{op}")
-    return datetime.fromisoformat(ts) if ts else None
+    return _parse_ts(ts) if ts else None
 
 def set_last_updated(state: dict, name: str, op: str):
     state.setdefault("last_updated", {})
-    state["last_updated"][f"{name}:{op}"] = datetime.now().isoformat()
+    state["last_updated"][f"{name}:{op}"] = datetime.now(timezone.utc).isoformat()
 
 # ── Task scheduling ───────────────────────────────────────────────────────────
+
+_EPOCH_MIN = datetime.min.replace(tzinfo=timezone.utc)
 
 def build_tasks(state: dict) -> list:
     """Expand active zones into (zone_cfg, op) pairs, sorted stalest-first."""
@@ -155,7 +180,7 @@ def build_tasks(state: dict) -> list:
         if zone["active"]
         for op in zone["operations"]
     ]
-    return sorted(tasks, key=lambda t: get_last_updated(state, t[0]["name"], t[1]) or datetime.min)
+    return sorted(tasks, key=lambda t: get_last_updated(state, t[0]["name"], t[1]) or _EPOCH_MIN)
 
 # ── DB helpers ────────────────────────────────────────────────────────────────
 
@@ -201,18 +226,43 @@ def upsert_properties(db, elements: list, operation: str) -> dict:
         if not payload["propertyCode"]:
             continue
 
-        payload["huella_digital"]      = generar_huella_digital(payload)
+        huella = generar_huella_digital(payload)
+        payload["huella_digital"]      = huella
         payload["score_intrinseco"]    = valoracion_intrinseca(payload)
         payload["fecha_actualizacion"] = datetime.now(timezone.utc)
-        payload["fecha_obtencion"]     = datetime.now(timezone.utc)
+
+        # Spatial: geom + distancias + score_contexto + score_final
+        payload["geom"] = WKTElement(f"POINT({lon} {lat})", srid=4326)
+        distancias = compute_distances_for_point(db, lat, lon)
+        payload.update(distancias)
+        payload["score_contexto"] = compute_score_contexto(distancias)
+        payload["score_final"]    = compute_score_final(payload["score_intrinseco"], payload["score_contexto"])
+
+        # Dedupe: another property (different code) with the same fingerprint
+        # means Idealista is listing the same physical home via another agency.
+        original = db.query(Propiedad).filter(
+            Propiedad.huella_digital == huella,
+            Propiedad.propertyCode != payload["propertyCode"],
+        ).first()
+        if original:
+            payload["es_duplicado"]       = True
+            payload["propiedad_original"] = original.propertyCode
+        else:
+            payload["es_duplicado"]       = False
+            payload["propiedad_original"] = None
 
         existe = db.query(Propiedad).filter(
             Propiedad.propertyCode == payload["propertyCode"]
         ).first()
 
-        db.merge(Propiedad(**payload))
-        actualizadas += bool(existe)
-        nuevas       += not bool(existe)
+        if existe:
+            for k, v in payload.items():
+                setattr(existe, k, v)
+            actualizadas += 1
+        else:
+            payload["fecha_obtencion"] = datetime.now(timezone.utc)
+            db.add(Propiedad(**payload))
+            nuevas += 1
 
     db.commit()
     return {"nuevas": nuevas, "actualizadas": actualizadas}

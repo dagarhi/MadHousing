@@ -1,42 +1,77 @@
 #!/usr/bin/env python3
-"""Fetch POI snapshots from OSM Overpass and save as GeoJSON.
+"""Fetch POI snapshots from OSM Overpass and write to the PostGIS ``pois`` table.
 
-Target area: Comunidad de Madrid (ISO 3166-2 ES-MD). Output goes to
-`Frontend_Ang/src/assets/poi/<key>.geojson`.
+Target area: Comunidad de Madrid (ISO 3166-2 ES-MD).
 
 Usage:
-    python Backend/scripts/fetch_pois.py              # all categories
-    python Backend/scripts/fetch_pois.py parks metro  # subset
+    python Backend/scripts/fetch_pois.py                # all categories
+    python Backend/scripts/fetch_pois.py park commerce  # subset
 
-Snapshot tool — OSM data changes slowly for metro/parks/schools, so this is
-expected to be re-run manually (monthly-ish) rather than on a schedule.
+Reads DATABASE_URL from Backend/.env (override in shell for Supabase).
+Idempotent: each category does DELETE + INSERT so reruns refresh the
+snapshot cleanly without duplicates.
 """
 from __future__ import annotations
 
-import json
+import os
 import sys
 import time
 from pathlib import Path
 
 import requests
+from dotenv import load_dotenv
+
+# Load backend's .env (lets us run standalone with local DATABASE_URL).
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+load_dotenv(BACKEND_DIR / ".env")
+sys.path.insert(0, str(BACKEND_DIR))
+
+from database import SessionLocal  # noqa: E402
+from models import POI  # noqa: E402
+from geoalchemy2.elements import WKTElement  # noqa: E402
+
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+USER_AGENT   = "MadHousing-POI-fetch/1.0 (https://madhousing.netlify.app)"
 
-# Overpass etiquette: identify the client. Default requests UA gets 406'd.
-USER_AGENT = "MadHousing-POI-fetch/1.0 (https://madhousing.netlify.app)"
-
-# Output location (relative to repo root — Backend/scripts/fetch_pois.py → ../../)
-REPO_ROOT = Path(__file__).resolve().parents[2]
-OUT_DIR   = REPO_ROOT / "Frontend_Ang" / "src" / "assets" / "poi"
-
-
-# Overpass queries. Each returns `out geom;` so coordinates are inlined in
-# the JSON response — no second lookup pass needed.
+# Overpass QL per category. Each returns elements with enough info to build WKT.
 QUERIES: dict[str, str] = {
-    # Named parks only — excludes the thousands of unnamed micro-gardens that
-    # would bloat the snapshot to ~10 MB. Named parks are what users can
-    # actually identify/reason about in a housing search context.
-    "parks": """
+    # Transporte público: metro + Cercanías. Bus fuera intencionadamente
+    # (saturan el mapa y no discriminan para scoring).
+    "transport": """
+        [out:json][timeout:120];
+        area["ISO3166-2"="ES-MD"]->.a;
+        (
+          node["railway"="station"]["station"="subway"](area.a);
+          node["railway"="station"]["subway"="yes"](area.a);
+          node["railway"="station"]["network"~"[Cc]ercan"](area.a);
+          node["railway"="station"]["operator"~"[Cc]ercan"](area.a);
+        );
+        out;
+    """,
+    # Sanidad: hospitales + clínicas + farmacias. Todas con name para
+    # descartar entradas basura / sin identificar.
+    "health": """
+        [out:json][timeout:180];
+        area["ISO3166-2"="ES-MD"]->.a;
+        (
+          node["amenity"~"^(hospital|clinic|pharmacy)$"]["name"](area.a);
+          way["amenity"~"^(hospital|clinic|pharmacy)$"]["name"](area.a);
+        );
+        out geom tags;
+    """,
+    "education": """
+        [out:json][timeout:180];
+        area["ISO3166-2"="ES-MD"]->.a;
+        (
+          node["amenity"="school"]["name"](area.a);
+          way["amenity"="school"]["name"](area.a);
+        );
+        out geom tags;
+    """,
+    # Parques: solo con nombre (Madrid tiene miles de micro-jardines sin nombre
+    # que inflarían la tabla sin aportar valor al usuario).
+    "park": """
         [out:json][timeout:180];
         area["ISO3166-2"="ES-MD"]->.a;
         (
@@ -45,14 +80,24 @@ QUERIES: dict[str, str] = {
         );
         out geom tags;
     """,
-    "metro": """
-        [out:json][timeout:120];
+    "commerce": """
+        [out:json][timeout:180];
         area["ISO3166-2"="ES-MD"]->.a;
         (
-          node["railway"="station"]["station"="subway"](area.a);
-          node["railway"="station"]["subway"="yes"](area.a);
+          node["shop"="supermarket"]["name"](area.a);
+          way["shop"="supermarket"]["name"](area.a);
         );
-        out;
+        out geom tags;
+    """,
+    # Bici: solo carriles dedicados (highway=cycleway). Los cycleway:left/right
+    # sobre calzada son numerosísimos y de calidad de datos variable.
+    "bike": """
+        [out:json][timeout:180];
+        area["ISO3166-2"="ES-MD"]->.a;
+        (
+          way["highway"="cycleway"](area.a);
+        );
+        out geom;
     """,
 }
 
@@ -68,105 +113,143 @@ def fetch(query: str) -> dict:
     return r.json()
 
 
-def _coords(geom: list[dict]) -> list[list[float]]:
-    return [[p["lon"], p["lat"]] for p in geom]
+# ── WKT builders ────────────────────────────────────────────────────────────
+
+def _ring(coords: list[list[float]]) -> str:
+    return ", ".join(f"{c[0]} {c[1]}" for c in coords)
 
 
-def _is_closed(ring: list[list[float]]) -> bool:
-    return len(ring) >= 4 and ring[0] == ring[-1]
+def element_to_wkt(el: dict) -> str | None:
+    """Convert an OSM element to a WKT string. Returns None if unrepresentable."""
+    etype = el["type"]
+    tags = el.get("tags") or {}
 
+    if etype == "node":
+        return f"POINT({el['lon']} {el['lat']})"
 
-def to_point_fc(osm: dict) -> dict:
-    features = []
-    for el in osm.get("elements", []):
-        if el.get("type") != "node":
-            continue
-        tags = el.get("tags") or {}
-        props = {"id": el["id"]}
-        for k in ("name", "line", "operator", "network"):
-            if k in tags:
-                props[k] = tags[k]
-        features.append({
-            "type": "Feature",
-            "geometry": {"type": "Point", "coordinates": [el["lon"], el["lat"]]},
-            "properties": props,
-        })
-    return {"type": "FeatureCollection", "features": features}
+    if etype == "way":
+        geom = el.get("geometry")
+        if not geom or len(geom) < 2:
+            return None
+        coords = [[p["lon"], p["lat"]] for p in geom]
 
+        # Closed + non-road → polygon. Anything else → linestring. This handles
+        # cycleway loops (rare) as linestrings, which is the right call.
+        is_closed = len(coords) >= 4 and coords[0] == coords[-1]
+        is_linear = "highway" in tags
 
-def to_polygon_fc(osm: dict) -> dict:
-    """Ways (closed) → Polygon; type=multipolygon relations → MultiPolygon.
-    Inner rings from relations are dropped for simplicity — visually fine for
-    park fills at city zoom levels."""
-    features = []
-    for el in osm.get("elements", []):
-        tags = el.get("tags") or {}
-        props = {"id": el["id"]}
-        if "name" in tags:
-            props["name"] = tags["name"]
+        if is_closed and not is_linear:
+            return f"POLYGON(({_ring(coords)}))"
+        return f"LINESTRING({_ring(coords)})"
 
-        if el["type"] == "way":
-            geom = el.get("geometry")
-            if not geom or len(geom) < 3:
+    if etype == "relation" and tags.get("type") == "multipolygon":
+        # Outer rings only (inner holes dropped — fine for city-level park fills).
+        outers = []
+        for m in el.get("members", []):
+            if m.get("type") != "way" or m.get("role") != "outer":
                 continue
-            coords = _coords(geom)
-            if not _is_closed(coords):
-                coords.append(coords[0])
-            features.append({
-                "type": "Feature",
-                "geometry": {"type": "Polygon", "coordinates": [coords]},
-                "properties": props,
-            })
-        elif el["type"] == "relation" and tags.get("type") == "multipolygon":
-            outers = []
-            for m in el.get("members", []):
-                if m.get("type") != "way" or m.get("role") != "outer":
-                    continue
-                geom = m.get("geometry")
-                if not geom or len(geom) < 3:
-                    continue
-                coords = _coords(geom)
-                if not _is_closed(coords):
-                    continue
-                outers.append([coords])
-            if not outers:
+            g = m.get("geometry")
+            if not g or len(g) < 3:
                 continue
-            features.append({
-                "type": "Feature",
-                "geometry": {"type": "MultiPolygon", "coordinates": outers},
-                "properties": props,
-            })
-    return {"type": "FeatureCollection", "features": features}
+            coords = [[p["lon"], p["lat"]] for p in g]
+            if coords[0] != coords[-1]:
+                continue
+            outers.append(f"(({_ring(coords)}))")
+        if not outers:
+            return None
+        return f"MULTIPOLYGON({','.join(outers)})"
+
+    return None
 
 
-CONVERTERS = {
-    "parks": to_polygon_fc,
-    "metro": to_point_fc,
+# ── Tag helpers ─────────────────────────────────────────────────────────────
+
+def infer_subtype(category: str, tags: dict) -> str | None:
+    if category == "transport":
+        if tags.get("station") == "subway" or tags.get("subway") == "yes":
+            return "metro"
+        return "cercanias"
+    if category == "health":
+        # amenity ∈ {hospital, clinic, pharmacy} tal cual
+        return tags.get("amenity")
+    if category == "education":
+        return "school"
+    if category == "park":
+        return "park"
+    if category == "commerce":
+        return "supermarket"
+    if category == "bike":
+        return "cycleway"
+    return None
+
+
+# Subset of tags we keep as `extra` JSONB — useful for popups/route labels later.
+EXTRA_KEYS = {
+    "operator", "network", "line", "brand",
+    "wheelchair", "opening_hours", "surface",
 }
 
+def relevant_extra(tags: dict) -> dict | None:
+    extra = {k: v for k, v in tags.items() if k in EXTRA_KEYS}
+    return extra or None
 
-def run_one(key: str) -> None:
-    print(f"[{key}] querying Overpass…", flush=True)
+
+# ── Main per-category pipeline ──────────────────────────────────────────────
+
+def process_category(db, category: str) -> int:
+    print(f"[{category}] querying Overpass…", flush=True)
     t0 = time.time()
-    osm = fetch(QUERIES[key])
-    fc  = CONVERTERS[key](osm)
-    dt  = time.time() - t0
+    osm = fetch(QUERIES[category])
+    t_fetch = time.time() - t0
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    out = OUT_DIR / f"{key}.geojson"
-    out.write_text(json.dumps(fc, ensure_ascii=False, separators=(",", ":")))
-    size_kb = out.stat().st_size / 1024
-    print(f"[{key}] {len(fc['features'])} features in {dt:.1f}s → {out.relative_to(REPO_ROOT)} ({size_kb:.0f} KB)")
+    # Idempotent refresh: clear previous snapshot of this category.
+    deleted = db.query(POI).filter(POI.category == category).delete()
+    db.commit()
+    if deleted:
+        print(f"[{category}] cleared {deleted} previous rows")
+
+    inserted = 0
+    for el in osm.get("elements", []):
+        wkt = element_to_wkt(el)
+        if not wkt:
+            continue
+        tags = el.get("tags") or {}
+        poi = POI(
+            category=category,
+            subtype=infer_subtype(category, tags),
+            name=tags.get("name"),
+            geom=WKTElement(wkt, srid=4326),
+            extra=relevant_extra(tags),
+        )
+        db.add(poi)
+        inserted += 1
+        if inserted % 500 == 0:
+            db.commit()
+    db.commit()
+
+    dt = time.time() - t0
+    print(f"[{category}] {inserted} inserted ({t_fetch:.1f}s fetch, {dt:.1f}s total)")
+    return inserted
 
 
 def main() -> int:
     targets = sys.argv[1:] or list(QUERIES)
     unknown = [t for t in targets if t not in QUERIES]
     if unknown:
-        print(f"Unknown POIs: {unknown}. Available: {list(QUERIES)}")
+        print(f"Unknown categories: {unknown}. Available: {list(QUERIES)}")
         return 2
-    for key in targets:
-        run_one(key)
+
+    dsn = os.getenv("DATABASE_URL", "")
+    safe_dsn = dsn.split("@")[-1] if "@" in dsn else dsn
+    print(f"Using DATABASE_URL: …@{safe_dsn}")
+
+    db = SessionLocal()
+    try:
+        for cat in targets:
+            process_category(db, cat)
+            time.sleep(3)  # polite gap between heavy Overpass queries
+    finally:
+        db.close()
     return 0
 
 

@@ -1,15 +1,24 @@
 import { Injectable, ApplicationRef, EnvironmentInjector, createComponent, ComponentRef } from '@angular/core';
+import { Subject } from 'rxjs';
 import { MapService } from './map.service';
 import { Propiedad } from '../models/propiedad.model';
-import { PopupPropiedadComponent } from '../../shared/components/popup/popup-propiedad'; 
+import { PopupPropiedadComponent } from '../../shared/components/popup/popup-propiedad';
 
 @Injectable({ providedIn: 'root' })
 export class PopupPropiedadService {
+  /** Emitted when the user clicks "Ver entorno" inside a property popup. */
+  readonly entornoRequested$ = new Subject<Propiedad>();
+
   constructor(
     private readonly mapSvc: MapService,
     private readonly appRef: ApplicationRef,
     private readonly env: EnvironmentInjector
   ) {}
+
+  requestEntorno(piso: Propiedad): void {
+    this.mapSvc.cerrarPopup();
+    this.entornoRequested$.next(piso);
+  }
 
   open(piso: Propiedad, lngLat: [number, number], isDark = false, onClose?: () => void) {
     let cmpRef: ComponentRef<PopupPropiedadComponent> | undefined;
