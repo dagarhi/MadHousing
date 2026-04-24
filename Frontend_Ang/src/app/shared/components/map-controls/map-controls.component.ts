@@ -16,7 +16,7 @@ import {
 } from '@angular/animations';
 import { Modo } from '../../../core/services/map-layer-manager.service';
 
-export type PoiKey = 'parks' | 'metro' | 'schools' | 'health' | 'bike';
+export type PoiKey = 'transport' | 'health' | 'education' | 'park' | 'commerce' | 'bike';
 
 interface PoiOption {
   key: PoiKey;
@@ -36,11 +36,12 @@ const LAYERS: LayerOption[] = [
 ];
 
 const POIS: PoiOption[] = [
-  { key: 'parks',   label: 'Parques',     icon: 'trees' },
-  { key: 'metro',   label: 'Metro',       icon: 'train-front' },
-  { key: 'schools', label: 'Colegios',    icon: 'graduation-cap' },
-  { key: 'health',  label: 'Sanidad',     icon: 'cross' },
-  { key: 'bike',    label: 'Carril bici', icon: 'bike' },
+  { key: 'transport', label: 'Transporte',  icon: 'train-front' },
+  { key: 'health',    label: 'Sanidad',     icon: 'cross' },
+  { key: 'education', label: 'Educación',   icon: 'graduation-cap' },
+  { key: 'park',      label: 'Parques',     icon: 'trees' },
+  { key: 'commerce',  label: 'Comercio',    icon: 'shopping-cart' },
+  { key: 'bike',      label: 'Carril bici', icon: 'bike' },
 ];
 
 @Component({
@@ -70,11 +71,12 @@ export class MapControlsComponent {
   @Input() routeActive: boolean = false;
 
   @Input() poisActive: Record<PoiKey, boolean> = {
-    parks:   false,
-    metro:   false,
-    schools: false,
-    health:  false,
-    bike:    false,
+    transport: false,
+    health:    false,
+    education: false,
+    park:      false,
+    commerce:  false,
+    bike:      false,
   };
 
   @Output() layerChange        = new EventEmitter<Modo>();

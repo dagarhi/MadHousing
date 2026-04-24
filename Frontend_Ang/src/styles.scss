@@ -469,3 +469,47 @@ canvas:focus {
     background: rgba(234, 179, 8, 0.2);
   }
 }
+
+// Popup que sigue al cursor sobre la línea de ruta dibujada (route-layer).
+// Se aplica al contenedor maplibregl por className, por eso va en global.
+.maplibregl-popup.route-hover-popup {
+  .maplibregl-popup-tip { display: none; }
+
+  .maplibregl-popup-content {
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .route-hover__body {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.6rem;
+    background: var(--mat-sys-surface, #fff);
+    color: var(--mat-sys-on-surface, #1c1b1f);
+    border: 1px solid var(--mat-sys-outline-variant, rgba(103, 80, 164, 0.3));
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    font: 500 12px/1.2 system-ui, -apple-system, sans-serif;
+    white-space: nowrap;
+  }
+
+  .route-hover__mode {
+    display: inline-flex;
+    align-items: center;
+    color: var(--mat-sys-on-surface-variant, #49454f);
+
+    svg { display: block; }
+  }
+
+  .route-hover__sep {
+    color: var(--mat-sys-outline-variant, rgba(103, 80, 164, 0.3));
+  }
+
+  .route-hover__stat strong {
+    color: var(--mat-sys-primary, #7c3aed);
+    font-weight: 600;
+  }
+}

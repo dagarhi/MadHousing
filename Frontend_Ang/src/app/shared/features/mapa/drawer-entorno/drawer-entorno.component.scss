@@ -1,0 +1,232 @@
+// Drawer de entorno: panel lateral derecho con pestaña pequeña sobresaliente.
+// .de__body y .de__handle son ambos position:fixed, independientes entre sí,
+// así que el handle no depende del ancho del body y se ve siempre.
+
+:host {
+  // Alineado con el sistema Material de la app (mat-sys-*). Mismos tokens que
+  // usa drawer-favoritos para mantener coherencia visual entre paneles.
+  --de-bg:      var(--mat-sys-surface, #fff);
+  --de-bg-alt:  var(--mat-sys-surface-container-low, #f7f2ff);
+  --de-fg:      var(--mat-sys-on-surface, #1c1b1f);
+  --de-fg-dim:  var(--mat-sys-on-surface-variant, #49454f);
+  --de-border:  var(--mat-sys-outline-variant, rgba(103, 80, 164, 0.3));
+  --de-accent:  var(--mat-sys-primary, #7c3aed);
+  --de-danger:  #ef4444;
+
+  display: contents;
+}
+
+.de { display: contents; }
+
+// ── Pestaña pequeña sobresaliente ───────────────────────────────────────────
+.de__handle {
+  position: fixed;
+  top: 30%;
+  right: 360px;            // justo fuera del borde izquierdo del body
+  z-index: 21;
+  width: 22px;
+  height: 36px;
+
+  background: var(--de-bg);
+  border: 1px solid var(--de-border);
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  cursor: pointer;
+  color: var(--de-fg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: -2px 2px 6px rgba(0, 0, 0, 0.08);
+  transition: right 180ms ease, background 140ms ease;
+
+  &:hover { background: var(--de-bg-alt); }
+}
+
+// Cuando el drawer está colapsado, el body desaparece y el handle se pega
+// al borde derecho del viewport.
+.de--collapsed .de__handle { right: 0; }
+
+// ── Cuerpo ──────────────────────────────────────────────────────────────────
+// Centrado verticalmente dejando ~15% arriba y abajo libre para que no se pise
+// con los controles del mapa (Ayuda arriba, footer de map-controls abajo).
+.de__body {
+  position: fixed;
+  top: 15%;
+  right: 0;
+  bottom: 15%;
+  width: 360px;
+  max-width: calc(100vw - 40px);
+  z-index: 20;
+
+  background: var(--de-bg);
+  border: 1px solid var(--de-border);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.08);
+  font: 500 13px/1.4 system-ui, sans-serif;
+  color: var(--de-fg);
+}
+
+// ── Header ──────────────────────────────────────────────────────────────────
+.de__header {
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--de-border);
+  background: var(--de-bg-alt);
+  flex-shrink: 0;
+}
+
+.de__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.de__subtitle {
+  font-size: 12px;
+  color: var(--de-fg-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.de__loading {
+  padding: 16px;
+  font-size: 12px;
+  color: var(--de-fg-dim);
+}
+
+// ── Secciones plegables (scrolleables) ─────────────────────────────────────
+.de__sections {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;            // imprescindible para que flex-auto scrollee en lugar de desbordar
+}
+
+.de__section {
+  border-bottom: 1px solid var(--de-border);
+}
+
+.de__section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--de-fg);
+  text-align: left;
+  font-size: 13px;
+  transition: background 120ms ease;
+
+  &:hover { background: var(--de-bg-alt); }
+  &.active {
+    background: var(--de-bg-alt);
+    font-weight: 600;
+  }
+}
+
+.de__cat-icon   { flex-shrink: 0; color: var(--de-fg-dim); }
+.de__cat-label  { flex: 1; }
+.de__cat-count  {
+  font-size: 11px;
+  background: var(--de-border);
+  color: var(--de-fg-dim);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.de__cat-chevron { color: var(--de-fg-dim); }
+
+// ── Lista de POIs dentro de una sección ────────────────────────────────────
+.de__poi-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 4px 0;
+  background: var(--de-bg);
+}
+
+.de__poi-empty {
+  padding: 8px 32px;
+  color: var(--de-fg-dim);
+  font-style: italic;
+  font-size: 12px;
+}
+
+.de__poi {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px 8px 32px;
+  border-top: 1px solid var(--de-border);
+  &:first-child { border-top: none; }
+}
+
+.de__poi-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.de__poi-name {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.de__poi-dist {
+  font-size: 11px;
+  color: var(--de-fg-dim);
+}
+
+.de__poi-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.de__route-btn {
+  background: transparent;
+  border: 1px solid var(--de-border);
+  color: var(--de-fg-dim);
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+
+  &:hover {
+    background: var(--de-accent);
+    color: #fff;
+    border-color: var(--de-accent);
+  }
+
+  // Activo: ruta actualmente dibujada para este POI+perfil. Click otra vez
+  // para limpiarla. Se respeta sobre el hover via background !important de la
+  // transición del estado activo.
+  &.active {
+    background: var(--de-accent);
+    color: #fff;
+    border-color: var(--de-accent);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--de-accent) 25%, transparent);
+  }
+}
+
+@media (max-width: 480px) {
+  .de__body { width: calc(100vw - 22px); }
+  .de__handle { right: calc(100vw - 22px); }
+  .de--collapsed .de__handle { right: 0; }
+}

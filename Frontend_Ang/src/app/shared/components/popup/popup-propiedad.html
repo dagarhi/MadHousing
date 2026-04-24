@@ -94,7 +94,7 @@
     </div>
   </div>
 
-  <!-- Footer -->
+  <!-- Footer: acciones de guardado a la izquierda, navegación a la derecha -->
   <div class="footer">
     <button class="btn-fav" (click)="onToggleFavorito()"
       [attr.aria-pressed]="isFav" aria-label="Guardar en favoritos">
@@ -106,10 +106,17 @@
       <span>{{ isFav ? 'Guardado' : 'Guardar' }}</span>
     </button>
 
-    <a *ngIf="piso.url" class="btn-link" [href]="piso.url" target="_blank" rel="noopener">
-      Ver anuncio
-      <lucide-icon name="external-link" [size]="12"></lucide-icon>
-    </a>
+    <div class="footer__actions">
+      <button class="btn-link" (click)="onVerEntorno()" aria-label="Ver POIs cercanos">
+        <lucide-icon name="compass" [size]="12"></lucide-icon>
+        Ver entorno
+      </button>
+
+      <a *ngIf="piso.url" class="btn-link" [href]="piso.url" target="_blank" rel="noopener">
+        Ver anuncio
+        <lucide-icon name="external-link" [size]="12"></lucide-icon>
+      </a>
+    </div>
   </div>
 
 </div>

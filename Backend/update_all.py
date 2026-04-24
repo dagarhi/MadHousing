@@ -5,10 +5,14 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent / ".env")
 
+from geoalchemy2.elements import WKTElement
 from database import SessionLocal, init_db
 from models import Propiedad, ScraperState
 from services.idealista_api import IdealistaAPI
-from services.scoring import valoracion_intrinseca, generar_huella_digital
+from services.scoring import (
+    valoracion_intrinseca, generar_huella_digital,
+    compute_distances_for_point, compute_score_contexto, compute_score_final,
+)
 
 ZONAS = [
     # ── High-interest zones (2 ops, wide radius) ──────────────────────────────
@@ -226,6 +230,13 @@ def upsert_properties(db, elements: list, operation: str) -> dict:
         payload["huella_digital"]      = huella
         payload["score_intrinseco"]    = valoracion_intrinseca(payload)
         payload["fecha_actualizacion"] = datetime.now(timezone.utc)
+
+        # Spatial: geom + distancias + score_contexto + score_final
+        payload["geom"] = WKTElement(f"POINT({lon} {lat})", srid=4326)
+        distancias = compute_distances_for_point(db, lat, lon)
+        payload.update(distancias)
+        payload["score_contexto"] = compute_score_contexto(distancias)
+        payload["score_final"]    = compute_score_final(payload["score_intrinseco"], payload["score_contexto"])
 
         # Dedupe: another property (different code) with the same fingerprint
         # means Idealista is listing the same physical home via another agency.

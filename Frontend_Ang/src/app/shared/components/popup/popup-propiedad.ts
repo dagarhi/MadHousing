@@ -8,6 +8,7 @@ import { Propiedad } from '../../../core/models/propiedad.model';
 import { FavoritosService } from '../../../core/services/favoritos.service';
 import { MapService } from '../../../core/services/map.service';
 import { ThemeService } from '../../../core/services/theme.service';
+import { PopupPropiedadService } from '../../../core/services/popup-propiedad.service';
 import { PALETTE_RDYLGN, BACKEND_SCORE_DOMAIN, interpolatePalette } from '../../../core/styles/score-colors';
 
 @Component({
@@ -35,6 +36,7 @@ export class PopupPropiedadComponent implements OnInit, OnDestroy {
     private favs: FavoritosService,
     private mapSvc: MapService,
     private themeSvc: ThemeService,
+    private popupSvc: PopupPropiedadService,
   ) { }
 
   ngOnInit(): void {
@@ -126,5 +128,10 @@ export class PopupPropiedadComponent implements OnInit, OnDestroy {
 
   onClosePopup(): void {
     this.mapSvc.cerrarPopup();
+  }
+
+  onVerEntorno(): void {
+    if (!this.piso) return;
+    this.popupSvc.requestEntorno(this.piso);
   }
 }

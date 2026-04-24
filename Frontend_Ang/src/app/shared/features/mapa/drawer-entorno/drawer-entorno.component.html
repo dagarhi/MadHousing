@@ -1,0 +1,63 @@
+<div class="de" *ngIf="propiedad" [class.de--collapsed]="collapsed" role="complementary" aria-label="Entorno del piso">
+
+  <!-- Pestaña pequeña que sobresale por la izquierda del drawer -->
+  <button
+    class="de__handle"
+    type="button"
+    (click)="toggleCollapsed()"
+    [attr.aria-label]="collapsed ? 'Expandir panel de entorno' : 'Colapsar panel de entorno'"
+    [title]="collapsed ? 'Ver entorno' : 'Colapsar'">
+    <lucide-icon [name]="collapsed ? 'chevron-left' : 'chevron-right'" [size]="14"></lucide-icon>
+  </button>
+
+  <!-- Cuerpo del drawer -->
+  <section class="de__body" *ngIf="!collapsed">
+    <header class="de__header">
+      <div class="de__title">
+        <lucide-icon name="compass" [size]="14"></lucide-icon>
+        <span>Entorno</span>
+      </div>
+      <div class="de__subtitle" *ngIf="propiedad.address">{{ propiedad.address }}</div>
+    </header>
+
+    <div class="de__loading" *ngIf="loading">Cargando entorno…</div>
+
+    <ul class="de__sections" *ngIf="!loading">
+      <li class="de__section" *ngFor="let s of sections">
+        <button class="de__section-head" type="button" (click)="toggleSection(s.key)" [class.active]="s.open">
+          <lucide-icon [name]="s.icon" [size]="14" class="de__cat-icon"></lucide-icon>
+          <span class="de__cat-label">{{ s.label }}</span>
+          <span class="de__cat-count" *ngIf="s.pois.length > 0">{{ s.pois.length }}</span>
+          <lucide-icon [name]="s.open ? 'chevron-down' : 'chevron-right'" [size]="12" class="de__cat-chevron"></lucide-icon>
+        </button>
+
+        <ul class="de__poi-list" *ngIf="s.open">
+          <li class="de__poi-empty" *ngIf="s.pois.length === 0">Sin datos disponibles</li>
+          <li class="de__poi" *ngFor="let p of s.pois; trackBy: trackByPoiId">
+            <div class="de__poi-info">
+              <span class="de__poi-name">{{ p.name || p.subtype || '(sin nombre)' }}</span>
+              <span class="de__poi-dist">{{ fmtDist(p.dist_m) }}</span>
+            </div>
+            <div class="de__poi-actions">
+              <button class="de__route-btn" type="button"
+                      [class.active]="isRouteActive(p, 'foot-walking')"
+                      (click)="onRouteClick(p, 'foot-walking')" title="Ruta a pie">
+                <lucide-icon name="footprints" [size]="12"></lucide-icon>
+              </button>
+              <button class="de__route-btn" type="button"
+                      [class.active]="isRouteActive(p, 'cycling-regular')"
+                      (click)="onRouteClick(p, 'cycling-regular')" title="Ruta en bici">
+                <lucide-icon name="bike" [size]="12"></lucide-icon>
+              </button>
+              <button class="de__route-btn" type="button"
+                      [class.active]="isRouteActive(p, 'driving-car')"
+                      (click)="onRouteClick(p, 'driving-car')" title="Ruta en coche">
+                <lucide-icon name="car" [size]="12"></lucide-icon>
+              </button>
+            </div>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </section>
+</div>

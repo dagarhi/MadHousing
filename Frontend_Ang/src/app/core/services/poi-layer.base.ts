@@ -1,9 +1,9 @@
 import { Injectable, OnDestroy, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import maplibregl from 'maplibre-gl';
 import type { FeatureCollection } from 'geojson';
 import { MapService } from './map.service';
 import { MapLayer } from './map-layer.interface';
+import { PoiService, PoiCategory } from './poi.service';
 
 export interface PoiLayerStyle {
   type: 'circle' | 'fill' | 'line' | 'symbol';
@@ -14,20 +14,22 @@ export interface PoiLayerStyle {
 }
 
 /**
- * Shared lifecycle for static-snapshot POI layers (parks, metro, schools…).
- * Each concrete subclass declares an `id`, `zIndex`, GeoJSON URL and a MapLibre
- * style. Data is fetched lazily on first `setVisible(true)`, cached in-memory,
- * and replayed through style swaps via the manager's attach/detach cycle.
+ * Shared lifecycle for POI layers (parks, metro, schools…). Each concrete
+ * subclass declares an `id`, `zIndex`, backend `category`, and a MapLibre style.
+ * Data is fetched lazily on first `setVisible(true)` via `PoiService` (which hits
+ * GET /pois?category=X with HTTP cache + per-session in-memory cache), stored in
+ * the instance, and replayed through style swaps via the manager's attach/detach
+ * cycle so theme toggles don't trigger refetches.
  */
 @Injectable()
 export abstract class PoiLayerBase implements OnDestroy, MapLayer {
   abstract readonly id: string;
   abstract readonly zIndex: number;
-  protected abstract readonly geojsonUrl: string;
+  protected abstract readonly category: PoiCategory;
   protected abstract readonly style: PoiLayerStyle;
 
   protected readonly mapSvc = inject(MapService);
-  protected readonly http   = inject(HttpClient);
+  protected readonly pois   = inject(PoiService);
 
   protected map?: maplibregl.Map;
   protected data?: FeatureCollection;
@@ -83,7 +85,7 @@ export abstract class PoiLayerBase implements OnDestroy, MapLayer {
   private ensureLoaded() {
     if (this.fetching || this.data) return;
     this.fetching = true;
-    this.http.get<FeatureCollection>(this.geojsonUrl).subscribe({
+    this.pois.getPois(this.category).subscribe({
       next: fc => {
         this.fetching = false;
         this.data = fc;
@@ -91,7 +93,7 @@ export abstract class PoiLayerBase implements OnDestroy, MapLayer {
       },
       error: err => {
         this.fetching = false;
-        console.error(`[${this.id}] failed to load ${this.geojsonUrl}`, err);
+        console.error(`[${this.id}] failed to load category=${this.category}`, err);
       },
     });
   }

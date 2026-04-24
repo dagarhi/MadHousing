@@ -18,11 +18,13 @@ import { PinsLayerService } from '../../../../core/services/pins-layer.service';
 import { RadiusLayerService } from '../../../../core/services/radius-layer.service';
 import { IsochroneLayerService } from '../../../../core/services/isochrone-layer.service';
 import { RouteLayerService } from '../../../../core/services/route-layer.service';
+import { PopupPropiedadService } from '../../../../core/services/popup-propiedad.service';
+import { DrawerEntornoComponent, RouteRequest } from '../drawer-entorno/drawer-entorno.component';
 
 @Component({
   selector: 'app-mapa-principal',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, MapControlsComponent, SnapDragDirective],
+  imports: [CommonModule, LucideAngularModule, MapControlsComponent, SnapDragDirective, DrawerEntornoComponent],
   templateUrl: './mapa-principal.component.html',
   styleUrls: ['./mapa-principal.component.scss'],
 })
@@ -73,12 +75,16 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
 
   // ── POI state ────────────────────────────────────────────────────────────
   poisActive: Record<PoiKey, boolean> = {
-    parks:   false,
-    metro:   false,
-    schools: false,
-    health:  false,
-    bike:    false,
+    transport: false,
+    health:    false,
+    education: false,
+    park:      false,
+    commerce:  false,
+    bike:      false,
   };
+
+  // ── Entorno drawer state ─────────────────────────────────────────────────
+  entornoPiso: Propiedad | null = null;
 
   constructor(
     readonly manager: MapLayerManager,
@@ -92,7 +98,53 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
     private radiusLayer: RadiusLayerService,
     private isoLayer: IsochroneLayerService,
     private routeLayer: RouteLayerService,
-  ) {}
+    private popupSvc: PopupPropiedadService,
+  ) {
+    this.subs.add(
+      this.popupSvc.entornoRequested$.subscribe(piso => this.zone.run(() => {
+        this.entornoPiso = piso;
+      })),
+    );
+  }
+
+  onEntornoClose(): void {
+    this.entornoPiso = null;
+  }
+
+  /** Drawer requested route removal (user clicked an active route button). */
+  onEntornoClearRoute(): void {
+    this.routeLayer.clear();
+  }
+
+  /**
+   * Draw a route from the property to a POI without opening the main Ruta panel.
+   * Drawer-triggered routes live only on the map — distance/duration will be
+   * available via hover (Fase 7). Any panel-driven state is cleared so the map
+   * shows only this new route.
+   */
+  onEntornoRouteTo(req: RouteRequest): void {
+    const piso = this.entornoPiso;
+    if (!piso || piso.latitude == null || piso.longitude == null) return;
+
+    // Close the main Ruta panel if it happened to be open with a previous route.
+    this.routeOrigin = null;
+    this.routeDest = null;
+    this.routeOriginLabel = '';
+    this.routeDestLabel = '';
+    this.routeDistanceKm = null;
+    this.routeDurationMin = null;
+    this.routeLoading = false;
+    this.routeOpen = false;
+
+    const origin: [number, number] = [piso.longitude, piso.latitude];
+    const dest:   [number, number] = [req.destLng, req.destLat];
+
+    this.routeLayer.setEndpoints(origin, dest);
+    this.routeSvc.getRoute(origin, dest, req.profile).subscribe({
+      next: gj => this.zone.run(() => this.routeLayer.setRoute(gj, req.profile)),
+      error: err => console.error('[entorno route]', err),
+    });
+  }
 
   async ngAfterViewInit() {
     this.allPisos = Array.isArray(this.pisos) ? [...this.pisos] : [];
@@ -152,7 +204,6 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
   onPoiToggle(key: PoiKey): void {
     const next = !this.poisActive[key];
     this.poisActive = { ...this.poisActive, [key]: next };
-    // Silently no-op for keys without a registered layer yet (schools/health/bike).
     this.manager.getLayer(key)?.setVisible(next);
   }
 
@@ -195,7 +246,16 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
 
     // POIs — layer services were already cleared by manager.clearAll(), so
     // just reset the UI state so checkboxes uncheck.
-    this.poisActive = { parks: false, metro: false, schools: false, health: false, bike: false };
+    this.poisActive = {
+      transport: false,
+      health:    false,
+      education: false,
+      park:      false,
+      commerce:  false,
+      bike:      false,
+    };
+
+    this.entornoPiso = null;
   }
 
   // ── Radius filter ─────────────────────────────────────────────────────────
@@ -534,7 +594,7 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
           this.routeDistanceKm = null;
           this.routeDurationMin = null;
         }
-        this.routeLayer.setRoute(gj);
+        this.routeLayer.setRoute(gj, this.routeProfile);
       }),
       error: (err) => this.zone.run(() => {
         console.error('[Route] ORS error', err);

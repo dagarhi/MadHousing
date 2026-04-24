@@ -59,6 +59,7 @@ import {
   TrainFront,
   GraduationCap,
   Cross,
+  ShoppingCart,
 } from 'lucide-angular';
 import { Legend } from 'chart.js';
 
@@ -119,6 +120,7 @@ bootstrapApplication(AppComponent, {
         TrainFront,
         GraduationCap,
         Cross,
+        ShoppingCart,
       })
     ),
   ],

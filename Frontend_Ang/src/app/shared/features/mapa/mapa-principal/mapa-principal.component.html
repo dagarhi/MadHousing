@@ -4,6 +4,13 @@
   <div class="map-loading-spinner"></div>
 </div>
 
+<app-drawer-entorno
+  [propiedad]="entornoPiso"
+  (close)="onEntornoClose()"
+  (routeTo)="onEntornoRouteTo($event)"
+  (clearRoute)="onEntornoClearRoute()">
+</app-drawer-entorno>
+
 <app-map-controls
   appSnapDrag snapId="capas" defaultZone="TL"
   [activeLayer]="modo"
