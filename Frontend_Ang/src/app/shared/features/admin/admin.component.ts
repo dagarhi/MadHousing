@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { ThemeService } from '../../../core/services/theme.service';
 import { environment } from '../../../../environments/environment';
 import { LucideAngularModule } from 'lucide-angular';
 
@@ -34,6 +35,7 @@ export class AdminComponent implements OnInit {
     private http: HttpClient,
     private auth: AuthService,
     private router: Router,
+    readonly theme: ThemeService,
   ) {}
 
   ngOnInit(): void {
@@ -91,5 +93,9 @@ export class AdminComponent implements OnInit {
 
   volverAlMapa(): void {
     this.router.navigate(['/mapa']);
+  }
+
+  toggleTheme(): void {
+    this.theme.toggle();
   }
 }

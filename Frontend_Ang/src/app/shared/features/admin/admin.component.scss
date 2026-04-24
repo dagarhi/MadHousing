@@ -1,7 +1,8 @@
 :host {
   display: block;
   min-height: 100vh;
-  background: #f5f0ff;
+  background: var(--app-bg);
+  color: var(--app-on-bg);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
@@ -24,7 +25,7 @@
     margin: 0;
     font-size: 1.4rem;
     font-weight: 700;
-    color: #4a148c;
+    color: var(--mat-sys-primary);
   }
 }
 
@@ -33,21 +34,41 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.45rem 0.9rem;
-  border: 1px solid #d1c4e9;
+  border: 1px solid var(--app-border);
   border-radius: 9999px;
-  background: #fff;
-  color: #7b1fa2;
+  background: var(--app-card);
+  color: var(--mat-sys-primary);
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s, box-shadow 0.15s;
 
   &:hover {
-    background: #ede7f6;
-    box-shadow: 0 2px 6px rgba(123, 31, 162, 0.15);
+    background: var(--panel-item-hover);
+    box-shadow: var(--app-elev-shadow);
   }
 }
 
+.btn-theme {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  border: 1px solid var(--app-border);
+  background: var(--app-card);
+  color: var(--mat-sys-primary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: var(--panel-item-hover);
+    border-color: var(--mat-sys-primary);
+  }
+}
+
+/* Admin badge: mantiene el magenta de marca independientemente del tema */
 .admin-badge {
   padding: 0.3rem 0.8rem;
   background: linear-gradient(135deg, #d100b6, #f500c9);
@@ -61,7 +82,7 @@
 
 .admin-estado {
   text-align: center;
-  color: #666;
+  color: var(--panel-text-muted);
   padding: 2rem;
 }
 
@@ -71,16 +92,16 @@
   align-items: center;
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
-  background: #fef2f2;
-  border: 1px solid #fca5a5;
+  background: color-mix(in oklab, #ef4444 12%, var(--app-card));
+  border: 1px solid color-mix(in oklab, #ef4444 40%, transparent);
   border-radius: 0.75rem;
-  color: #b91c1c;
+  color: #ef4444;
   font-size: 0.9rem;
 
   button {
     border: none;
     background: transparent;
-    color: #b91c1c;
+    color: inherit;
     cursor: pointer;
     font-size: 1rem;
   }
@@ -91,18 +112,18 @@
 .user-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
+  background: var(--app-card);
   border-radius: 1rem;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--app-elev-shadow);
 
   th {
     padding: 0.75rem 1rem;
     text-align: left;
     font-size: 0.82rem;
     font-weight: 600;
-    color: #7b1fa2;
-    background: #f3e5f5;
+    color: var(--mat-sys-primary);
+    background: var(--mat-sys-surface-container);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -110,17 +131,17 @@
   td {
     padding: 0.75rem 1rem;
     font-size: 0.9rem;
-    color: #333;
-    border-top: 1px solid #f0e6ff;
+    color: var(--app-on-bg);
+    border-top: 1px solid var(--app-border);
   }
 
   tr:hover td {
-    background: #faf5ff;
+    background: var(--panel-item-hover);
   }
 }
 
-.col-id    { color: #999; font-size: 0.82rem; }
-.col-date  { color: #666; font-size: 0.85rem; }
+.col-id     { color: var(--panel-text-faint); font-size: 0.82rem; }
+.col-date   { color: var(--panel-text-muted); font-size: 0.85rem; }
 .col-actions { display: flex; align-items: center; gap: 0.4rem; }
 
 /* Role badge */
@@ -132,12 +153,12 @@
   font-weight: 600;
 
   &--admin {
-    background: #ede7f6;
-    color: #6a1b9a;
+    background: color-mix(in oklab, var(--mat-sys-primary) 18%, transparent);
+    color: var(--mat-sys-primary);
   }
 
   &--user {
-    background: #e3f2fd;
+    background: color-mix(in oklab, #1565c0 18%, transparent);
     color: #1565c0;
   }
 }
@@ -149,32 +170,32 @@
   align-items: center;
   justify-content: center;
   padding: 0.35rem 0.6rem;
-  border: 1px solid #e0d4f7;
+  border: 1px solid var(--app-border);
   border-radius: 0.5rem;
-  background: #fff;
-  color: #7b1fa2;
+  background: var(--app-card);
+  color: var(--mat-sys-primary);
   cursor: pointer;
   font-size: 0.82rem;
   transition: background 0.15s, border-color 0.15s;
 
   &:hover {
-    background: #f3e5f5;
-    border-color: #ce93d8;
+    background: var(--panel-item-hover);
+    border-color: var(--mat-sys-primary);
   }
 
   &.btn-delete {
-    color: #c62828;
-    border-color: #ffcdd2;
+    color: #ef4444;
+    border-color: color-mix(in oklab, #ef4444 40%, transparent);
 
     &:hover {
-      background: #fef2f2;
-      border-color: #f44336;
+      background: color-mix(in oklab, #ef4444 10%, transparent);
+      border-color: #ef4444;
     }
   }
 }
 
 .confirm-text {
   font-size: 0.85rem;
-  color: #c62828;
+  color: #ef4444;
   font-weight: 500;
 }

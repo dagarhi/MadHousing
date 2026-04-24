@@ -289,68 +289,61 @@
   }
 }
 
-// ── Footer ───────────────────────────────────────────────────────────────────
+// ── Footer: acciones apiladas verticalmente ─────────────────────────────────
 
 .footer {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding-top: 0.5rem;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-top: 0.55rem;
   border-top: 1px solid var(--panel-border);
   margin-top: 0.1rem;
 }
 
-.footer__actions {
+.footer-action {
   display: inline-flex;
   align-items: center;
-  gap: 0.9rem;
-}
-
-.btn-fav {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  border: none;
-  background: none;
+  gap: 0.45rem;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
   cursor: pointer;
-  padding: 0.25rem 0.45rem;
+  padding: 0.45rem 0.65rem;
   border-radius: 8px;
   font-size: 0.78rem;
+  font-weight: 500;
   line-height: 1;
-  color: var(--panel-text-muted);
+  color: var(--panel-text);
   font-family: inherit;
+  text-decoration: none;
+  text-align: left;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 
   lucide-icon {
     flex-shrink: 0;
+    color: var(--panel-text-muted);
   }
 
   &:hover {
     background: var(--panel-item-hover);
-    color: var(--panel-text);
-  }
-}
+    border-color: var(--mat-sys-primary, #7c3aed);
+    color: var(--mat-sys-primary, #7c3aed);
 
-.btn-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.78rem;
-  font-weight: 500;
-  line-height: 1;
-  color: #6366f1;
-  text-decoration: none;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  font-family: inherit;
-
-  lucide-icon {
-    flex-shrink: 0;
+    lucide-icon { color: inherit; }
   }
 
-  &:hover {
-    text-decoration: underline;
+  &--fav.is-active {
+    color: #ef4444;
+    border-color: color-mix(in oklab, #ef4444 35%, transparent);
+    background: color-mix(in oklab, #ef4444 8%, var(--panel-bg));
+
+    lucide-icon { color: #ef4444; }
+
+    &:hover {
+      background: color-mix(in oklab, #ef4444 14%, var(--panel-bg));
+      border-color: #ef4444;
+      color: #ef4444;
+    }
   }
 }

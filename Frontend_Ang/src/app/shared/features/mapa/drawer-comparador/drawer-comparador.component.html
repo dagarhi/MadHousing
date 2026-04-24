@@ -34,41 +34,44 @@
     </div>
 
     <div *ngIf="zonaA && zonaB" class="comparacion">
-      <p class="summary">
-        Comparando <strong>{{ zonaA }}</strong> vs <strong>{{ zonaB }}</strong>
-        ({{ tipoOperacion === 'sale' ? 'Venta' : 'Alquiler' }})
-      </p>
-
-      <!-- Gráficos (sin funciones en plantilla) -->
-       <!-- 💶 Precio medio (€) -->
-      <div class="chart-item">
-        <h4>💶 Precio medio (€)</h4>
-        <div class="chart-canvas">
-          <canvas #precioCanvas></canvas>
+      <div class="summary">
+        <span class="summary__text">
+          Comparando <strong>{{ zonaA }}</strong> vs <strong>{{ zonaB }}</strong>
+          · {{ tipoOperacion === 'sale' ? 'Venta' : 'Alquiler' }}
+        </span>
+        <div class="legend">
+          <span class="legend__item"><span class="dot dot--a"></span>{{ zonaA }}</span>
+          <span class="legend__item"><span class="dot dot--b"></span>{{ zonaB }}</span>
         </div>
       </div>
 
-      <!-- 📏 Tamaño medio (m²) -->
-      <div class="chart-item">
-        <h4>📏 Tamaño medio (m²)</h4>
-        <div class="chart-canvas">
-          <canvas #tamanoCanvas></canvas>
+      <div class="chart-grid">
+        <div class="chart-item">
+          <h4>Precio medio (€)</h4>
+          <div class="chart-canvas">
+            <canvas #precioCanvas></canvas>
+          </div>
         </div>
-      </div>
 
-      <!-- ⭐ Score medio -->
-      <div class="chart-item">
-        <h4>⭐ Score medio</h4>
-        <div class="chart-canvas">
-          <canvas #scoreCanvas></canvas>
+        <div class="chart-item">
+          <h4>Tamaño medio (m²)</h4>
+          <div class="chart-canvas">
+            <canvas #tamanoCanvas></canvas>
+          </div>
         </div>
-      </div>
 
-      <!-- 🏘️ Número de pisos -->
-      <div class="chart-item">
-        <h4>🏘️ Número de pisos</h4>
-        <div class="chart-canvas">
-          <canvas #countCanvas></canvas>
+        <div class="chart-item">
+          <h4>Score medio</h4>
+          <div class="chart-canvas">
+            <canvas #scoreCanvas></canvas>
+          </div>
+        </div>
+
+        <div class="chart-item">
+          <h4>Número de pisos</h4>
+          <div class="chart-canvas">
+            <canvas #countCanvas></canvas>
+          </div>
         </div>
       </div>
 

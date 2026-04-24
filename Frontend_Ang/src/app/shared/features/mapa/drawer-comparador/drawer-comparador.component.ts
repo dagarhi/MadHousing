@@ -13,12 +13,13 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { DrawerShellComponent } from '../../../components/drawer-shell/drawer-shell.component'; 
+import { DrawerShellComponent } from '../../../components/drawer-shell/drawer-shell.component';
 import { LucideAngularModule } from 'lucide-angular';
 
 import { EstadisticasGlobales, EstadisticaZona } from '../../../../core/models/estadistica.model';
-import { EstadisticasService } from '../../../../core/services/estadisticas.service'; 
-import { firstValueFrom } from 'rxjs';
+import { EstadisticasService } from '../../../../core/services/estadisticas.service';
+import { ThemeService } from '../../../../core/services/theme.service';
+import { firstValueFrom, Subscription } from 'rxjs';
 
 import {
   Chart,
@@ -31,6 +32,10 @@ import {
 Chart.register(...registerables);
 
 type ChartDataSimple = ChartConfiguration['data'];
+
+// Dos tonos con alto contraste para que A vs B sea legible de un vistazo
+const BRAND_A = '#c000a5'; // magenta de marca
+const BRAND_B = '#14b8a6'; // teal complementario
 
 @Component({
   selector: 'app-drawer-comparador',
@@ -71,16 +76,9 @@ export class DrawerComparadorComponent
   private scoreChart?: Chart;
   private countChart?: Chart;
 
-  chartOptions: ChartConfiguration['options'] = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      y: {
-        beginAtZero: true,
-      },
-    },
-  } as ChartConfiguration['options'];
+  chartOptions: ChartConfiguration['options'] = this.buildChartOptions(false);
+
+  private themeSub?: Subscription;
 
   // datos preparados (como antes)
   chartData: {
@@ -95,13 +93,27 @@ export class DrawerComparadorComponent
     count: { labels: [], datasets: [] },
   };
 
-  constructor(private estadisticas: EstadisticasService) {}
+  constructor(
+    private estadisticas: EstadisticasService,
+    private theme: ThemeService,
+  ) {}
 
   // ───────────────────── ciclos de vida ─────────────────────
 
   ngAfterViewInit() {
     // cuando ya existen los canvas, podemos pintar si ya teníamos datos
     this.updateAllCharts();
+
+    this.themeSub = this.theme.dark$.subscribe((dark) => {
+      this.chartOptions = this.buildChartOptions(dark);
+      // Reasignar options en cada chart y volver a pintar
+      for (const c of [this.precioChart, this.tamanoChart, this.scoreChart, this.countChart]) {
+        if (c) {
+          c.options = this.chartOptions as any;
+          c.update();
+        }
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -109,6 +121,51 @@ export class DrawerComparadorComponent
     this.destroyChart(this.tamanoChart);
     this.destroyChart(this.scoreChart);
     this.destroyChart(this.countChart);
+    this.themeSub?.unsubscribe();
+  }
+
+  private buildChartOptions(dark: boolean): ChartConfiguration['options'] {
+    const tickColor = dark ? '#e5e7eb' : '#1f2937';
+    const gridColor = dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+    const tooltipBg = dark ? '#1e1e2e' : '#ffffff';
+    const tooltipText = dark ? '#e5e7eb' : '#111827';
+    const tooltipBorder = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)';
+
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: tooltipBg,
+          titleColor: tooltipText,
+          bodyColor: tooltipText,
+          borderColor: tooltipBorder,
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8,
+        },
+      },
+      datasets: {
+        bar: {
+          barPercentage: 0.55,
+          categoryPercentage: 0.65,
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: tickColor },
+          grid: { color: gridColor, display: false },
+          border: { display: false },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: tickColor },
+          grid: { color: gridColor },
+          border: { display: false },
+        },
+      },
+    } as ChartConfiguration['options'];
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -217,12 +274,13 @@ export class DrawerComparadorComponent
       labels,
       datasets: [
         {
-          label: '€',
+          label: 'Precio (€)',
           data: [
             val(datosA, 'precio_medio'),
             val(datosB, 'precio_medio'),
           ],
-          backgroundColor: ['#1976d2', '#20c997'],
+          backgroundColor: [BRAND_A, BRAND_B],
+          borderRadius: 6,
         },
       ],
     };
@@ -231,12 +289,13 @@ export class DrawerComparadorComponent
       labels,
       datasets: [
         {
-          label: 'm²',
+          label: 'Tamaño (m²)',
           data: [
             val(datosA, 'tamano_medio'),
             val(datosB, 'tamano_medio'),
           ],
-          backgroundColor: ['#1976d2', '#20c997'],
+          backgroundColor: [BRAND_A, BRAND_B],
+          borderRadius: 6,
         },
       ],
     };
@@ -250,7 +309,8 @@ export class DrawerComparadorComponent
             val(datosA, 'score_medio'),
             val(datosB, 'score_medio'),
           ],
-          backgroundColor: ['#1976d2', '#20c997'],
+          backgroundColor: [BRAND_A, BRAND_B],
+          borderRadius: 6,
         },
       ],
     };
@@ -261,19 +321,11 @@ export class DrawerComparadorComponent
         {
           label: 'Nº pisos',
           data: [val(datosA, 'count'), val(datosB, 'count')],
-          backgroundColor: ['#1976d2', '#20c997'],
+          backgroundColor: [BRAND_A, BRAND_B],
+          borderRadius: 6,
         },
       ],
     };
-
-    console.log('Comparador charts', {
-      op,
-      zonaA: this.zonaA,
-      zonaB: this.zonaB,
-      datosA,
-      datosB,
-      chartPrecio: this.chartData.precio_medio,
-    });
 
     this.updateAllCharts();
   }

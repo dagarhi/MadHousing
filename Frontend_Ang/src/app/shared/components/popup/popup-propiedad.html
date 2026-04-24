@@ -94,29 +94,27 @@
     </div>
   </div>
 
-  <!-- Footer: acciones de guardado a la izquierda, navegación a la derecha -->
+  <!-- Footer: acciones apiladas verticalmente -->
   <div class="footer">
-    <button class="btn-fav" (click)="onToggleFavorito()"
+    <button class="footer-action footer-action--fav" (click)="onToggleFavorito()"
+      [class.is-active]="isFav"
       [attr.aria-pressed]="isFav" aria-label="Guardar en favoritos">
       <lucide-icon
         [name]="isFav ? 'heart' : 'heart-off'"
-        [size]="15"
-        [style.color]="isFav ? '#ef4444' : '#9ca3af'">
+        [size]="14">
       </lucide-icon>
       <span>{{ isFav ? 'Guardado' : 'Guardar' }}</span>
     </button>
 
-    <div class="footer__actions">
-      <button class="btn-link" (click)="onVerEntorno()" aria-label="Ver POIs cercanos">
-        <lucide-icon name="compass" [size]="12"></lucide-icon>
-        Ver entorno
-      </button>
+    <button class="footer-action" (click)="onVerEntorno()" aria-label="Ver POIs cercanos">
+      <lucide-icon name="compass" [size]="14"></lucide-icon>
+      <span>Ver entorno</span>
+    </button>
 
-      <a *ngIf="piso.url" class="btn-link" [href]="piso.url" target="_blank" rel="noopener">
-        Ver anuncio
-        <lucide-icon name="external-link" [size]="12"></lucide-icon>
-      </a>
-    </div>
+    <a *ngIf="piso.url" class="footer-action" [href]="piso.url" target="_blank" rel="noopener">
+      <lucide-icon name="external-link" [size]="14"></lucide-icon>
+      <span>Ver anuncio</span>
+    </a>
   </div>
 
 </div>

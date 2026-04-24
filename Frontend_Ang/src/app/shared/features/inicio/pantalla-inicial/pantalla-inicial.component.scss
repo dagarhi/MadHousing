@@ -25,6 +25,35 @@
   padding: 1.5rem;
 }
 
+/* Botón flotante de tema en la esquina superior derecha */
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.45);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
 .inicio__layout {
   display: flex;
   flex-direction: column;
@@ -196,6 +225,7 @@ input {
   border: 1px solid #d1c4e9;
   font-size: 0.95rem;
   background-color: #faf7ff;
+  color: #1f2937;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 
   &:focus {
@@ -208,6 +238,17 @@ input {
   &.is-invalid {
     border-color: #e53935;
     box-shadow: 0 0 0 2px rgba(229, 57, 53, 0.1);
+  }
+
+  /* Bloqueo del autofill de Chrome para que no pinte fondo blanco sobre dark */
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus,
+  &:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #faf7ff inset !important;
+    -webkit-text-fill-color: #1f2937 !important;
+    caret-color: #1f2937;
+    transition: background-color 9999s ease-out 0s;
   }
 }
 
@@ -317,4 +358,67 @@ button[type='submit'] {
   color: #92400e;             // texto marrón oscuro
 
   line-height: 1.4;
+}
+/* ── Dark mode overrides ─────────────────────────────────────────────────
+   La identidad visual (gradiente + imagen de fondo) se mantiene idéntica.
+   Solo ajustamos la card de login y sus contenidos para que sean legibles
+   sobre el gradiente oscuro también cuando el tema global es dark. */
+:host-context([data-theme="dark"]) {
+  .inicio__card {
+    background: rgba(30, 30, 46, 0.94);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .inicio__titulo { color: #e9d5ff; }
+  .inicio__subtitulo { color: #c4b5fd; }
+
+  label { color: #d1d5db; }
+
+  input {
+    background-color: #2a2a3e;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #e5e7eb;
+
+    &:focus {
+      background-color: #1e1e2e;
+      border-color: #c000a5;
+    }
+
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus,
+    &:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 1000px #2a2a3e inset !important;
+      -webkit-text-fill-color: #e5e7eb !important;
+      caret-color: #e5e7eb;
+    }
+  }
+
+  .modo-toggle {
+    background: rgba(255, 255, 255, 0.08);
+
+    button {
+      color: #c4b5fd;
+      &:hover:not(.activo) { background: rgba(255, 255, 255, 0.08); }
+    }
+  }
+
+  .toggle-password {
+    color: #c4b5fd;
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+      color: #e9d5ff;
+    }
+  }
+
+  .inicio__alerta {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.45);
+    color: #fbbf24;
+  }
+
+  .inicio__alerta--ok {
+    background: rgba(16, 185, 129, 0.18);
+    border-color: rgba(16, 185, 129, 0.45);
+    color: #34d399;
+  }
 }
