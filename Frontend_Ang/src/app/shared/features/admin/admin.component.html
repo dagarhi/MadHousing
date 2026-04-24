@@ -6,6 +6,12 @@
       Volver al mapa
     </button>
     <h1>Panel de administración</h1>
+    <button type="button" class="btn-theme" (click)="toggleTheme()"
+      [attr.aria-label]="theme.isDark ? 'Modo claro' : 'Modo oscuro'"
+      [attr.aria-pressed]="theme.isDark"
+      title="Cambiar tema">
+      <lucide-icon [name]="theme.isDark ? 'sun' : 'moon'" [size]="18"></lucide-icon>
+    </button>
     <span class="admin-badge">{{ currentUsername }}</span>
   </header>
 

@@ -21,6 +21,25 @@ type PinData = {
 /** Sentinel used in `icon-size` expressions when no pin is hovered/selected. */
 const NO_ID = '__no_pin__';
 
+/**
+ * Cross-fade entre puntos (low zoom) y iconos (high zoom).
+ * Por debajo de ZOOM_FADE_MIN solo se ven los dots; por encima de
+ * ZOOM_FADE_MAX solo los iconos; entre medias, ambos con opacidad lineal.
+ */
+const ZOOM_FADE_MIN = 13;
+const ZOOM_FADE_MAX = 15;
+
+/**
+ * Colores de los dots por tipo de operación.
+ * Elegidos para no chocar con las capas POI:
+ *  - Rent: emerald-600, más oscuro que parques (#4ade80) y que bici (#14b8a6).
+ *  - Sale: fuchsia-600, desplazado de comercio (#a855f7) hacia magenta.
+ * Mantienen familia de color con los PNG (verde/violeta) para que el
+ * cross-fade zoom↔icono se vea continuo.
+ */
+const DOT_COLOR_RENT = '#059669';
+const DOT_COLOR_SALE = '#c026d3';
+
 @Injectable({ providedIn: 'root' })
 export class PinsLayerService implements OnDestroy, MapLayer {
   readonly id = 'pins';
@@ -30,6 +49,7 @@ export class PinsLayerService implements OnDestroy, MapLayer {
 
   private readonly sourceId = 'pins-source';
   readonly layerId = 'pins-layer';
+  private readonly dotLayerId = 'pins-dot-layer';
 
   private options: Required<Pick<PinsOptions, 'colorByOperation' | 'showPopupOnClick'>> & {
     popupBuilder: (p: Propiedad) => string | HTMLElement;
@@ -59,10 +79,12 @@ export class PinsLayerService implements OnDestroy, MapLayer {
 
     const hasSource = !!this.map.getSource(this.sourceId);
     const hasLayer = !!this.map.getLayer(this.layerId);
+    const hasDotLayer = !!this.map.getLayer(this.dotLayerId);
 
-    if (this.attached && (!hasSource || !hasLayer)) {
+    if (this.attached && (!hasSource || !hasLayer || !hasDotLayer)) {
       this.detachHandlers();
       if (hasLayer) { try { this.map.removeLayer(this.layerId); } catch { } }
+      if (hasDotLayer) { try { this.map.removeLayer(this.dotLayerId); } catch { } }
       if (hasSource) { try { this.map.removeSource(this.sourceId); } catch { } }
       this.attached = false;
     }
@@ -73,6 +95,42 @@ export class PinsLayerService implements OnDestroy, MapLayer {
       this.map.addSource(this.sourceId, {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] },
+      });
+    }
+
+    // Dots: visibles al alejar. Se añaden primero para que en la zona de
+    // transición los iconos (que entran encima) queden por arriba.
+    if (!this.map.getLayer(this.dotLayerId)) {
+      this.map.addLayer({
+        id: this.dotLayerId,
+        type: 'circle',
+        source: this.sourceId,
+        paint: {
+          'circle-color': [
+            'match', ['get', 'operation'],
+            'rent', DOT_COLOR_RENT,
+            'sale', DOT_COLOR_SALE,
+            DOT_COLOR_SALE,
+          ],
+          'circle-radius': [
+            'interpolate', ['linear'], ['zoom'],
+            8, 2.5,
+            12, 3.5,
+            14, 4.5,
+          ],
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 1.5,
+          'circle-opacity': [
+            'interpolate', ['linear'], ['zoom'],
+            ZOOM_FADE_MIN, 1,
+            ZOOM_FADE_MAX, 0,
+          ],
+          'circle-stroke-opacity': [
+            'interpolate', ['linear'], ['zoom'],
+            ZOOM_FADE_MIN, 1,
+            ZOOM_FADE_MAX, 0,
+          ],
+        },
       });
     }
 
@@ -93,6 +151,13 @@ export class PinsLayerService implements OnDestroy, MapLayer {
           'icon-anchor': 'bottom',
           'icon-size': this.buildSizeExpr(),
         },
+        paint: {
+          'icon-opacity': [
+            'interpolate', ['linear'], ['zoom'],
+            ZOOM_FADE_MIN, 0,
+            ZOOM_FADE_MAX, 1,
+          ],
+        },
       });
     }
 
@@ -108,6 +173,9 @@ export class PinsLayerService implements OnDestroy, MapLayer {
     this.detachHandlers();
     if (this.map.getLayer(this.layerId)) {
       try { this.map.removeLayer(this.layerId); } catch { }
+    }
+    if (this.map.getLayer(this.dotLayerId)) {
+      try { this.map.removeLayer(this.dotLayerId); } catch { }
     }
     if (this.map.getSource(this.sourceId)) {
       try { this.map.removeSource(this.sourceId); } catch { }
@@ -129,8 +197,12 @@ export class PinsLayerService implements OnDestroy, MapLayer {
 
   setVisible(visible: boolean) {
     this.visible = visible;
-    if (!this.map || !this.map.getLayer(this.layerId)) return;
-    this.map.setLayoutProperty(this.layerId, 'visibility', visible ? 'visible' : 'none');
+    if (!this.map) return;
+    for (const id of [this.layerId, this.dotLayerId]) {
+      if (this.map.getLayer(id)) {
+        this.map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none');
+      }
+    }
   }
 
   /** When true, clicking a pin does not open its popup (used by route mode). */
@@ -216,7 +288,7 @@ export class PinsLayerService implements OnDestroy, MapLayer {
 
     this.map.easeTo({
       center: rec.coord,
-      zoom: zoom ?? Math.max(this.map.getZoom(), 14),
+      zoom: zoom ?? Math.max(this.map.getZoom(), ZOOM_FADE_MAX),
       duration: 600,
     });
 
@@ -263,16 +335,20 @@ export class PinsLayerService implements OnDestroy, MapLayer {
 
   private attachHandlers() {
     if (!this.map) return;
-    this.map.on('click', this.layerId, this.handleClick);
-    this.map.on('mousemove', this.layerId, this.handleMouseMove);
-    this.map.on('mouseleave', this.layerId, this.handleMouseLeave);
+    for (const id of [this.layerId, this.dotLayerId]) {
+      this.map.on('click', id, this.handleClick);
+      this.map.on('mousemove', id, this.handleMouseMove);
+      this.map.on('mouseleave', id, this.handleMouseLeave);
+    }
   }
 
   private detachHandlers() {
     if (!this.map) return;
-    this.map.off('click', this.layerId, this.handleClick);
-    this.map.off('mousemove', this.layerId, this.handleMouseMove);
-    this.map.off('mouseleave', this.layerId, this.handleMouseLeave);
+    for (const id of [this.layerId, this.dotLayerId]) {
+      this.map.off('click', id, this.handleClick);
+      this.map.off('mousemove', id, this.handleMouseMove);
+      this.map.off('mouseleave', id, this.handleMouseLeave);
+    }
   }
 
   private rebuildSourceFromData() {

@@ -3,7 +3,7 @@
   (openedChange)="onOpenedChange($event)"
   [title]="'Filtros de búsqueda'"
   position="right"
-  [width]="'520px'"
+  [width]="'600px'"
   [loading]="loadingZonas"
 >
   <div drawer-content>
@@ -138,15 +138,31 @@
 
 
     <!-- Avanzado -->
-    <div class="advanced" *ngIf="stats && !noData && (municipio || distrito || barrio)">
-      <h4>Filtros avanzados</h4>
-      <label>Habitaciones mínimas</label>
-      <input type="number" [(ngModel)]="rooms" min="0" />
+    <section class="filter-card filter-card--avanzado"
+      *ngIf="stats && !noData && (municipio || distrito || barrio)">
+      <h3 class="card-title">
+        <lucide-icon name="sliders-horizontal"></lucide-icon>
+        Filtros avanzados
+      </h3>
 
-      <label>Planta mínima</label>
-      <input type="number" [(ngModel)]="floor" min="0" />
+      <div class="avanzado-grid">
+        <div class="grupo">
+          <div class="grupo-titulo">
+            <lucide-icon name="bed-double"></lucide-icon>
+            <span>Habitaciones mínimas</span>
+          </div>
+          <input type="number" class="avanzado-input" [(ngModel)]="rooms" min="0" placeholder="0" />
+        </div>
 
-    </div>
+        <div class="grupo">
+          <div class="grupo-titulo">
+            <lucide-icon name="building-2"></lucide-icon>
+            <span>Planta mínima</span>
+          </div>
+          <input type="number" class="avanzado-input" [(ngModel)]="floor" min="0" placeholder="0" />
+        </div>
+      </div>
+    </section>
   </div>
 
   <!-- Footer -->

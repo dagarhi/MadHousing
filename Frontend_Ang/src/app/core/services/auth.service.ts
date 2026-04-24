@@ -40,6 +40,9 @@ export class AuthService {
     private dialog: MatDialog,
   ) {
     this.restoreSession();
+    if (!environment.production) {
+      (window as unknown as { __auth?: AuthService }).__auth = this;
+    }
   }
 
   /** Calculates token expiration or defaults to 1 hour */

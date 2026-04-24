@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { MapPreloadService } from '../../../../core/services/map-preload.service';
+import { ThemeService } from '../../../../core/services/theme.service';
 import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
@@ -30,6 +31,7 @@ export class PantallaInicialComponent implements OnInit {
     private auth: AuthService,
     private route: ActivatedRoute,
     private preload: MapPreloadService,
+    readonly theme: ThemeService,
   ) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
@@ -121,5 +123,9 @@ export class PantallaInicialComponent implements OnInit {
 
   togglePassword(): void {
     this.mostrarPassword = !this.mostrarPassword;
+  }
+
+  toggleTheme(): void {
+    this.theme.toggle();
   }
 }

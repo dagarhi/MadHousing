@@ -1,4 +1,10 @@
 <div class="inicio">
+  <button type="button" class="theme-toggle" (click)="toggleTheme()"
+    [attr.aria-label]="theme.isDark ? 'Modo claro' : 'Modo oscuro'"
+    [attr.aria-pressed]="theme.isDark"
+    title="Cambiar tema">
+    <lucide-icon [name]="theme.isDark ? 'sun' : 'moon'" [size]="18"></lucide-icon>
+  </button>
   <div class="inicio__layout">
 
     <section class="inicio__info">

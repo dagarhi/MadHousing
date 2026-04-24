@@ -4,7 +4,7 @@
 
 .empty-msg {
   text-align: center;
-  color: var(--mat-sys-on-surface-variant, #888);
+  color: var(--panel-text-muted);
   margin-top: 2rem;
 }
 
@@ -12,16 +12,18 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 0.5rem;
   padding: 0.75rem;
   margin-bottom: 0.75rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--panel-border);
   border-radius: 8px;
-  background: var(--mat-sys-surface, #fff);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  background: var(--panel-bg);
+  color: var(--panel-text);
+  box-shadow: var(--app-elev-shadow);
   transition: box-shadow 0.2s;
 
   &:hover {
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
   }
 
   .info {
@@ -31,23 +33,13 @@
     h4 {
       margin: 0;
       font-size: 1rem;
-      color: var(--mat-sys-on-surface, #111);
+      color: var(--panel-text);
     }
 
     .detalle {
       margin: 0.25rem 0;
       font-size: 0.9rem;
-      color: var(--mat-sys-on-surface-variant, #555);
-    }
-
-    a {
-      font-size: 0.85rem;
-      color: #1c7ed6;
-      text-decoration: none;
-
-      &:hover {
-        text-decoration: underline;
-      }
+      color: var(--panel-text-muted);
     }
 
     .nota-input {
@@ -58,17 +50,16 @@
       font-size: 0.82rem;
       font-family: inherit;
       padding: 0.35rem 0.5rem;
-      border: 1px solid var(--mat-sys-outline-variant, rgba(103, 80, 164, 0.3));
+      border: 1px solid var(--panel-input-border);
       border-radius: 6px;
-      background: var(--mat-sys-surface-container-low, #f7f2ff);
-      color: var(--mat-sys-on-surface, #1c1b1f);
+      background: var(--panel-input-bg);
+      color: var(--panel-text);
       line-height: 1.4;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
 
       &::placeholder {
-        color: var(--mat-sys-on-surface-variant, #49454f);
-        opacity: 0.6;
+        color: var(--panel-text-faint);
       }
 
       &:focus {
@@ -78,21 +69,49 @@
     }
   }
 
-  .remove-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
+  .go-btn {
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    color: #c92a2a;
-    font-size: 0.85rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 6px;
-    transition: background 0.2s;
+    gap: 0.35rem;
+    margin-top: 0.45rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    background: color-mix(in oklab, #2563eb 10%, var(--panel-bg));
+    border: 1px solid color-mix(in oklab, #2563eb 40%, transparent);
+    color: #2563eb;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
 
     &:hover {
-      background: rgba(224, 49, 49, 0.1);
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #fff;
+    }
+  }
+
+  .remove-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    padding: 0.35rem 0.7rem;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    background: color-mix(in oklab, #dc2626 10%, var(--panel-bg));
+    border: 1px solid color-mix(in oklab, #dc2626 40%, transparent);
+    color: #dc2626;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+    &:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+      color: #fff;
     }
 
     lucide-icon {
@@ -108,17 +127,21 @@
   justify-content: center;
   align-items: center;
   gap: 6px;
-  background: #ffffff;
-  color: rgb(0, 0, 0);
-  border: none;
-  border-radius: 8px;
   padding: 0.6rem;
+  border-radius: 8px;
+  font-family: inherit;
   font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s ease;
+  background: color-mix(in oklab, #dc2626 10%, var(--panel-bg));
+  border: 1px solid color-mix(in oklab, #dc2626 40%, transparent);
+  color: #dc2626;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 
   &:hover {
-    background: #c92a2a;
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
   }
 
   lucide-icon {

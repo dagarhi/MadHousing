@@ -13,11 +13,13 @@
   <!-- Cuerpo del drawer -->
   <section class="de__body" *ngIf="!collapsed">
     <header class="de__header">
-      <div class="de__title">
-        <lucide-icon name="compass" [size]="14"></lucide-icon>
-        <span>Entorno</span>
+      <div class="de__title" aria-hidden="true">
+        <lucide-icon name="compass" [size]="16"></lucide-icon>
       </div>
-      <div class="de__subtitle" *ngIf="propiedad.address">{{ propiedad.address }}</div>
+      <div class="de__header-text">
+        <div class="de__heading">Entorno</div>
+        <div class="de__subtitle" *ngIf="propiedad.address">{{ propiedad.address }}</div>
+      </div>
     </header>
 
     <div class="de__loading" *ngIf="loading">Cargando entorno…</div>

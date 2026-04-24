@@ -16,6 +16,7 @@ from __future__ import annotations
 import os
 import sys
 import time
+from math import asin, cos, radians, sin, sqrt
 from pathlib import Path
 
 import requests
@@ -103,14 +104,44 @@ QUERIES: dict[str, str] = {
 
 
 def fetch(query: str) -> dict:
-    r = requests.post(
-        OVERPASS_URL,
-        data={"data": query},
-        headers={"User-Agent": USER_AGENT},
-        timeout=240,
-    )
-    r.raise_for_status()
-    return r.json()
+    """POST to Overpass with retries for transient 429/5xx / timeouts.
+
+    The public Overpass endpoint throttles and often returns 504 Gateway
+    Timeout under load — a simple exponential backoff recovers cleanly
+    without needing to re-run the whole script.
+    """
+    RETRY_STATUSES = {429, 500, 502, 503, 504}
+    MAX_ATTEMPTS = 4
+    BACKOFF_S = [10, 30, 60]  # waits before attempts 2, 3, 4
+
+    last_err: Exception | None = None
+    for attempt in range(MAX_ATTEMPTS):
+        try:
+            r = requests.post(
+                OVERPASS_URL,
+                data={"data": query},
+                headers={"User-Agent": USER_AGENT},
+                timeout=240,
+            )
+            if r.status_code in RETRY_STATUSES and attempt < MAX_ATTEMPTS - 1:
+                wait = BACKOFF_S[attempt]
+                print(f"  Overpass {r.status_code}, retrying in {wait}s (attempt {attempt+2}/{MAX_ATTEMPTS})…", flush=True)
+                time.sleep(wait)
+                continue
+            r.raise_for_status()
+            return r.json()
+        except (requests.Timeout, requests.ConnectionError) as e:
+            last_err = e
+            if attempt < MAX_ATTEMPTS - 1:
+                wait = BACKOFF_S[attempt]
+                print(f"  Overpass network error ({type(e).__name__}), retrying in {wait}s…", flush=True)
+                time.sleep(wait)
+                continue
+            raise
+
+    if last_err:
+        raise last_err
+    raise RuntimeError("Overpass retries exhausted")
 
 
 # ── WKT builders ────────────────────────────────────────────────────────────
@@ -194,6 +225,119 @@ def relevant_extra(tags: dict) -> dict | None:
     return extra or None
 
 
+# ── Deduplicación por proximidad ────────────────────────────────────────────
+# OSM acumula múltiples etiquetas para el mismo sitio físico (una clínica
+# con 5 consultas, una estación de metro con 4 bocas, etc.). Colapsamos por
+# subtipo dentro de un radio razonable antes de insertar en BBDD.
+
+DEDUP_RADIUS_M: dict[str, float] = {
+    # Sanidad
+    "hospital":    60,
+    "clinic":      30,
+    "pharmacy":    20,
+    # Transporte
+    "metro":       35,
+    "cercanias":   35,
+    # Educación
+    "school":      60,
+    # Comercio
+    "supermarket": 25,
+}
+
+# Categorías exentas de dedup por proximidad (parques son polígonos nombrados,
+# bici son LineStrings — la duplicación ahí no se mide por cercanía de centroide).
+SKIP_DEDUP_CATEGORIES = {"park", "bike"}
+
+
+def _centroid_latlon(el: dict) -> tuple[float, float] | None:
+    """Approximate (lat, lon) centroid of an OSM element for dedup distance."""
+    etype = el["type"]
+    if etype == "node":
+        return (el["lat"], el["lon"])
+    if etype == "way":
+        geom = el.get("geometry") or []
+        if not geom:
+            return None
+        return (
+            sum(p["lat"] for p in geom) / len(geom),
+            sum(p["lon"] for p in geom) / len(geom),
+        )
+    if etype == "relation":
+        lats: list[float] = []
+        lons: list[float] = []
+        for m in el.get("members", []):
+            if m.get("type") != "way" or m.get("role") != "outer":
+                continue
+            for p in m.get("geometry") or []:
+                lats.append(p["lat"])
+                lons.append(p["lon"])
+        if not lats:
+            return None
+        return (sum(lats) / len(lats), sum(lons) / len(lons))
+    return None
+
+
+def _haversine_m(a: tuple[float, float], b: tuple[float, float]) -> float:
+    R = 6371000.0
+    lat1, lon1 = a
+    lat2, lon2 = b
+    phi1, phi2 = radians(lat1), radians(lat2)
+    dphi = radians(lat2 - lat1)
+    dlam = radians(lon2 - lon1)
+    h = sin(dphi / 2) ** 2 + cos(phi1) * cos(phi2) * sin(dlam / 2) ** 2
+    return 2 * R * asin(sqrt(h))
+
+
+def _priority(el: dict) -> tuple[int, int]:
+    """Higher is better. Ways (building polygons) win over loose nodes;
+    within same type, the one with a longer `name` wins."""
+    etype = el["type"]
+    name = (el.get("tags") or {}).get("name") or ""
+    return (1 if etype == "way" else 0, len(name))
+
+
+def dedup_by_proximity(category: str, elements: list[dict]) -> list[dict]:
+    if category in SKIP_DEDUP_CATEGORIES:
+        return elements
+
+    # Group by subtype so distinct subtypes don't eat each other.
+    groups: dict[str, list[dict]] = {}
+    for el in elements:
+        tags = el.get("tags") or {}
+        sub = infer_subtype(category, tags) or ""
+        groups.setdefault(sub, []).append(el)
+
+    kept_all: list[dict] = []
+    dropped = 0
+
+    for sub, items in groups.items():
+        radius = DEDUP_RADIUS_M.get(sub)
+        if not radius:
+            kept_all.extend(items)
+            continue
+
+        # Greedy: sort by priority desc, keep first; drop any within radius.
+        ordered = sorted(items, key=_priority, reverse=True)
+        kept_here: list[tuple[tuple[float, float] | None, dict]] = []
+        for el in ordered:
+            c = _centroid_latlon(el)
+            if c is None:
+                # Unmeasurable geometry; keep and let element_to_wkt drop it later if needed.
+                kept_here.append((None, el))
+                continue
+            if any(_haversine_m(c, kc) <= radius for kc, _ in kept_here if kc is not None):
+                dropped += 1
+                continue
+            kept_here.append((c, el))
+
+        kept_all.extend(el for _, el in kept_here)
+
+    if dropped:
+        print(f"[{category}] dedup: dropped {dropped} near-duplicate points")
+
+    return kept_all
+
+
 # ── Main per-category pipeline ──────────────────────────────────────────────
 
 def process_category(db, category: str) -> int:
@@ -202,6 +346,9 @@ def process_category(db, category: str) -> int:
     osm = fetch(QUERIES[category])
     t_fetch = time.time() - t0
 
+    raw_elements = osm.get("elements", [])
+    elements = dedup_by_proximity(category, raw_elements)
+
     # Idempotent refresh: clear previous snapshot of this category.
     deleted = db.query(POI).filter(POI.category == category).delete()
     db.commit()
@@ -209,7 +356,7 @@ def process_category(db, category: str) -> int:
         print(f"[{category}] cleared {deleted} previous rows")
 
     inserted = 0
-    for el in osm.get("elements", []):
+    for el in elements:
         wkt = element_to_wkt(el)
         if not wkt:
             continue

@@ -26,6 +26,7 @@
   .header-left {
     display: flex;
     align-items: center;
+    gap: 0.25rem;
     justify-self: start;
   }
 
@@ -89,10 +90,6 @@
   .header .theme-btn {
     padding: 0 0.6rem;
     min-width: 40px;
-  }
-
-  .header .logout-btn {
-    margin-right: 0.25rem;
   }
 
   .header .admin-btn {
