@@ -4,10 +4,21 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { AppComponent } from './app/app';
 import { provideRouter } from '@angular/router';
 import { routes } from './app/app.routes';
-import { importProvidersFrom } from '@angular/core';
+import { importProvidersFrom, isDevMode, LOCALE_ID } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './app/core/interceptors/auth.interceptor';
+import { provideTransloco } from '@jsverse/transloco';
+import { TranslocoHttpLoader } from './transloco-loader';
+import { registerLocaleData } from '@angular/common';
+import localeEs from '@angular/common/locales/es';
+import localeEn from '@angular/common/locales/en';
+import { LanguageService } from './app/core/services/language.service';
+
+// Registramos los locales que usa la app — necesario para que los pipes
+// `date`, `number` y `currency` formateen según el idioma activo.
+registerLocaleData(localeEs);
+registerLocaleData(localeEn);
 
 // 👇 Lucide
 import { BrushCleaning, EyeOff, LucideAngularModule, ArrowLeft } from 'lucide-angular';
@@ -68,6 +79,24 @@ bootstrapApplication(AppComponent, {
     provideRouter(routes),
     provideAnimations(),
     provideHttpClient(withInterceptors([authInterceptor])),
+    provideTransloco({
+      config: {
+        availableLangs: ['es', 'en'],
+        defaultLang: 'es',
+        fallbackLang: 'es',
+        reRenderOnLangChange: true,
+        prodMode: !isDevMode(),
+      },
+      loader: TranslocoHttpLoader,
+    }),
+    {
+      // LOCALE_ID se resuelve una vez al arrancar la app (Angular no soporta
+      // cambio de locale en caliente sin recargar). Usamos el idioma que
+      // LanguageService eligió en su detectInitial(): localStorage → navigator → 'es'.
+      provide: LOCALE_ID,
+      useFactory: (lang: LanguageService) => lang.current === 'en' ? 'en' : 'es',
+      deps: [LanguageService],
+    },
     importProvidersFrom(
       LucideAngularModule.pick({
         Heart,

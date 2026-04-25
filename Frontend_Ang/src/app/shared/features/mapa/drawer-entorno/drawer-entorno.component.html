@@ -1,12 +1,13 @@
-<div class="de" *ngIf="propiedad" [class.de--collapsed]="collapsed" role="complementary" aria-label="Entorno del piso">
+<div class="de" *ngIf="propiedad" [class.de--collapsed]="collapsed" role="complementary"
+  [attr.aria-label]="'DRAWER_ENTORNO.ARIA_PANEL' | transloco">
 
   <!-- Pestaña pequeña que sobresale por la izquierda del drawer -->
   <button
     class="de__handle"
     type="button"
     (click)="toggleCollapsed()"
-    [attr.aria-label]="collapsed ? 'Expandir panel de entorno' : 'Colapsar panel de entorno'"
-    [title]="collapsed ? 'Ver entorno' : 'Colapsar'">
+    [attr.aria-label]="(collapsed ? 'DRAWER_ENTORNO.ARIA_EXPAND' : 'DRAWER_ENTORNO.ARIA_COLLAPSE') | transloco"
+    [title]="(collapsed ? 'DRAWER_ENTORNO.TITLE_EXPAND' : 'DRAWER_ENTORNO.TITLE_COLLAPSE') | transloco">
     <lucide-icon [name]="collapsed ? 'chevron-left' : 'chevron-right'" [size]="14"></lucide-icon>
   </button>
 
@@ -17,43 +18,50 @@
         <lucide-icon name="compass" [size]="16"></lucide-icon>
       </div>
       <div class="de__header-text">
-        <div class="de__heading">Entorno</div>
+        <div class="de__heading">{{ 'DRAWER_ENTORNO.HEADING' | transloco }}</div>
         <div class="de__subtitle" *ngIf="propiedad.address">{{ propiedad.address }}</div>
       </div>
     </header>
 
-    <div class="de__loading" *ngIf="loading">Cargando entorno…</div>
+    <div class="de__loading" *ngIf="loading">{{ 'DRAWER_ENTORNO.LOADING' | transloco }}</div>
 
     <ul class="de__sections" *ngIf="!loading">
       <li class="de__section" *ngFor="let s of sections">
         <button class="de__section-head" type="button" (click)="toggleSection(s.key)" [class.active]="s.open">
           <lucide-icon [name]="s.icon" [size]="14" class="de__cat-icon"></lucide-icon>
-          <span class="de__cat-label">{{ s.label }}</span>
+          <span class="de__cat-label">{{ s.labelKey | transloco }}</span>
           <span class="de__cat-count" *ngIf="s.pois.length > 0">{{ s.pois.length }}</span>
           <lucide-icon [name]="s.open ? 'chevron-down' : 'chevron-right'" [size]="12" class="de__cat-chevron"></lucide-icon>
         </button>
 
         <ul class="de__poi-list" *ngIf="s.open">
-          <li class="de__poi-empty" *ngIf="s.pois.length === 0">Sin datos disponibles</li>
+          <li class="de__poi-empty" *ngIf="s.pois.length === 0">
+            {{ 'DRAWER_ENTORNO.NO_DATA' | transloco }}
+          </li>
           <li class="de__poi" *ngFor="let p of s.pois; trackBy: trackByPoiId">
             <div class="de__poi-info">
-              <span class="de__poi-name">{{ p.name || p.subtype || '(sin nombre)' }}</span>
+              <span class="de__poi-name">
+                {{ p.name || p.subtype || ('DRAWER_ENTORNO.POI_UNNAMED' | transloco) }}
+              </span>
               <span class="de__poi-dist">{{ fmtDist(p.dist_m) }}</span>
             </div>
             <div class="de__poi-actions">
               <button class="de__route-btn" type="button"
                       [class.active]="isRouteActive(p, 'foot-walking')"
-                      (click)="onRouteClick(p, 'foot-walking')" title="Ruta a pie">
+                      (click)="onRouteClick(p, 'foot-walking')"
+                      [title]="'DRAWER_ENTORNO.ROUTE_FOOT' | transloco">
                 <lucide-icon name="footprints" [size]="12"></lucide-icon>
               </button>
               <button class="de__route-btn" type="button"
                       [class.active]="isRouteActive(p, 'cycling-regular')"
-                      (click)="onRouteClick(p, 'cycling-regular')" title="Ruta en bici">
+                      (click)="onRouteClick(p, 'cycling-regular')"
+                      [title]="'DRAWER_ENTORNO.ROUTE_BIKE' | transloco">
                 <lucide-icon name="bike" [size]="12"></lucide-icon>
               </button>
               <button class="de__route-btn" type="button"
                       [class.active]="isRouteActive(p, 'driving-car')"
-                      (click)="onRouteClick(p, 'driving-car')" title="Ruta en coche">
+                      (click)="onRouteClick(p, 'driving-car')"
+                      [title]="'DRAWER_ENTORNO.ROUTE_CAR' | transloco">
                 <lucide-icon name="car" [size]="12"></lucide-icon>
               </button>
             </div>

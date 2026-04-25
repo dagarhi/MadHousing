@@ -40,6 +40,9 @@ export class AuthService {
     private dialog: MatDialog,
   ) {
     this.restoreSession();
+    // Dev-only: expone el servicio en `window.__auth` para disparar flujos de
+    // auth desde la consola del navegador (p.ej. `__auth.logout('expired')`
+    // para probar el modal de sesión expirada). Excluido del bundle de prod.
     if (!environment.production) {
       (window as unknown as { __auth?: AuthService }).__auth = this;
     }

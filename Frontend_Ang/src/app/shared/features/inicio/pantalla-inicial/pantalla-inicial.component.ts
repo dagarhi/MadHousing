@@ -6,11 +6,14 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { MapPreloadService } from '../../../../core/services/map-preload.service';
 import { ThemeService } from '../../../../core/services/theme.service';
 import { LucideAngularModule } from 'lucide-angular';
+import { TranslocoModule } from '@jsverse/transloco';
+import { LangSwitchComponent } from '../../../components/lang-switch/lang-switch.component';
+import { mapBackendError } from '../../../../core/utils/backend-errors';
 
 @Component({
   selector: 'app-pantalla-inicial',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule, TranslocoModule, LangSwitchComponent],
   templateUrl: './pantalla-inicial.component.html',
   styleUrls: ['./pantalla-inicial.component.scss'],
 })
@@ -20,9 +23,12 @@ export class PantallaInicialComponent implements OnInit {
 
   modoRegistro = false;
   cargando = false;
-  error: string | null = null;
-  mensajeSesion: string | null = null;
-  registroExito: string | null = null;
+  // Las propiedades guardan claves de traducción (no strings literales) para
+  // que la UI reaccione a cambios de idioma sin necesidad de re-disparar
+  // las acciones que las setearon.
+  errorKey: string | null = null;
+  mensajeSesionKey: string | null = null;
+  registroExitoKey: string | null = null;
   mostrarPassword = false;
 
   constructor(
@@ -54,14 +60,14 @@ export class PantallaInicialComponent implements OnInit {
 
     const reason = this.route.snapshot.queryParamMap.get('reason');
     if (reason === 'expired') {
-      this.mensajeSesion = 'Tu sesión ha expirado. Por favor, vuelve a iniciar sesión.';
+      this.mensajeSesionKey = 'LOGIN.NOTICES.SESSION_EXPIRED';
     }
   }
 
   toggleModo(): void {
     this.modoRegistro = !this.modoRegistro;
-    this.error = null;
-    this.registroExito = null;
+    this.errorKey = null;
+    this.registroExitoKey = null;
     this.loginForm.reset();
     this.registerForm.reset();
   }
@@ -72,7 +78,7 @@ export class PantallaInicialComponent implements OnInit {
       this.loginForm.markAllAsTouched();
       return;
     }
-    this.error = null;
+    this.errorKey = null;
     this.cargando = true;
     const { username, password } = this.loginForm.value;
     this.auth.login(username, password).subscribe({
@@ -83,7 +89,7 @@ export class PantallaInicialComponent implements OnInit {
       error: (err) => {
         console.error('Error en login', err);
         this.cargando = false;
-        this.error = 'Usuario o contraseña incorrectos.';
+        this.errorKey = mapBackendError(err, 'LOGIN.ERRORS.BAD_CREDENTIALS');
       },
     });
   }
@@ -94,19 +100,19 @@ export class PantallaInicialComponent implements OnInit {
       this.registerForm.markAllAsTouched();
       return;
     }
-    this.error = null;
+    this.errorKey = null;
     this.cargando = true;
     const { username, password } = this.registerForm.value;
     this.auth.register(username, password).subscribe({
       next: () => {
         this.cargando = false;
-        this.registroExito = 'Cuenta creada. Ya puedes iniciar sesión.';
+        this.registroExitoKey = 'LOGIN.NOTICES.REGISTER_OK';
         this.modoRegistro = false;
         this.loginForm.patchValue({ username });
       },
       error: (err) => {
         this.cargando = false;
-        this.error = err.error?.detail ?? 'Error al registrar. Inténtalo de nuevo.';
+        this.errorKey = mapBackendError(err, 'LOGIN.ERRORS.REGISTER_FAIL');
       },
     });
   }

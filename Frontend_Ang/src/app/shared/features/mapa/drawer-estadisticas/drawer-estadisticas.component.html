@@ -1,7 +1,7 @@
 <app-drawer-shell
   [(opened)]="opened"
   (openedChange)="onOpenedChange($event)"
-  [title]="'Estadísticas por zona'"
+  [title]="'DRAWER_ESTADISTICAS.TITLE' | transloco"
   position="right"
   [width]="'900px'"
   [loading]="loading"
@@ -12,12 +12,12 @@
       <div class="group">
         <label for="est-tipo-operacion">
           <lucide-icon name="house"></lucide-icon>
-          Tipo de operación
+          {{ 'DRAWER_ESTADISTICAS.OPERATION_TYPE' | transloco }}
         </label>
 
         <select id="est-tipo-operacion" [(ngModel)]="tipoOperacion" (change)="actualizarGrafico()">
-          <option value="sale">Venta</option>
-          <option value="rent">Alquiler</option>
+          <option value="sale">{{ 'COMMON.OPERATION.SALE' | transloco }}</option>
+          <option value="rent">{{ 'COMMON.OPERATION.RENT' | transloco }}</option>
         </select>
       </div>
 
@@ -25,13 +25,13 @@
       <div class="group">
         <label for="est-metrica">
           <lucide-icon name="bar-chart-3"></lucide-icon>
-          Métrica
+          {{ 'DRAWER_ESTADISTICAS.METRIC' | transloco }}
         </label>
 
         <select id="est-metrica" [(ngModel)]="metrica" (change)="actualizarGrafico()">
-          <option value="precio_medio">Precio medio (€)</option>
-          <option value="tamano_medio">Tamaño medio (m²)</option>
-          <option value="score_medio">Score medio</option>
+          <option value="precio_medio">{{ 'DRAWER_ESTADISTICAS.METRIC_PRICE' | transloco }}</option>
+          <option value="tamano_medio">{{ 'DRAWER_ESTADISTICAS.METRIC_SIZE' | transloco }}</option>
+          <option value="score_medio">{{ 'DRAWER_ESTADISTICAS.METRIC_SCORE' | transloco }}</option>
         </select>
       </div>
     </div>

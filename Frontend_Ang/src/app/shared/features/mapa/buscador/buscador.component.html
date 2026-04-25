@@ -1,7 +1,7 @@
 <app-drawer-shell
   [(opened)]="opened"
   (openedChange)="onOpenedChange($event)"
-  [title]="'Filtros de búsqueda'"
+  [title]="'BUSCADOR.TITLE' | transloco"
   position="right"
   [width]="'600px'"
   [loading]="loadingZonas"
@@ -9,31 +9,31 @@
   <div drawer-content>
     <!-- Selects jerárquicos -->
     <div class="select-group">
-      <label for="sel-municipio">Ciudad / Municipio</label>
+      <label for="sel-municipio">{{ 'BUSCADOR.CITY' | transloco }}</label>
       <select id="sel-municipio" [(ngModel)]="municipio" (change)="resetDependientes(); cargarStatsZona()">
-        <option [ngValue]="''">Selecciona ciudad</option>
+        <option [ngValue]="''">{{ 'BUSCADOR.CITY_PLACEHOLDER' | transloco }}</option>
         <option *ngFor="let c of ciudadesOptions" [value]="c">{{ c }}</option>
       </select>
 
-      <label for="sel-distrito">Distrito</label>
+      <label for="sel-distrito">{{ 'BUSCADOR.DISTRICT' | transloco }}</label>
       <select id="sel-distrito" [(ngModel)]="distrito" (change)="barrio = ''; cargarStatsZona()" [disabled]="!municipio">
-        <option [ngValue]="''">Selecciona distrito</option>
+        <option [ngValue]="''">{{ 'BUSCADOR.DISTRICT_PLACEHOLDER' | transloco }}</option>
         <option *ngFor="let d of distritosOptions" [value]="d">{{ d }}</option>
       </select>
 
-      <label for="sel-barrio">Barrio</label>
+      <label for="sel-barrio">{{ 'BUSCADOR.NEIGHBORHOOD' | transloco }}</label>
       <select id="sel-barrio" [(ngModel)]="barrio" (change)="cargarStatsZona()" [disabled]="!distrito">
-        <option [ngValue]="''">Selecciona barrio</option>
+        <option [ngValue]="''">{{ 'BUSCADOR.NEIGHBORHOOD_PLACEHOLDER' | transloco }}</option>
         <option *ngFor="let b of barriosOptions" [value]="b">{{ b }}</option>
       </select>
     </div>
 
     <!-- Tipo de operación -->
     <div class="select-group">
-      <label for="sel-operation">Tipo de operación</label>
+      <label for="sel-operation">{{ 'BUSCADOR.OPERATION_TYPE' | transloco }}</label>
       <select id="sel-operation" [(ngModel)]="operation" (change)="cargarZonas(); cargarStatsZona()">
-        <option value="rent">Alquiler</option>
-        <option value="sale">Venta</option>
+        <option value="rent">{{ 'COMMON.OPERATION.RENT' | transloco }}</option>
+        <option value="sale">{{ 'COMMON.OPERATION.SALE' | transloco }}</option>
       </select>
     </div>
 
@@ -42,7 +42,7 @@
     >
       <h3 class="card-title">
         <lucide-icon name="Funnel"></lucide-icon>
-        Filtros
+        {{ 'BUSCADOR.FILTERS_TITLE' | transloco }}
       </h3>
 
       <div class="rangos-grid">
@@ -50,11 +50,11 @@
         <div class="grupo">
           <div class="grupo-titulo">
             <lucide-icon name="euro"></lucide-icon>
-            <span>Precio (€)</span>
+            <span>{{ 'BUSCADOR.PRICE' | transloco }}</span>
           </div>
           <div class="campo-par">
             <mat-form-field appearance="outline" class="modern-field" floatLabel="always">
-              <mat-label>Mínimo</mat-label>
+              <mat-label>{{ 'COMMON.MIN' | transloco }}</mat-label>
               <span matPrefix class="prefix"><lucide-icon name="chevrons-down"></lucide-icon></span>
               <input matInput type="number"
                     [ngModel]="priceRange[0]"
@@ -65,7 +65,7 @@
             <span class="dash" aria-hidden="true">–</span>
 
             <mat-form-field appearance="outline" class="modern-field" floatLabel="always">
-              <mat-label>Máximo</mat-label>
+              <mat-label>{{ 'COMMON.MAX' | transloco }}</mat-label>
               <span matPrefix class="prefix"><lucide-icon name="chevrons-up"></lucide-icon></span>
               <input matInput type="number"
                     [ngModel]="priceRange[1]"
@@ -79,11 +79,11 @@
         <div class="grupo">
           <div class="grupo-titulo">
             <lucide-icon name="ruler"></lucide-icon>
-            <span>Tamaño (m²)</span>
+            <span>{{ 'BUSCADOR.SIZE' | transloco }}</span>
           </div>
           <div class="campo-par">
             <mat-form-field appearance="outline" class="modern-field" floatLabel="always">
-              <mat-label>Mínimo</mat-label>
+              <mat-label>{{ 'COMMON.MIN' | transloco }}</mat-label>
               <span matPrefix class="prefix"><lucide-icon name="chevrons-down"></lucide-icon></span>
               <input matInput type="number"
                     [ngModel]="sizeRange[0]"
@@ -94,7 +94,7 @@
             <span class="dash" aria-hidden="true">–</span>
 
             <mat-form-field appearance="outline" class="modern-field" floatLabel="always">
-              <mat-label>Máximo</mat-label>
+              <mat-label>{{ 'COMMON.MAX' | transloco }}</mat-label>
               <span matPrefix class="prefix"><lucide-icon name="chevrons-up"></lucide-icon></span>
               <input matInput type="number"
                     [ngModel]="sizeRange[1]"
@@ -108,11 +108,11 @@
         <div class="grupo">
           <div class="grupo-titulo">
             <lucide-icon name="sparkles"></lucide-icon>
-            <span>Score (0–100)</span>
+            <span>{{ 'BUSCADOR.SCORE_RANGE' | transloco }}</span>
           </div>
           <div class="campo-par">
             <mat-form-field appearance="outline" class="modern-field" floatLabel="always">
-              <mat-label>Mínimo</mat-label>
+              <mat-label>{{ 'COMMON.MIN' | transloco }}</mat-label>
               <span matPrefix class="prefix"><lucide-icon name="chevrons-down"></lucide-icon></span>
               <input matInput type="number"
                     [ngModel]="scoreRange[0]"
@@ -123,7 +123,7 @@
             <span class="dash" aria-hidden="true">–</span>
 
             <mat-form-field appearance="outline" class="modern-field" floatLabel="always">
-              <mat-label>Máximo</mat-label>
+              <mat-label>{{ 'COMMON.MAX' | transloco }}</mat-label>
               <span matPrefix class="prefix"><lucide-icon name="chevrons-up"></lucide-icon></span>
               <input matInput type="number"
                     [ngModel]="scoreRange[1]"
@@ -142,14 +142,14 @@
       *ngIf="stats && !noData && (municipio || distrito || barrio)">
       <h3 class="card-title">
         <lucide-icon name="sliders-horizontal"></lucide-icon>
-        Filtros avanzados
+        {{ 'BUSCADOR.ADVANCED_TITLE' | transloco }}
       </h3>
 
       <div class="avanzado-grid">
         <div class="grupo">
           <div class="grupo-titulo">
             <lucide-icon name="bed-double"></lucide-icon>
-            <span>Habitaciones mínimas</span>
+            <span>{{ 'BUSCADOR.ROOMS_MIN' | transloco }}</span>
           </div>
           <input type="number" class="avanzado-input" [(ngModel)]="rooms" min="0" placeholder="0" />
         </div>
@@ -157,7 +157,7 @@
         <div class="grupo">
           <div class="grupo-titulo">
             <lucide-icon name="building-2"></lucide-icon>
-            <span>Planta mínima</span>
+            <span>{{ 'BUSCADOR.FLOOR_MIN' | transloco }}</span>
           </div>
           <input type="number" class="avanzado-input" [(ngModel)]="floor" min="0" placeholder="0" />
         </div>
@@ -168,11 +168,13 @@
   <!-- Footer -->
   <div drawer-footer>
     <div class="footer-actions">
-      <button class="secondary" (click)="limpiarFiltros()">Limpiar filtros</button>
+      <button class="secondary" (click)="limpiarFiltros()">{{ 'BUSCADOR.CLEAR_FILTERS' | transloco }}</button>
       <button class="secondary" (click)="mostrarTodo()" [disabled]="loading">
-        Mostrar todos
+        {{ 'BUSCADOR.SHOW_ALL' | transloco }}
       </button>
-      <button class="primary" (click)="buscarPisos()" [disabled]="loading || noData">Buscar</button>
+      <button class="primary" (click)="buscarPisos()" [disabled]="loading || noData">
+        {{ 'BUSCADOR.SEARCH' | transloco }}
+      </button>
     </div>
   </div>
 </app-drawer-shell>

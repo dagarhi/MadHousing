@@ -6,6 +6,9 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { environment } from '../../../../environments/environment';
 import { LucideAngularModule } from 'lucide-angular';
+import { LangSwitchComponent } from '../../components/lang-switch/lang-switch.component';
+import { TranslocoModule } from '@jsverse/transloco';
+import { mapBackendError } from '../../../core/utils/backend-errors';
 
 interface UserRow {
   id: number;
@@ -17,14 +20,14 @@ interface UserRow {
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, LangSwitchComponent, TranslocoModule],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss'],
 })
 export class AdminComponent implements OnInit {
   users: UserRow[] = [];
   cargando = true;
-  error: string | null = null;
+  errorKey: string | null = null;
   confirmDeleteId: number | null = null;
 
   currentUsername = '';
@@ -45,14 +48,14 @@ export class AdminComponent implements OnInit {
 
   cargarUsuarios(): void {
     this.cargando = true;
-    this.error = null;
+    this.errorKey = null;
     this.http.get<UserRow[]>(`${this.apiUrl}/admin/users`).subscribe({
       next: (users) => {
         this.users = users;
         this.cargando = false;
       },
-      error: () => {
-        this.error = 'Error al cargar usuarios.';
+      error: (err) => {
+        this.errorKey = mapBackendError(err, 'ADMIN.ERRORS.LOAD');
         this.cargando = false;
       },
     });
@@ -64,8 +67,8 @@ export class AdminComponent implements OnInit {
       next: (updated) => {
         user.role = updated.role;
       },
-      error: () => {
-        this.error = 'Error al cambiar el rol.';
+      error: (err) => {
+        this.errorKey = mapBackendError(err, 'ADMIN.ERRORS.ROLE_CHANGE');
       },
     });
   }
@@ -84,8 +87,8 @@ export class AdminComponent implements OnInit {
         this.users = this.users.filter(u => u.id !== id);
         this.confirmDeleteId = null;
       },
-      error: () => {
-        this.error = 'Error al eliminar el usuario.';
+      error: (err) => {
+        this.errorKey = mapBackendError(err, 'ADMIN.ERRORS.DELETE');
         this.confirmDeleteId = null;
       },
     });

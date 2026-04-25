@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, distinctUntilChanged, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { Propiedad } from '../models/propiedad.model';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
 
 interface FavoriteDto {
   id: number;
@@ -24,8 +26,18 @@ export class FavoritosService {
   /** Map propertyCode -> nota */
   private notasPorProperty = new Map<string, string>();
 
-  constructor(private http: HttpClient) {
-    this.cargarDesdeServidor();
+  constructor(
+    private http: HttpClient,
+    private auth: AuthService,
+  ) {
+    // Resetea y recarga al cambiar de usuario para no cachear favoritos
+    // de la sesión anterior cuando entra otro usuario.
+    this.auth.currentUser$
+      .pipe(distinctUntilChanged((a, b) => a?.userId === b?.userId))
+      .subscribe((user) => {
+        if (user) this.cargarDesdeServidor();
+        else this.clearLocal();
+      });
   }
 
   private cargarDesdeServidor(): void {
@@ -131,16 +143,24 @@ export class FavoritosService {
 
   borrarTodos(): void {
     const ids = Array.from(this.idsPorProperty.values());
+    if (ids.length === 0) return;
+
+    // Limpia local de forma optimista; reloadFromServer al final garantiza
+    // que si alguna DELETE falla, el estado refleja la BBDD real.
     this.idsPorProperty.clear();
     this.notasPorProperty.clear();
     this.favoritosSubject.next([]);
 
-    ids.forEach((id) => {
-      this.http.delete(`${this.baseUrl}/${id}`).subscribe({
-        error: (err) =>
-          console.error('[FavoritosService] Error deleting favorite (bulk)', err),
-      });
-    });
+    const deletes = ids.map((id) =>
+      this.http.delete(`${this.baseUrl}/${id}`).pipe(
+        catchError((err) => {
+          console.error('[FavoritosService] Error deleting favorite (bulk)', err);
+          return of(null);
+        }),
+      ),
+    );
+
+    forkJoin(deletes).subscribe(() => this.cargarDesdeServidor());
   }
 
   reloadFromServer(): void {

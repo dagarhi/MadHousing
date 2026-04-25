@@ -1,12 +1,13 @@
 import { Component, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
+import { TranslocoModule } from '@jsverse/transloco';
 import { PALETTE_RDYLGN } from '../../../core/styles/score-colors';
 
 @Component({
   selector: 'app-leyenda-score',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, TranslocoModule],
   templateUrl: './leyenda-score.component.html',
   styleUrls: ['./leyenda-score.component.scss'],
 })

@@ -17,6 +17,8 @@ import { ThemeService } from '../../../../core/services/theme.service';
 import { environment } from '../../../../../environments/environment';
 import { MapHelpComponent } from '../../../components/map-help/map-help.component';
 import { SnapDragDirective } from '../../../directives/snap-drag.directive';
+import { LangSwitchComponent } from '../../../components/lang-switch/lang-switch.component';
+import { TranslocoModule } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-vista-mapa',
@@ -33,6 +35,8 @@ import { SnapDragDirective } from '../../../directives/snap-drag.directive';
     LucideAngularModule,
     MapHelpComponent,
     SnapDragDirective,
+    LangSwitchComponent,
+    TranslocoModule,
   ],
   templateUrl: './vista-mapa.component.html',
   styleUrls: ['./vista-mapa.component.scss'],

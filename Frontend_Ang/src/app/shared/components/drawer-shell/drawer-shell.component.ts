@@ -12,11 +12,12 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
+import { TranslocoModule } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-drawer-shell',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, TranslocoModule],
   templateUrl: './drawer-shell.component.html',
   styleUrls: ['./drawer-shell.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

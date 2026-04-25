@@ -2,7 +2,7 @@
 
   <!-- ── Pill trigger ── -->
   <button class="mc-pill" [class.mc-pill--radius]="radiusActive" (click)="toggle($event)">
-    <span>Controles</span>
+    <span>{{ 'MAP_CONTROLS.TRIGGER' | transloco }}</span>
     <svg class="mc-chevron" [class.open]="open"
          width="13" height="13" viewBox="0 0 24 24"
          fill="none" stroke="currentColor"
@@ -18,7 +18,7 @@
     <div class="mc-section mc-section--vista">
       <div class="mc-section-header">
         <lucide-icon name="layers" [size]="12" class="mc-section-header__icon"></lucide-icon>
-        <span class="mc-section-header__label">Vista</span>
+        <span class="mc-section-header__label">{{ 'MAP_CONTROLS.SECTION_VIEW' | transloco }}</span>
       </div>
 
       <button
@@ -27,7 +27,7 @@
         [class.active]="activeLayer === layer.value"
         (click)="selectLayer(layer.value, $event)">
         <span class="mc-radio" [class.active]="activeLayer === layer.value"></span>
-        {{ layer.label }}
+        {{ layer.labelKey | transloco }}
       </button>
     </div>
 
@@ -35,7 +35,7 @@
     <div class="mc-section mc-section--contexto">
       <div class="mc-section-header">
         <lucide-icon name="compass" [size]="12" class="mc-section-header__icon"></lucide-icon>
-        <span class="mc-section-header__label">Contexto</span>
+        <span class="mc-section-header__label">{{ 'MAP_CONTROLS.SECTION_CONTEXT' | transloco }}</span>
       </div>
 
       <button
@@ -52,7 +52,7 @@
           </svg>
         </span>
         <lucide-icon [name]="poi.icon" [size]="13" class="mc-poi-btn__icon"></lucide-icon>
-        {{ poi.label }}
+        {{ poi.labelKey | transloco }}
       </button>
     </div>
 
@@ -60,11 +60,12 @@
     <div class="mc-section mc-section--tools">
       <div class="mc-section-header">
         <lucide-icon name="wrench" [size]="12" class="mc-section-header__icon"></lucide-icon>
-        <span class="mc-section-header__label">Herramientas</span>
+        <span class="mc-section-header__label">{{ 'MAP_CONTROLS.SECTION_TOOLS' | transloco }}</span>
       </div>
 
       <div class="mc-tools-row">
-        <button class="mc-tool-btn" [class.active]="radiusActive" (click)="toggleRadius($event)" title="Filtro radio">
+        <button class="mc-tool-btn" [class.active]="radiusActive" (click)="toggleRadius($event)"
+          [title]="'MAP_CONTROLS.TOOL_RADIUS_TITLE' | transloco">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round">
@@ -74,17 +75,19 @@
             <line x1="12" y1="6"  x2="12" y2="2"/>
             <line x1="12" y1="22" x2="12" y2="18"/>
           </svg>
-          <span>Radio</span>
+          <span>{{ 'MAP_CONTROLS.TOOL_RADIUS' | transloco }}</span>
         </button>
 
-        <button class="mc-tool-btn" [class.active]="isochroneOpen" (click)="toggleIsochrone($event)" title="Isócronas">
+        <button class="mc-tool-btn" [class.active]="isochroneOpen" (click)="toggleIsochrone($event)"
+          [title]="'MAP_CONTROLS.TOOL_ISOCHRONE' | transloco">
           <lucide-icon name="clock" [size]="13"></lucide-icon>
-          <span>Isócronas</span>
+          <span>{{ 'MAP_CONTROLS.TOOL_ISOCHRONE' | transloco }}</span>
         </button>
 
-        <button class="mc-tool-btn" [class.active]="routeActive" (click)="toggleRoute($event)" title="Ruta">
+        <button class="mc-tool-btn" [class.active]="routeActive" (click)="toggleRoute($event)"
+          [title]="'MAP_CONTROLS.TOOL_ROUTE' | transloco">
           <lucide-icon name="route" [size]="13"></lucide-icon>
-          <span>Ruta</span>
+          <span>{{ 'MAP_CONTROLS.TOOL_ROUTE' | transloco }}</span>
         </button>
       </div>
     </div>
@@ -93,18 +96,18 @@
     <div class="mc-section mc-section--actions">
       <div class="mc-section-header">
         <lucide-icon name="sparkles" [size]="12" class="mc-section-header__icon"></lucide-icon>
-        <span class="mc-section-header__label">Acciones</span>
+        <span class="mc-section-header__label">{{ 'MAP_CONTROLS.SECTION_ACTIONS' | transloco }}</span>
       </div>
 
       <div class="mc-actions-row">
         <button class="mc-action-btn" (click)="clear($event)">
           <lucide-icon name="brush-cleaning" [size]="13"></lucide-icon>
-          Limpiar
+          {{ 'MAP_CONTROLS.ACTION_CLEAR' | transloco }}
         </button>
 
         <button class="mc-action-btn" (click)="center($event)">
           <lucide-icon name="navigation-2" [size]="13"></lucide-icon>
-          Centrar
+          {{ 'MAP_CONTROLS.ACTION_CENTER' | transloco }}
         </button>
       </div>
     </div>

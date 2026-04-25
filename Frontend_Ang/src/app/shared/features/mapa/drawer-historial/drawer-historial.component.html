@@ -1,14 +1,14 @@
 <app-drawer-shell
   [(opened)]="opened"
   (openedChange)="onOpenedChange($event)"
-  [title]="'Historial de búsquedas'"
+  [title]="'DRAWER_HISTORIAL.TITLE' | transloco"
   position="right"
   [width]="'460px'"
 >
   <div drawer-content>
     <ng-container *ngIf="(historial.historial$ | async) as lista">
       <p *ngIf="lista.length === 0" class="empty-msg">
-        Aún no hay búsquedas en esta sesión.
+        {{ 'DRAWER_HISTORIAL.EMPTY' | transloco }}
       </p>
 
       <div *ngFor="let h of lista" class="hist-item">
@@ -20,11 +20,11 @@
         <div class="actions">
           <button class="btn secondary" (click)="onReaplicar(h)">
             <lucide-icon name="refresh-ccw"></lucide-icon>
-            Reaplicar
+            {{ 'DRAWER_HISTORIAL.REAPPLY' | transloco }}
           </button>
           <button class="btn danger" (click)="eliminar(h); $event.stopPropagation()">
             <lucide-icon name="trash-2"></lucide-icon>
-            Eliminar
+            {{ 'DRAWER_HISTORIAL.DELETE' | transloco }}
           </button>
         </div>
       </div>
@@ -34,7 +34,7 @@
   <div drawer-footer>
     <button class="clear-btn" (click)="borrarTodos()">
       <lucide-icon name="trash"></lucide-icon>
-      Borrar todo
+      {{ 'DRAWER_HISTORIAL.CLEAR_ALL' | transloco }}
     </button>
   </div>
 </app-drawer-shell>

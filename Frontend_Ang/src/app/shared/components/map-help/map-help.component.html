@@ -2,12 +2,12 @@
 <button
   *ngIf="showInfoButton"
   class="help-fab"
-  matTooltip="Cómo usar MadHousing"
+  [matTooltip]="'TUTORIAL.TOOLTIP' | transloco"
   matTooltipPosition="left"
   (click)="openDialog()"
 >
   <lucide-icon name="info" [size]="15"></lucide-icon>
-  <span>Ayuda</span>
+  <span>{{ 'TUTORIAL.FAB_LABEL' | transloco }}</span>
 </button>
 
 <!-- ── Dialog: carousel tutorial ── -->
@@ -16,8 +16,10 @@
 
     <!-- Cabecera fija -->
     <div class="tutorial__header">
-      <span class="tutorial__counter">{{ slideIndex + 1 }} / {{ slides.length }}</span>
-      <button class="tutorial__close" mat-dialog-close aria-label="Cerrar">
+      <span class="tutorial__counter">
+        {{ 'TUTORIAL.COUNTER' | transloco:{ current: slideIndex + 1, total: slides.length } }}
+      </span>
+      <button class="tutorial__close" mat-dialog-close [attr.aria-label]="'COMMON.CLOSE' | transloco">
         <lucide-icon name="x" [size]="16"></lucide-icon>
       </button>
     </div>
@@ -27,13 +29,14 @@
       <div class="tutorial__icon-wrap">
         <lucide-icon [name]="current.icon" [size]="36"></lucide-icon>
       </div>
-      <h2 class="tutorial__title">{{ current.title }}</h2>
-      <p class="tutorial__desc">{{ current.desc }}</p>
+      <h2 class="tutorial__title">{{ current.titleKey | transloco }}</h2>
+      <p class="tutorial__desc">{{ current.bodyKey | transloco }}</p>
     </div>
 
     <!-- Navegación -->
     <div class="tutorial__nav">
-      <button class="nav-btn" (click)="prev()" [disabled]="isFirst" aria-label="Anterior">
+      <button class="nav-btn" (click)="prev()" [disabled]="isFirst"
+        [attr.aria-label]="'TUTORIAL.ARIA_PREV' | transloco">
         <lucide-icon name="chevron-left" [size]="20"></lucide-icon>
       </button>
 
@@ -43,11 +46,12 @@
           class="dot"
           [class.dot--active]="i === slideIndex"
           (click)="goTo(i)"
-          [attr.aria-label]="'Slide ' + (i + 1)"
+          [attr.aria-label]="'TUTORIAL.ARIA_SLIDE' | transloco:{ n: i + 1 }"
         ></button>
       </div>
 
-      <button class="nav-btn" (click)="next()" [disabled]="isLast" aria-label="Siguiente">
+      <button class="nav-btn" (click)="next()" [disabled]="isLast"
+        [attr.aria-label]="'TUTORIAL.ARIA_NEXT' | transloco">
         <lucide-icon name="chevron-right" [size]="20"></lucide-icon>
       </button>
     </div>
@@ -59,14 +63,14 @@
         class="btn-start"
         mat-dialog-close
       >
-        ¡Empezar!
+        {{ 'TUTORIAL.START' | transloco }}
       </button>
       <button
         *ngIf="!isLast"
         class="btn-skip"
         mat-dialog-close
       >
-        Saltar tutorial
+        {{ 'TUTORIAL.SKIP' | transloco }}
       </button>
     </div>
 

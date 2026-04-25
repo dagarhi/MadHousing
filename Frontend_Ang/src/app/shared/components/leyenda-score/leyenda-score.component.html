@@ -1,13 +1,13 @@
 <div class="leyenda" [class.open-up]="openUpward" [class.align-right]="alignRight">
 
   <button class="toggle" (click)="toggle()"
-    [attr.aria-label]="expanded ? 'Cerrar leyenda' : 'Mostrar leyenda de score'">
+    [attr.aria-label]="(expanded ? 'LEYENDA_SCORE.ARIA_HIDE' : 'LEYENDA_SCORE.ARIA_SHOW') | transloco">
     <lucide-icon [name]="expanded ? 'x' : 'list-ordered'" [size]="15" aria-hidden="true"></lucide-icon>
-    <span *ngIf="!expanded">Leyenda</span>
+    <span *ngIf="!expanded">{{ 'LEYENDA_SCORE.TOGGLE_LABEL' | transloco }}</span>
   </button>
 
   <div class="panel" *ngIf="expanded">
-    <p class="panel__title">Score del piso</p>
+    <p class="panel__title">{{ 'LEYENDA_SCORE.PANEL_TITLE' | transloco }}</p>
 
     <div class="panel__gradient" [ngStyle]="gradientStyle"></div>
 
@@ -23,12 +23,12 @@
 
     <div class="panel__rows">
       <div class="panel__row">
-        <span class="panel__badge panel__badge--sale">Venta</span>
-        <span class="panel__info">Relación €/m² — menor es mejor</span>
+        <span class="panel__badge panel__badge--sale">{{ 'COMMON.OPERATION.SALE' | transloco }}</span>
+        <span class="panel__info">{{ 'LEYENDA_SCORE.SALE_INFO' | transloco }}</span>
       </div>
       <div class="panel__row">
-        <span class="panel__badge panel__badge--rent">Alquiler</span>
-        <span class="panel__info">Precio total — más barato, mejor score</span>
+        <span class="panel__badge panel__badge--rent">{{ 'COMMON.OPERATION.RENT' | transloco }}</span>
+        <span class="panel__info">{{ 'LEYENDA_SCORE.RENT_INFO' | transloco }}</span>
       </div>
     </div>
   </div>

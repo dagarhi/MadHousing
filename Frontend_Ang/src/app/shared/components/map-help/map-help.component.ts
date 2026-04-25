@@ -10,53 +10,27 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { LucideAngularModule } from 'lucide-angular';
+import { TranslocoModule } from '@jsverse/transloco';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ✏️  SLIDES DEL TUTORIAL — edita, añade o elimina entradas aquí libremente.
-//    Cada slide necesita:
-//      icon  → nombre de cualquier icono Lucide registrado en main.ts
-//      title → título corto de la slide
-//      desc  → párrafo explicativo (puede contener saltos de línea \n)
+// SLIDES DEL TUTORIAL — define icono + claves i18n. El texto vive en
+// `assets/i18n/{es,en}.json` bajo `TUTORIAL.SLIDES.*`. Para añadir/quitar slides,
+// edita esta lista Y los JSON correspondientes.
 // ─────────────────────────────────────────────────────────────────────────────
 interface TutorialSlide {
   icon: string;
-  title: string;
-  desc: string;
+  titleKey: string;
+  bodyKey: string;
 }
 
 const SLIDES: TutorialSlide[] = [
-  {
-    icon: 'house',
-    title: 'Bienvenido a MadHousing',
-    desc: 'Tu herramienta para explorar el mercado inmobiliario de Madrid. Visualiza pisos, analiza zonas y toma decisiones más informadas.',
-  },
-  {
-    icon: 'search',
-    title: 'Busca pisos',
-    desc: 'Usa el Buscador en la barra superior para filtrar por precio, tamaño, habitaciones o zona. Los resultados aparecen directamente en el mapa.',
-  },
-  {
-    icon: 'layers',
-    title: 'Tres modos de mapa',
-    desc: 'Alterna entre el mapa de calor (densidad de pisos), el coroplético (valor medio por zona) y las chinchetas (ubicación exacta de cada piso).',
-  },
-  {
-    icon: 'sparkles',
-    title: 'Score de cada piso',
-    desc: 'Cada propiedad tiene un score calculado automáticamente. Cuanto más alto, mejor relación calidad-precio según la zona y las características del piso.',
-  },
-  {
-    icon: 'heart',
-    title: 'Favoritos e historial',
-    desc: 'Guarda los pisos que más te interesan en Favoritos. En Historial puedes recuperar búsquedas anteriores y reaplicar sus filtros al instante.',
-  },
-  {
-    icon: 'bar-chart-3',
-    title: 'Estadísticas y comparador',
-    desc: 'Consulta estadísticas agregadas de tus resultados y compara pisos lado a lado para encontrar la mejor opción.',
-  },
+  { icon: 'house',        titleKey: 'TUTORIAL.SLIDES.WELCOME.TITLE',      bodyKey: 'TUTORIAL.SLIDES.WELCOME.BODY' },
+  { icon: 'search',       titleKey: 'TUTORIAL.SLIDES.SEARCH.TITLE',       bodyKey: 'TUTORIAL.SLIDES.SEARCH.BODY' },
+  { icon: 'layers',       titleKey: 'TUTORIAL.SLIDES.MAP_MODES.TITLE',    bodyKey: 'TUTORIAL.SLIDES.MAP_MODES.BODY' },
+  { icon: 'sparkles',     titleKey: 'TUTORIAL.SLIDES.SCORE.TITLE',        bodyKey: 'TUTORIAL.SLIDES.SCORE.BODY' },
+  { icon: 'heart',        titleKey: 'TUTORIAL.SLIDES.FAVS_HISTORY.TITLE', bodyKey: 'TUTORIAL.SLIDES.FAVS_HISTORY.BODY' },
+  { icon: 'bar-chart-3',  titleKey: 'TUTORIAL.SLIDES.STATS_COMP.TITLE',   bodyKey: 'TUTORIAL.SLIDES.STATS_COMP.BODY' },
 ];
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Component({
   selector: 'app-map-help',
@@ -67,6 +41,7 @@ const SLIDES: TutorialSlide[] = [
     MatDialogModule,
     MatTooltipModule,
     LucideAngularModule,
+    TranslocoModule,
   ],
   templateUrl: './map-help.component.html',
   styleUrls: ['./map-help.component.scss'],

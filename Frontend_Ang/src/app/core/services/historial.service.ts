@@ -1,9 +1,12 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { HistorialItem } from '../models/historial.model';
 import { FiltroBusqueda } from '../models/filtros.model';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
+import { TranslocoService } from '@jsverse/transloco';
 
 interface SearchHistoryDto {
   id: number;
@@ -19,8 +22,19 @@ export class HistorialService {
   private historialSubject = new BehaviorSubject<HistorialItem[]>([]);
   historial$ = this.historialSubject.asObservable();
 
-  constructor(private http: HttpClient) {
-    this.cargarDesdeServidor();
+  constructor(
+    private http: HttpClient,
+    private auth: AuthService,
+    private transloco: TranslocoService,
+  ) {
+    // El servicio es singleton; reaccionamos a cambios de sesión para que
+    // el historial de un usuario no se quede cacheado al entrar otro.
+    this.auth.currentUser$
+      .pipe(distinctUntilChanged((a, b) => a?.userId === b?.userId))
+      .subscribe((user) => {
+        if (user) this.cargarDesdeServidor();
+        else this.clearLocal();
+      });
   }
 
   private cargarDesdeServidor(): void {
@@ -73,16 +87,28 @@ export class HistorialService {
 
   borrarTodos() {
     const actual = [...this.currentHistorial];
+    if (actual.length === 0) return;
+
+    // Optimistic clear, luego recargamos desde servidor para reflejar la
+    // verdad (si alguna DELETE falló, los items reaparecerán en vez de
+    // quedar como "borrados" en el cliente pero persistentes en BBDD).
     this.historialSubject.next([]);
 
-    actual.forEach((item) => {
-      const numId = Number(item.id);
-      if (!Number.isFinite(numId)) return;
+    const deletes = actual
+      .map((item) => Number(item.id))
+      .filter((n) => Number.isFinite(n))
+      .map((id) =>
+        this.http.delete(`${this.baseUrl}/${id}`).pipe(
+          catchError((err) => {
+            console.error('[HistorialService] Error deleting history (bulk)', err);
+            return of(null);
+          }),
+        ),
+      );
 
-      this.http.delete(`${this.baseUrl}/${numId}`).subscribe({
-        error: (err) => console.error('[HistorialService] Error deleting history (bulk)', err),
-      });
-    });
+    if (deletes.length === 0) return;
+
+    forkJoin(deletes).subscribe(() => this.cargarDesdeServidor());
   }
 
   // --- Helpers ---
@@ -101,10 +127,19 @@ export class HistorialService {
     };
   }
 
+  /**
+   * Construye el resumen visible en el drawer de historial. Se traduce en el
+   * momento de creación con el idioma activo. Si el usuario cambia de idioma
+   * a mitad de sesión, los items previos conservan su idioma original (la
+   * próxima recarga desde el servidor los regenera con el idioma activo).
+   */
   private renderResumen(f: FiltroBusqueda): string {
+    const t = (key: string, params?: object) => this.transloco.translate(key, params);
     const partes: string[] = [];
     if (f.municipio) partes.push(f.municipio);
-    if (f.operation) partes.push(f.operation === 'rent' ? 'alquiler' : 'venta');
+    if (f.operation) {
+      partes.push(t(f.operation === 'rent' ? 'COMMON.OPERATION.RENT_LOWER' : 'COMMON.OPERATION.SALE_LOWER'));
+    }
 
     const fmt = (label: string, a?: number, b?: number) =>
       a != null || b != null
@@ -119,10 +154,10 @@ export class HistorialService {
     if (size) partes.push(size);
     if (score) partes.push(score);
 
-    if (f.rooms != null) partes.push(`${f.rooms}+ hab`);
-    if (f.floor != null) partes.push(`planta ≥ ${f.floor}`);
+    if (f.rooms != null) partes.push(t('DRAWER_HISTORIAL.RESUMEN_ROOMS', { n: f.rooms }));
+    if (f.floor != null) partes.push(t('DRAWER_HISTORIAL.RESUMEN_FLOOR', { n: f.floor }));
 
-    return partes.join(' · ') || 'Búsqueda';
+    return partes.join(' · ') || t('DRAWER_HISTORIAL.RESUMEN_DEFAULT');
   }
 
   private hashFiltros(f: FiltroBusqueda): string {

@@ -1,6 +1,7 @@
 <div #mapContainer id="map" class="map-container"></div>
 
-<div class="map-loading-overlay" *ngIf="manager.tileLoading$ | async" aria-label="Cargando mapa" role="status">
+<div class="map-loading-overlay" *ngIf="manager.tileLoading$ | async"
+  [attr.aria-label]="'MAP_PANELS.LOADING_MAP' | transloco" role="status">
   <div class="map-loading-spinner"></div>
 </div>
 
@@ -38,7 +39,7 @@
     <line x1="12" y1="6"  x2="12" y2="2"/>
     <line x1="12" y1="22" x2="12" y2="18"/>
   </svg>
-  Haz clic en el mapa para definir el centro
+  {{ 'MAP_PANELS.RADIUS_HINT' | transloco }}
 </div>
 
 <!-- Isochrone hint toast -->
@@ -49,7 +50,7 @@
     <circle cx="12" cy="12" r="10"/>
     <polyline points="12 6 12 12 16 14"/>
   </svg>
-  Haz clic en el mapa para calcular isócronas
+  {{ 'MAP_PANELS.ISOCHRONE_HINT' | transloco }}
 </div>
 
 <!-- Isochrone control panel -->
@@ -57,7 +58,7 @@
 
   <div class="iso-panel__header">
     <lucide-icon name="clock" [size]="14" class="iso-panel__icon"></lucide-icon>
-    <span class="iso-panel__title">Isócronas</span>
+    <span class="iso-panel__title">{{ 'MAP_PANELS.ISOCHRONE.TITLE' | transloco }}</span>
   </div>
 
   <!-- Transport mode -->
@@ -65,31 +66,31 @@
     <button class="iso-panel__mode-btn"
             [class.active]="isochroneProfile === 'foot-walking'"
             (click)="setIsochroneProfile('foot-walking')"
-            title="A pie">
+            [title]="'MAP_PANELS.MODE_FOOT_TITLE' | transloco">
       <lucide-icon name="footprints" [size]="14"></lucide-icon>
     </button>
     <button class="iso-panel__mode-btn"
             [class.active]="isochroneProfile === 'cycling-regular'"
             (click)="setIsochroneProfile('cycling-regular')"
-            title="Bicicleta">
+            [title]="'MAP_PANELS.MODE_BIKE_TITLE' | transloco">
       <lucide-icon name="bike" [size]="14"></lucide-icon>
     </button>
     <button class="iso-panel__mode-btn"
             [class.active]="isochroneProfile === 'driving-car'"
             (click)="setIsochroneProfile('driving-car')"
-            title="Coche">
+            [title]="'MAP_PANELS.MODE_CAR_TITLE' | transloco">
       <lucide-icon name="car" [size]="14"></lucide-icon>
     </button>
   </div>
 
   <!-- Time ranges -->
   <div class="iso-panel__ranges">
-    <label class="iso-panel__range-lbl" *ngFor="let r of [[600,'10 min'],[1200,'20 min'],[1800,'30 min']]">
+    <label class="iso-panel__range-lbl" *ngFor="let r of [[600, 10], [1200, 20], [1800, 30]]">
       <input type="checkbox"
              [checked]="isochroneRanges.has(+r[0])"
              (change)="toggleIsochroneRange(+r[0])">
       <span class="iso-panel__range-dot" [attr.data-val]="r[0]"></span>
-      {{ r[1] }}
+      {{ 'MAP_PANELS.ISOCHRONE.RANGE_LABEL' | transloco:{ n: r[1] } }}
     </label>
   </div>
 
@@ -97,21 +98,23 @@
   <div class="iso-panel__status" *ngIf="!isochroneCenter && !isochroneLoading">
     <button class="iso-panel__place-btn" (click)="toggleIsochroneMode()">
       <lucide-icon name="map-pin" [size]="12"></lucide-icon>
-      {{ isochroneMode ? 'Cancelar' : 'Seleccionar punto' }}
+      {{ (isochroneMode ? 'MAP_PANELS.ISOCHRONE.CANCEL' : 'MAP_PANELS.ISOCHRONE.SELECT_POINT') | transloco }}
     </button>
   </div>
 
   <div class="iso-panel__status" *ngIf="isochroneLoading">
     <span class="iso-panel__spinner"></span>
-    <span>Calculando...</span>
+    <span>{{ 'MAP_PANELS.ISOCHRONE.CALCULATING' | transloco }}</span>
   </div>
 
   <!-- Bottom row with count + actions -->
   <div class="iso-panel__bottom" *ngIf="isochroneCenter && !isochroneLoading">
     <span class="iso-panel__count" *ngIf="isochroneCount !== null">
-      <span class="iso-panel__count-num">{{ isochroneCount }}</span> prop.
+      <span class="iso-panel__count-num">{{ isochroneCount }}</span>
+      {{ 'MAP_PANELS.ISOCHRONE.PROPERTIES_SHORT' | transloco }}
     </span>
-    <button class="iso-panel__action-btn" (click)="toggleIsochroneMode()" title="Mover punto">
+    <button class="iso-panel__action-btn" (click)="toggleIsochroneMode()"
+      [title]="'MAP_PANELS.ISOCHRONE.MOVE_POINT_TITLE' | transloco">
       <lucide-icon name="map-pin" [size]="11"></lucide-icon>
     </button>
     <button class="iso-panel__clear" (click)="clearIsochrone()">
@@ -121,7 +124,7 @@
         <line x1="18" y1="6" x2="6" y2="18"/>
         <line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
-      Borrar
+      {{ 'MAP_PANELS.ISOCHRONE.CLEAR' | transloco }}
     </button>
   </div>
 
@@ -130,7 +133,7 @@
 <!-- Route hint toast -->
 <div class="radius-hint" *ngIf="routeMode && (!routeOrigin || !routeDest)" role="status">
   <lucide-icon name="route" [size]="14"></lucide-icon>
-  {{ !routeOrigin ? 'Haz clic en el mapa o sobre un piso para fijar el origen' : 'Ahora haz clic para el destino' }}
+  {{ (!routeOrigin ? 'MAP_PANELS.ROUTE.HINT_ORIGIN' : 'MAP_PANELS.ROUTE.HINT_DEST') | transloco }}
 </div>
 
 <!-- Route control panel -->
@@ -138,7 +141,7 @@
 
   <div class="route-panel__header">
     <lucide-icon name="route" [size]="14" class="route-panel__icon"></lucide-icon>
-    <span class="route-panel__title">Ruta</span>
+    <span class="route-panel__title">{{ 'MAP_PANELS.ROUTE.TITLE' | transloco }}</span>
   </div>
 
   <!-- Transport mode -->
@@ -146,19 +149,19 @@
     <button class="route-panel__mode-btn"
             [class.active]="routeProfile === 'foot-walking'"
             (click)="setRouteProfile('foot-walking')"
-            title="A pie">
+            [title]="'MAP_PANELS.MODE_FOOT_TITLE' | transloco">
       <lucide-icon name="footprints" [size]="14"></lucide-icon>
     </button>
     <button class="route-panel__mode-btn"
             [class.active]="routeProfile === 'cycling-regular'"
             (click)="setRouteProfile('cycling-regular')"
-            title="Bicicleta">
+            [title]="'MAP_PANELS.MODE_BIKE_TITLE' | transloco">
       <lucide-icon name="bike" [size]="14"></lucide-icon>
     </button>
     <button class="route-panel__mode-btn"
             [class.active]="routeProfile === 'driving-car'"
             (click)="setRouteProfile('driving-car')"
-            title="Coche">
+            [title]="'MAP_PANELS.MODE_CAR_TITLE' | transloco">
       <lucide-icon name="car" [size]="14"></lucide-icon>
     </button>
   </div>
@@ -168,13 +171,13 @@
     <div class="route-panel__pt">
       <span class="route-panel__pt-dot" data-kind="origin"></span>
       <span class="route-panel__pt-lbl" [class.placeholder]="!routeOriginLabel">
-        {{ routeOriginLabel || 'Clic para origen…' }}
+        {{ routeOriginLabel || ('MAP_PANELS.ROUTE.PLACEHOLDER_ORIGIN' | transloco) }}
       </span>
     </div>
     <div class="route-panel__pt">
       <span class="route-panel__pt-dot" data-kind="dest"></span>
       <span class="route-panel__pt-lbl" [class.placeholder]="!routeDestLabel">
-        {{ routeDestLabel || 'Clic para destino…' }}
+        {{ routeDestLabel || ('MAP_PANELS.ROUTE.PLACEHOLDER_DEST' | transloco) }}
       </span>
     </div>
   </div>
@@ -182,7 +185,7 @@
   <!-- Summary -->
   <div class="route-panel__summary" *ngIf="routeLoading">
     <span class="iso-panel__spinner"></span>
-    <span>Calculando ruta…</span>
+    <span>{{ 'MAP_PANELS.ROUTE.CALCULATING' | transloco }}</span>
   </div>
   <div class="route-panel__summary" *ngIf="!routeLoading && routeDistanceKm !== null">
     <span><strong>{{ routeDistanceKm }}</strong> km</span>
@@ -194,7 +197,7 @@
     <button class="route-panel__action-btn"
             (click)="swapRoute()"
             [disabled]="!routeOrigin || !routeDest"
-            title="Invertir origen y destino">
+            [title]="'MAP_PANELS.ROUTE.SWAP_TITLE' | transloco">
       <lucide-icon name="arrow-left-right" [size]="12"></lucide-icon>
     </button>
     <button class="route-panel__clear" (click)="clearRoute()">
@@ -204,7 +207,7 @@
         <line x1="18" y1="6" x2="6" y2="18"/>
         <line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
-      Limpiar
+      {{ 'MAP_PANELS.ROUTE.CLEAR' | transloco }}
     </button>
   </div>
 </div>
@@ -221,7 +224,7 @@
       <line x1="12" y1="6"  x2="12" y2="2"/>
       <line x1="12" y1="22" x2="12" y2="18"/>
     </svg>
-    <span class="radius-panel__title">Radio de búsqueda</span>
+    <span class="radius-panel__title">{{ 'MAP_PANELS.RADIUS.TITLE' | transloco }}</span>
   </div>
 
   <div class="radius-panel__options">
@@ -237,7 +240,7 @@
   <div class="radius-panel__bottom">
     <span class="radius-panel__count" *ngIf="filteredCount !== null">
       <span class="radius-panel__count-num">{{ filteredCount }}</span>
-      prop.
+      {{ 'MAP_PANELS.RADIUS.PROPERTIES_SHORT' | transloco }}
     </span>
     <button class="radius-panel__clear" (click)="clearRadius()">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
@@ -246,7 +249,7 @@
         <line x1="18" y1="6" x2="6" y2="18"/>
         <line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
-      Borrar
+      {{ 'MAP_PANELS.RADIUS.CLEAR' | transloco }}
     </button>
   </div>
 </div>

@@ -1,8 +1,9 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DrawerShellComponent } from '../../../components/drawer-shell/drawer-shell.component'; 
-import { FavoritosService } from '../../../../core/services/favoritos.service'; 
+import { DrawerShellComponent } from '../../../components/drawer-shell/drawer-shell.component';
+import { FavoritosService } from '../../../../core/services/favoritos.service';
 import { LucideAngularModule } from 'lucide-angular';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { Propiedad } from '../../../../core/models/propiedad.model';
 import { PinsLayerService } from '../../../../core/services/pins-layer.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -10,7 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 @Component({
   selector: 'app-drawer-favoritos',
   standalone: true,
-  imports: [CommonModule, DrawerShellComponent, LucideAngularModule],
+  imports: [CommonModule, DrawerShellComponent, LucideAngularModule, TranslocoModule],
   templateUrl: './drawer-favoritos.component.html',
   styleUrls: ['./drawer-favoritos.component.scss'],
 })
@@ -22,7 +23,8 @@ export class DrawerFavoritosComponent {
   constructor(
     public favoritos: FavoritosService,
     private pins: PinsLayerService,
-    private snack: MatSnackBar
+    private snack: MatSnackBar,
+    private transloco: TranslocoService,
   ) {}
 
   toggleDrawer(open: boolean) {
@@ -75,15 +77,19 @@ export class DrawerFavoritosComponent {
 
     // Caso 2: NO está dibujado → avisamos y pedimos acción
     const ref = this.snack.open(
-      'Este piso no está dibujado. ¿Quieres dibujarlo y centrar el mapa?',
-      'Dibujar',
+      this.transloco.translate('DRAWER_FAVORITOS.PIN_NOT_DRAWN'),
+      this.transloco.translate('DRAWER_FAVORITOS.DRAW_ACTION'),
       { duration: 7000 } // si no pulsa, no pasa nada
     );
 
     ref.onAction().subscribe(() => {
       const ok = this.pins.addOne(item, { fly: true, zoom: 16, openPopup: true });
       if (!ok) {
-        this.snack.open('No se pudo dibujar el pin (falta localización).', undefined, { duration: 4000 });
+        this.snack.open(
+          this.transloco.translate('DRAWER_FAVORITOS.PIN_FAILED'),
+          undefined,
+          { duration: 4000 },
+        );
       }
     });
   }
