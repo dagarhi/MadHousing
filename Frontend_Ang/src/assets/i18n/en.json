@@ -1,0 +1,314 @@
+{
+  "COMMON": {
+    "THEME": {
+      "LIGHT_MODE": "Light mode",
+      "DARK_MODE": "Dark mode",
+      "TOGGLE": "Toggle theme"
+    },
+    "PASSWORD": {
+      "SHOW": "Show password",
+      "HIDE": "Hide password"
+    },
+    "OPERATION": {
+      "RENT": "Rent",
+      "SALE": "Sale",
+      "RENT_LOWER": "rent",
+      "SALE_LOWER": "sale"
+    },
+    "PER_MONTH": "/mo",
+    "CLOSE": "Close",
+    "MIN": "Min",
+    "MAX": "Max"
+  },
+  "POPUP": {
+    "UNKNOWN_ADDRESS": "Unknown address",
+    "NO_PRICE": "No price",
+    "ROOMS_SHORT": "rm",
+    "SCORE_LABEL": "Score",
+    "SAVE": "Save",
+    "SAVED": "Saved",
+    "SAVE_FAVORITE_ARIA": "Save to favorites",
+    "VIEW_SURROUNDINGS": "View surroundings",
+    "VIEW_SURROUNDINGS_ARIA": "View nearby POIs",
+    "VIEW_LISTING": "View listing",
+    "MORTGAGE": {
+      "TITLE": "Mortgage calculator",
+      "DOWN_PAYMENT": "Down payment (%)",
+      "RATE": "Fixed rate (%)",
+      "TERM": "Term (years)",
+      "MONTHLY_PAYMENT": "Monthly payment",
+      "MONTHLY_UNIT": "€/mo",
+      "TOTAL_INTEREST": "Total interest"
+    }
+  },
+  "ADMIN": {
+    "BACK_TO_MAP": "Back to map",
+    "TITLE": "Admin panel",
+    "LOADING": "Loading users…",
+    "EMPTY": "No users registered.",
+    "TABLE": {
+      "ID": "ID",
+      "USERNAME": "Username",
+      "ROLE": "Role",
+      "CREATED_AT": "Joined",
+      "ACTIONS": "Actions"
+    },
+    "ACTIONS": {
+      "CHANGE_ROLE_TO": "Change to {{role}}",
+      "DELETE": "Delete",
+      "CONFIRM_DELETE": "Delete?",
+      "YES": "Yes",
+      "NO": "No"
+    },
+    "ERRORS": {
+      "LOAD": "Failed to load users.",
+      "ROLE_CHANGE": "Failed to change role.",
+      "DELETE": "Failed to delete user.",
+      "FORBIDDEN": "Admin access only.",
+      "SELF_ROLE": "You cannot change your own role.",
+      "INVALID_ROLE": "Invalid role. Allowed values: USER, ADMIN.",
+      "SELF_DELETE": "You cannot delete your own account.",
+      "USER_NOT_FOUND": "User not found."
+    }
+  },
+  "DRAWER_FAVORITOS": {
+    "TITLE": "My favorites",
+    "EMPTY": "You haven't saved any properties yet.",
+    "NO_SIZE": "No size",
+    "GO_TO_PROPERTY": "View on map",
+    "REMOVE": "Remove",
+    "CLEAR_ALL": "Clear all",
+    "NOTE_PLACEHOLDER": "Add a note...",
+    "PIN_NOT_DRAWN": "This property is not on the map. Draw it and center the view?",
+    "DRAW_ACTION": "Draw",
+    "PIN_FAILED": "Could not draw the pin (missing location)."
+  },
+  "DRAWER_HISTORIAL": {
+    "TITLE": "Search history",
+    "EMPTY": "No searches in this session yet.",
+    "REAPPLY": "Reapply",
+    "DELETE": "Delete",
+    "CLEAR_ALL": "Clear all",
+    "RESUMEN_DEFAULT": "Search",
+    "RESUMEN_ALL": "All properties",
+    "RESUMEN_ROOMS": "{{n}}+ rm",
+    "RESUMEN_FLOOR": "floor ≥ {{n}}"
+  },
+  "BUSCADOR": {
+    "TITLE": "Search filters",
+    "CITY": "City / Municipality",
+    "CITY_PLACEHOLDER": "Select a city",
+    "DISTRICT": "District",
+    "DISTRICT_PLACEHOLDER": "Select a district",
+    "NEIGHBORHOOD": "Neighborhood",
+    "NEIGHBORHOOD_PLACEHOLDER": "Select a neighborhood",
+    "OPERATION_TYPE": "Operation type",
+    "FILTERS_TITLE": "Filters",
+    "ADVANCED_TITLE": "Advanced filters",
+    "PRICE": "Price (€)",
+    "SIZE": "Size (m²)",
+    "SCORE_RANGE": "Score (0–100)",
+    "ROOMS_MIN": "Min rooms",
+    "FLOOR_MIN": "Min floor",
+    "CLEAR_FILTERS": "Clear filters",
+    "SHOW_ALL": "Show all",
+    "SEARCH": "Search",
+    "ERRORS": {
+      "NO_ZONE": "Select a valid area",
+      "SEARCH_FAIL": "Failed to search properties: {{msg}}",
+      "LOAD_ALL_FAIL": "Failed to load all results"
+    }
+  },
+  "DRAWER_ESTADISTICAS": {
+    "TITLE": "Statistics by area",
+    "OPERATION_TYPE": "Operation type",
+    "METRIC": "Metric",
+    "METRIC_PRICE": "Average price (€)",
+    "METRIC_SIZE": "Average size (m²)",
+    "METRIC_SCORE": "Average score"
+  },
+  "DRAWER_COMPARADOR": {
+    "TITLE": "Area comparator",
+    "ZONE_A": "Area A",
+    "ZONE_B": "Area B",
+    "ZONE_PLACEHOLDER": "Select...",
+    "OPERATION_TYPE_LABEL": "Operation type:",
+    "OP_SALE_EMOJI": "🏠 Sale",
+    "OP_RENT_EMOJI": "🔑 Rent",
+    "COMPARING": "Comparing",
+    "VS": "vs",
+    "CHART_PRICE": "Average price (€)",
+    "CHART_SIZE": "Average size (m²)",
+    "CHART_SCORE": "Average score",
+    "CHART_COUNT": "Number of properties",
+    "TABLE_METRIC": "Metric",
+    "TABLE_PRICE": "Average price (€)",
+    "TABLE_SIZE": "Average size (m²)",
+    "TABLE_SCORE": "Average score",
+    "TABLE_COUNT": "Property count",
+    "EMPTY": "Select two areas to compare."
+  },
+  "DRAWER_ENTORNO": {
+    "ARIA_PANEL": "Property surroundings",
+    "ARIA_EXPAND": "Expand surroundings panel",
+    "ARIA_COLLAPSE": "Collapse surroundings panel",
+    "TITLE_EXPAND": "View surroundings",
+    "TITLE_COLLAPSE": "Collapse",
+    "HEADING": "Surroundings",
+    "LOADING": "Loading surroundings…",
+    "NO_DATA": "No data available",
+    "POI_UNNAMED": "(unnamed)",
+    "ROUTE_FOOT": "Walking route",
+    "ROUTE_BIKE": "Cycling route",
+    "ROUTE_CAR": "Driving route",
+    "CATEGORIES": {
+      "TRANSPORT": "Transport",
+      "HEALTH": "Health",
+      "EDUCATION": "Education",
+      "PARK": "Parks",
+      "COMMERCE": "Shopping",
+      "BIKE": "Bike lane"
+    }
+  },
+  "TUTORIAL": {
+    "TOOLTIP": "How to use MadHousing",
+    "FAB_LABEL": "Help",
+    "ARIA_PREV": "Previous",
+    "ARIA_NEXT": "Next",
+    "ARIA_SLIDE": "Slide {{n}}",
+    "START": "Get started!",
+    "SKIP": "Skip tutorial",
+    "COUNTER": "{{current}} / {{total}}",
+    "SLIDES": {
+      "WELCOME": {
+        "TITLE": "Welcome to MadHousing",
+        "BODY": "Your tool to explore Madrid's real estate market. Visualize properties, analyze areas and make better-informed decisions."
+      },
+      "SEARCH": {
+        "TITLE": "Search properties",
+        "BODY": "Use the Search panel in the top bar to filter by price, size, rooms or area. Results show up directly on the map."
+      },
+      "MAP_MODES": {
+        "TITLE": "Three map modes",
+        "BODY": "Switch between the heat map (property density), the choropleth (average value per area) and the pins (exact location of each property)."
+      },
+      "SCORE": {
+        "TITLE": "Property score",
+        "BODY": "Each property has an automatically computed score. Higher means a better quality-price ratio for the area and the property's features."
+      },
+      "FAVS_HISTORY": {
+        "TITLE": "Favorites and history",
+        "BODY": "Save the properties you're interested in to Favorites. In History you can recover past searches and reapply their filters instantly."
+      },
+      "STATS_COMP": {
+        "TITLE": "Statistics and comparator",
+        "BODY": "Browse aggregate statistics for your results and compare properties side by side to find the best option."
+      }
+    }
+  },
+  "LEYENDA_SCORE": {
+    "ARIA_HIDE": "Hide legend",
+    "ARIA_SHOW": "Show score legend",
+    "TOGGLE_LABEL": "Legend",
+    "PANEL_TITLE": "Property score",
+    "SALE_INFO": "€/m² ratio — lower is better",
+    "RENT_INFO": "Total price — cheaper means better score"
+  },
+  "MAP_CONTROLS": {
+    "TRIGGER": "Controls",
+    "SECTION_VIEW": "View",
+    "SECTION_CONTEXT": "Context",
+    "SECTION_TOOLS": "Tools",
+    "SECTION_ACTIONS": "Actions",
+    "LAYER_CHORO": "Choropleth",
+    "LAYER_HEAT": "Heatmap",
+    "LAYER_PINS": "Pins",
+    "TOOL_RADIUS": "Radius",
+    "TOOL_RADIUS_TITLE": "Radius filter",
+    "TOOL_ISOCHRONE": "Isochrones",
+    "TOOL_ROUTE": "Route",
+    "ACTION_CLEAR": "Clear",
+    "ACTION_CENTER": "Center"
+  },
+  "MAP_PANELS": {
+    "LOADING_MAP": "Loading map",
+    "RADIUS_HINT": "Click on the map to set the center",
+    "ISOCHRONE_HINT": "Click on the map to compute isochrones",
+    "MODE_FOOT_TITLE": "Walking",
+    "MODE_BIKE_TITLE": "Cycling",
+    "MODE_CAR_TITLE": "Driving",
+    "ISOCHRONE": {
+      "TITLE": "Isochrones",
+      "RANGE_LABEL": "{{n}} min",
+      "SELECT_POINT": "Pick a point",
+      "CANCEL": "Cancel",
+      "CALCULATING": "Computing...",
+      "MOVE_POINT_TITLE": "Move point",
+      "PROPERTIES_SHORT": "props.",
+      "CLEAR": "Clear"
+    },
+    "ROUTE": {
+      "TITLE": "Route",
+      "HINT_ORIGIN": "Click on the map or a property to set the origin",
+      "HINT_DEST": "Now click to set the destination",
+      "PLACEHOLDER_ORIGIN": "Click for origin…",
+      "PLACEHOLDER_DEST": "Click for destination…",
+      "CALCULATING": "Computing route…",
+      "SWAP_TITLE": "Swap origin and destination",
+      "CLEAR": "Clear",
+      "LABEL_PROPERTY": "Property",
+      "LABEL_MAP_POINT": "Map point"
+    },
+    "RADIUS": {
+      "TITLE": "Search radius",
+      "PROPERTIES_SHORT": "props.",
+      "CLEAR": "Clear"
+    }
+  },
+  "MAPA_HEADER": {
+    "LOGOUT": "Sign out",
+    "ADMIN": "Admin",
+    "FAVORITES": "Favorites",
+    "HISTORY": "History",
+    "STATS": "Statistics",
+    "COMPARATOR": "Comparator",
+    "SEARCH": "Search"
+  },
+  "SESSION_EXPIRED": {
+    "TITLE": "Session expired",
+    "BODY": "Your session has expired. Please sign in again to continue.",
+    "CTA": "Go to login"
+  },
+  "LOGIN": {
+    "INFO": {
+      "SUBTITLE": "Browse apartments in Madrid with an interactive map, filters, area comparison, and personal history and favorites",
+      "FEATURE_MAP_TITLE": "Interactive map",
+      "FEATURE_MAP_BODY": "Explore properties directly on the map, filter by area, price and features.",
+      "FEATURE_USER_TITLE": "User account",
+      "FEATURE_USER_BODY": "Save your favorite apartments and searches to your own profile.",
+      "FEATURE_ANALYTICS_TITLE": "Analytics tools",
+      "FEATURE_ANALYTICS_BODY": "Browse the application's global data and compare specific areas."
+    },
+    "MODE_LOGIN": "Sign in",
+    "MODE_REGISTER": "Create account",
+    "LABEL_USERNAME": "Username",
+    "LABEL_PASSWORD": "Password",
+    "SUBMIT_LOGIN": "Sign in",
+    "SUBMIT_LOGIN_LOADING": "Signing in…",
+    "SUBMIT_REGISTER": "Sign up",
+    "SUBMIT_REGISTER_LOADING": "Creating account…",
+    "ERRORS": {
+      "USERNAME_REQUIRED": "Username is required.",
+      "PASSWORD_REQUIRED": "Password is required.",
+      "USERNAME_MIN": "Minimum 3 characters.",
+      "PASSWORD_MIN": "Minimum 6 characters.",
+      "BAD_CREDENTIALS": "Incorrect username or password.",
+      "USERNAME_TAKEN": "This username is already taken.",
+      "REGISTER_FAIL": "Failed to register. Please try again."
+    },
+    "NOTICES": {
+      "SESSION_EXPIRED": "Your session has expired. Please sign in again.",
+      "REGISTER_OK": "Account created. You can now sign in."
+    }
+  }
+}

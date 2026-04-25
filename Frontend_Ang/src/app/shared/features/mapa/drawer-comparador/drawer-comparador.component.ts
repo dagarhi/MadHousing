@@ -15,6 +15,7 @@ import { FormsModule } from '@angular/forms';
 
 import { DrawerShellComponent } from '../../../components/drawer-shell/drawer-shell.component';
 import { LucideAngularModule } from 'lucide-angular';
+import { TranslocoModule } from '@jsverse/transloco';
 
 import { EstadisticasGlobales, EstadisticaZona } from '../../../../core/models/estadistica.model';
 import { EstadisticasService } from '../../../../core/services/estadisticas.service';
@@ -45,6 +46,7 @@ const BRAND_B = '#14b8a6'; // teal complementario
     FormsModule,
     DrawerShellComponent,
     LucideAngularModule,
+    TranslocoModule,
   ],
   templateUrl: './drawer-comparador.component.html',
   styleUrls: ['./drawer-comparador.component.scss'],

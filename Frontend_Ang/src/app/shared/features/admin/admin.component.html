@@ -3,13 +3,14 @@
   <header class="admin-header">
     <button class="btn-volver" (click)="volverAlMapa()">
       <lucide-icon name="arrow-left"></lucide-icon>
-      Volver al mapa
+      {{ 'ADMIN.BACK_TO_MAP' | transloco }}
     </button>
-    <h1>Panel de administración</h1>
+    <h1>{{ 'ADMIN.TITLE' | transloco }}</h1>
+    <app-lang-switch variant="header-light"></app-lang-switch>
     <button type="button" class="btn-theme" (click)="toggleTheme()"
-      [attr.aria-label]="theme.isDark ? 'Modo claro' : 'Modo oscuro'"
+      [attr.aria-label]="(theme.isDark ? 'COMMON.THEME.LIGHT_MODE' : 'COMMON.THEME.DARK_MODE') | transloco"
       [attr.aria-pressed]="theme.isDark"
-      title="Cambiar tema">
+      [title]="'COMMON.THEME.TOGGLE' | transloco">
       <lucide-icon [name]="theme.isDark ? 'sun' : 'moon'" [size]="18"></lucide-icon>
     </button>
     <span class="admin-badge">{{ currentUsername }}</span>
@@ -17,21 +18,21 @@
 
   <main class="admin-content">
 
-    <div *ngIf="error" class="admin-error">
-      {{ error }}
-      <button (click)="error = null">✕</button>
+    <div *ngIf="errorKey" class="admin-error">
+      {{ errorKey | transloco }}
+      <button (click)="errorKey = null">✕</button>
     </div>
 
-    <div *ngIf="cargando" class="admin-estado">Cargando usuarios…</div>
+    <div *ngIf="cargando" class="admin-estado">{{ 'ADMIN.LOADING' | transloco }}</div>
 
     <table *ngIf="!cargando" class="user-table">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Usuario</th>
-          <th>Rol</th>
-          <th>Registro</th>
-          <th>Acciones</th>
+          <th>{{ 'ADMIN.TABLE.ID' | transloco }}</th>
+          <th>{{ 'ADMIN.TABLE.USERNAME' | transloco }}</th>
+          <th>{{ 'ADMIN.TABLE.ROLE' | transloco }}</th>
+          <th>{{ 'ADMIN.TABLE.CREATED_AT' | transloco }}</th>
+          <th>{{ 'ADMIN.TABLE.ACTIONS' | transloco }}</th>
         </tr>
       </thead>
       <tbody>
@@ -45,24 +46,31 @@
           <td class="col-actions">
             <ng-container *ngIf="confirmDeleteId !== user.id; else confirmDelete">
               <button class="btn-action btn-role" (click)="cambiarRol(user)"
-                [title]="'Cambiar a ' + (user.role === 'ADMIN' ? 'USER' : 'ADMIN')">
+                [title]="'ADMIN.ACTIONS.CHANGE_ROLE_TO' | transloco:{ role: (user.role === 'ADMIN' ? 'USER' : 'ADMIN') }">
                 <lucide-icon name="shield"></lucide-icon>
               </button>
-              <button class="btn-action btn-delete" (click)="confirmarEliminar(user.id)" title="Eliminar">
+              <button class="btn-action btn-delete" (click)="confirmarEliminar(user.id)"
+                [title]="'ADMIN.ACTIONS.DELETE' | transloco">
                 <lucide-icon name="trash-2"></lucide-icon>
               </button>
             </ng-container>
             <ng-template #confirmDelete>
-              <span class="confirm-text">¿Eliminar?</span>
-              <button class="btn-action btn-delete" (click)="eliminarUsuario(user.id)">Sí</button>
-              <button class="btn-action" (click)="cancelarEliminar()">No</button>
+              <span class="confirm-text">{{ 'ADMIN.ACTIONS.CONFIRM_DELETE' | transloco }}</span>
+              <button class="btn-action btn-delete" (click)="eliminarUsuario(user.id)">
+                {{ 'ADMIN.ACTIONS.YES' | transloco }}
+              </button>
+              <button class="btn-action" (click)="cancelarEliminar()">
+                {{ 'ADMIN.ACTIONS.NO' | transloco }}
+              </button>
             </ng-template>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <p *ngIf="!cargando && users.length === 0" class="admin-estado">No hay usuarios registrados.</p>
+    <p *ngIf="!cargando && users.length === 0" class="admin-estado">
+      {{ 'ADMIN.EMPTY' | transloco }}
+    </p>
 
   </main>
 </div>

@@ -19,7 +19,8 @@
 >
   <header class="drawer-header">
     <h3 *ngIf="title" id="drawer-panel-title">{{ title }}</h3>
-    <button *ngIf="showClose" class="close-btn" (click)="onCloseClick($event)" aria-label="Cerrar">
+    <button *ngIf="showClose" class="close-btn" (click)="onCloseClick($event)"
+      [attr.aria-label]="'COMMON.CLOSE' | transloco">
       <lucide-icon name="x"></lucide-icon>
     </button>
   </header>

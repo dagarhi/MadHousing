@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { Subscription } from 'rxjs';
 
 import { Propiedad } from '../../../../core/models/propiedad.model';
@@ -23,7 +24,7 @@ import { RouteProfile } from '../../../../core/services/route.service';
 
 interface CategoryView {
   key: PoiCategory;
-  label: string;
+  labelKey: string;
   icon: string;   // Lucide icon name
   open: boolean;
   pois: NearbyPoi[];
@@ -37,18 +38,18 @@ export interface RouteRequest {
 }
 
 const CATEGORIES: Array<Omit<CategoryView, 'open' | 'pois'>> = [
-  { key: 'transport', label: 'Transporte', icon: 'train-front' },
-  { key: 'health',    label: 'Sanidad',    icon: 'cross' },
-  { key: 'education', label: 'Educación',  icon: 'graduation-cap' },
-  { key: 'park',      label: 'Parques',    icon: 'trees' },
-  { key: 'commerce',  label: 'Comercio',   icon: 'shopping-cart' },
-  { key: 'bike',      label: 'Carril bici', icon: 'bike' },
+  { key: 'transport', labelKey: 'DRAWER_ENTORNO.CATEGORIES.TRANSPORT', icon: 'train-front' },
+  { key: 'health',    labelKey: 'DRAWER_ENTORNO.CATEGORIES.HEALTH',    icon: 'cross' },
+  { key: 'education', labelKey: 'DRAWER_ENTORNO.CATEGORIES.EDUCATION', icon: 'graduation-cap' },
+  { key: 'park',      labelKey: 'DRAWER_ENTORNO.CATEGORIES.PARK',      icon: 'trees' },
+  { key: 'commerce',  labelKey: 'DRAWER_ENTORNO.CATEGORIES.COMMERCE',  icon: 'shopping-cart' },
+  { key: 'bike',      labelKey: 'DRAWER_ENTORNO.CATEGORIES.BIKE',      icon: 'bike' },
 ];
 
 @Component({
   selector: 'app-drawer-entorno',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, TranslocoModule],
   templateUrl: './drawer-entorno.component.html',
   styleUrls: ['./drawer-entorno.component.scss'],
 })
@@ -61,6 +62,7 @@ export class DrawerEntornoComponent implements OnChanges, OnDestroy {
   @Output() clearRoute  = new EventEmitter<void>();
 
   private readonly pois = inject(PoiService);
+  private readonly transloco = inject(TranslocoService);
   private sub?: Subscription;
 
   collapsed = false;            // colapsa todo el drawer al handle
@@ -146,7 +148,7 @@ export class DrawerEntornoComponent implements OnChanges, OnDestroy {
     this.routeTo.emit({
       destLat: coords[1],
       destLng: coords[0],
-      label: poi.name || poi.subtype || '(sin nombre)',
+      label: poi.name || poi.subtype || this.transloco.translate('DRAWER_ENTORNO.POI_UNNAMED'),
       profile,
     });
   }

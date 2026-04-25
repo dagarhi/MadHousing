@@ -2,21 +2,22 @@ import { Component } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { TranslocoModule } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-session-expired-dialog',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, TranslocoModule],
   template: `
     <div class="session-expired-dialog">
       <div class="session-expired-dialog__icon">
         <lucide-icon name="clock" [size]="28"></lucide-icon>
       </div>
-      <h2>Sesión expirada</h2>
-      <p>Tu sesión ha expirado. Vuelve a iniciar sesión para continuar.</p>
+      <h2>{{ 'SESSION_EXPIRED.TITLE' | transloco }}</h2>
+      <p>{{ 'SESSION_EXPIRED.BODY' | transloco }}</p>
       <div class="actions">
         <button type="button" class="session-expired-dialog__cta" (click)="goToLogin()">
-          Ir al login
+          {{ 'SESSION_EXPIRED.CTA' | transloco }}
         </button>
       </div>
     </div>

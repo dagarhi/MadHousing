@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
+import { TranslocoModule } from '@jsverse/transloco';
 
 import { Propiedad } from '../../../core/models/propiedad.model';
 import { FavoritosService } from '../../../core/services/favoritos.service';
@@ -14,7 +15,7 @@ import { PALETTE_RDYLGN, BACKEND_SCORE_DOMAIN, interpolatePalette } from '../../
 @Component({
   selector: 'app-popup-propiedad',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule, TranslocoModule],
   templateUrl: './popup-propiedad.html',
   styleUrls: ['./popup-propiedad.scss'],
 })
@@ -63,12 +64,15 @@ export class PopupPropiedadComponent implements OnInit, OnDestroy {
     this.favs.toggleFavorito(this.piso);
   }
 
-  get operationLabel(): string {
+  /**
+   * Devuelve la clave i18n del label de operación; el template hace `| transloco`.
+   * Null cuando el dato falta → el template muestra '—' como fallback.
+   */
+  get operationLabelKey(): string | null {
     const op = this.piso?.operation;
-    if (!op) return '—';
-    if (op === 'rent') return 'Alquiler';
-    if (op === 'sale') return 'Venta';
-    return op;
+    if (op === 'rent') return 'COMMON.OPERATION.RENT';
+    if (op === 'sale') return 'COMMON.OPERATION.SALE';
+    return null;
   }
 
   private asNum(v: any): number | undefined {

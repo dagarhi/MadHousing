@@ -1,0 +1,314 @@
+{
+  "COMMON": {
+    "THEME": {
+      "LIGHT_MODE": "Modo claro",
+      "DARK_MODE": "Modo oscuro",
+      "TOGGLE": "Cambiar tema"
+    },
+    "PASSWORD": {
+      "SHOW": "Mostrar contraseña",
+      "HIDE": "Ocultar contraseña"
+    },
+    "OPERATION": {
+      "RENT": "Alquiler",
+      "SALE": "Venta",
+      "RENT_LOWER": "alquiler",
+      "SALE_LOWER": "venta"
+    },
+    "PER_MONTH": "/mes",
+    "CLOSE": "Cerrar",
+    "MIN": "Mínimo",
+    "MAX": "Máximo"
+  },
+  "POPUP": {
+    "UNKNOWN_ADDRESS": "Dirección desconocida",
+    "NO_PRICE": "Sin precio",
+    "ROOMS_SHORT": "hab.",
+    "SCORE_LABEL": "Score",
+    "SAVE": "Guardar",
+    "SAVED": "Guardado",
+    "SAVE_FAVORITE_ARIA": "Guardar en favoritos",
+    "VIEW_SURROUNDINGS": "Ver entorno",
+    "VIEW_SURROUNDINGS_ARIA": "Ver POIs cercanos",
+    "VIEW_LISTING": "Ver anuncio",
+    "MORTGAGE": {
+      "TITLE": "Calculadora de hipoteca",
+      "DOWN_PAYMENT": "Entrada (%)",
+      "RATE": "Tipo fijo (%)",
+      "TERM": "Plazo (años)",
+      "MONTHLY_PAYMENT": "Cuota mensual",
+      "MONTHLY_UNIT": "€/mes",
+      "TOTAL_INTEREST": "Total intereses"
+    }
+  },
+  "ADMIN": {
+    "BACK_TO_MAP": "Volver al mapa",
+    "TITLE": "Panel de administración",
+    "LOADING": "Cargando usuarios…",
+    "EMPTY": "No hay usuarios registrados.",
+    "TABLE": {
+      "ID": "ID",
+      "USERNAME": "Usuario",
+      "ROLE": "Rol",
+      "CREATED_AT": "Registro",
+      "ACTIONS": "Acciones"
+    },
+    "ACTIONS": {
+      "CHANGE_ROLE_TO": "Cambiar a {{role}}",
+      "DELETE": "Eliminar",
+      "CONFIRM_DELETE": "¿Eliminar?",
+      "YES": "Sí",
+      "NO": "No"
+    },
+    "ERRORS": {
+      "LOAD": "Error al cargar usuarios.",
+      "ROLE_CHANGE": "Error al cambiar el rol.",
+      "DELETE": "Error al eliminar el usuario.",
+      "FORBIDDEN": "Acceso restringido a administradores.",
+      "SELF_ROLE": "No puedes modificar tu propio rol.",
+      "INVALID_ROLE": "Rol inválido. Valores permitidos: USER, ADMIN.",
+      "SELF_DELETE": "No puedes eliminar tu propia cuenta.",
+      "USER_NOT_FOUND": "Usuario no encontrado."
+    }
+  },
+  "DRAWER_FAVORITOS": {
+    "TITLE": "Mis pisos favoritos",
+    "EMPTY": "No tienes pisos guardados aún.",
+    "NO_SIZE": "Sin tamaño",
+    "GO_TO_PROPERTY": "Ir al piso",
+    "REMOVE": "Quitar",
+    "CLEAR_ALL": "Borrar todos",
+    "NOTE_PLACEHOLDER": "Añadir nota...",
+    "PIN_NOT_DRAWN": "Este piso no está dibujado. ¿Quieres dibujarlo y centrar el mapa?",
+    "DRAW_ACTION": "Dibujar",
+    "PIN_FAILED": "No se pudo dibujar el pin (falta localización)."
+  },
+  "DRAWER_HISTORIAL": {
+    "TITLE": "Historial de búsquedas",
+    "EMPTY": "Aún no hay búsquedas en esta sesión.",
+    "REAPPLY": "Reaplicar",
+    "DELETE": "Eliminar",
+    "CLEAR_ALL": "Borrar todo",
+    "RESUMEN_DEFAULT": "Búsqueda",
+    "RESUMEN_ALL": "Todas las propiedades",
+    "RESUMEN_ROOMS": "{{n}}+ hab",
+    "RESUMEN_FLOOR": "planta ≥ {{n}}"
+  },
+  "BUSCADOR": {
+    "TITLE": "Filtros de búsqueda",
+    "CITY": "Ciudad / Municipio",
+    "CITY_PLACEHOLDER": "Selecciona ciudad",
+    "DISTRICT": "Distrito",
+    "DISTRICT_PLACEHOLDER": "Selecciona distrito",
+    "NEIGHBORHOOD": "Barrio",
+    "NEIGHBORHOOD_PLACEHOLDER": "Selecciona barrio",
+    "OPERATION_TYPE": "Tipo de operación",
+    "FILTERS_TITLE": "Filtros",
+    "ADVANCED_TITLE": "Filtros avanzados",
+    "PRICE": "Precio (€)",
+    "SIZE": "Tamaño (m²)",
+    "SCORE_RANGE": "Score (0–100)",
+    "ROOMS_MIN": "Habitaciones mínimas",
+    "FLOOR_MIN": "Planta mínima",
+    "CLEAR_FILTERS": "Limpiar filtros",
+    "SHOW_ALL": "Mostrar todos",
+    "SEARCH": "Buscar",
+    "ERRORS": {
+      "NO_ZONE": "Selecciona una zona válida",
+      "SEARCH_FAIL": "Error al buscar pisos: {{msg}}",
+      "LOAD_ALL_FAIL": "Error al cargar todos los resultados"
+    }
+  },
+  "DRAWER_ESTADISTICAS": {
+    "TITLE": "Estadísticas por zona",
+    "OPERATION_TYPE": "Tipo de operación",
+    "METRIC": "Métrica",
+    "METRIC_PRICE": "Precio medio (€)",
+    "METRIC_SIZE": "Tamaño medio (m²)",
+    "METRIC_SCORE": "Score medio"
+  },
+  "DRAWER_COMPARADOR": {
+    "TITLE": "Comparador de zonas",
+    "ZONE_A": "Zona A",
+    "ZONE_B": "Zona B",
+    "ZONE_PLACEHOLDER": "Selecciona...",
+    "OPERATION_TYPE_LABEL": "Tipo de operación:",
+    "OP_SALE_EMOJI": "🏠 Venta",
+    "OP_RENT_EMOJI": "🔑 Alquiler",
+    "COMPARING": "Comparando",
+    "VS": "vs",
+    "CHART_PRICE": "Precio medio (€)",
+    "CHART_SIZE": "Tamaño medio (m²)",
+    "CHART_SCORE": "Score medio",
+    "CHART_COUNT": "Número de pisos",
+    "TABLE_METRIC": "Métrica",
+    "TABLE_PRICE": "Precio medio (€)",
+    "TABLE_SIZE": "Tamaño medio (m²)",
+    "TABLE_SCORE": "Score medio",
+    "TABLE_COUNT": "Nº de pisos",
+    "EMPTY": "Selecciona dos zonas para comparar."
+  },
+  "DRAWER_ENTORNO": {
+    "ARIA_PANEL": "Entorno del piso",
+    "ARIA_EXPAND": "Expandir panel de entorno",
+    "ARIA_COLLAPSE": "Colapsar panel de entorno",
+    "TITLE_EXPAND": "Ver entorno",
+    "TITLE_COLLAPSE": "Colapsar",
+    "HEADING": "Entorno",
+    "LOADING": "Cargando entorno…",
+    "NO_DATA": "Sin datos disponibles",
+    "POI_UNNAMED": "(sin nombre)",
+    "ROUTE_FOOT": "Ruta a pie",
+    "ROUTE_BIKE": "Ruta en bici",
+    "ROUTE_CAR": "Ruta en coche",
+    "CATEGORIES": {
+      "TRANSPORT": "Transporte",
+      "HEALTH": "Sanidad",
+      "EDUCATION": "Educación",
+      "PARK": "Parques",
+      "COMMERCE": "Comercio",
+      "BIKE": "Carril bici"
+    }
+  },
+  "TUTORIAL": {
+    "TOOLTIP": "Cómo usar MadHousing",
+    "FAB_LABEL": "Ayuda",
+    "ARIA_PREV": "Anterior",
+    "ARIA_NEXT": "Siguiente",
+    "ARIA_SLIDE": "Slide {{n}}",
+    "START": "¡Empezar!",
+    "SKIP": "Saltar tutorial",
+    "COUNTER": "{{current}} / {{total}}",
+    "SLIDES": {
+      "WELCOME": {
+        "TITLE": "Bienvenido a MadHousing",
+        "BODY": "Tu herramienta para explorar el mercado inmobiliario de Madrid. Visualiza pisos, analiza zonas y toma decisiones más informadas."
+      },
+      "SEARCH": {
+        "TITLE": "Busca pisos",
+        "BODY": "Usa el Buscador en la barra superior para filtrar por precio, tamaño, habitaciones o zona. Los resultados aparecen directamente en el mapa."
+      },
+      "MAP_MODES": {
+        "TITLE": "Tres modos de mapa",
+        "BODY": "Alterna entre el mapa de calor (densidad de pisos), el coroplético (valor medio por zona) y las chinchetas (ubicación exacta de cada piso)."
+      },
+      "SCORE": {
+        "TITLE": "Score de cada piso",
+        "BODY": "Cada propiedad tiene un score calculado automáticamente. Cuanto más alto, mejor relación calidad-precio según la zona y las características del piso."
+      },
+      "FAVS_HISTORY": {
+        "TITLE": "Favoritos e historial",
+        "BODY": "Guarda los pisos que más te interesan en Favoritos. En Historial puedes recuperar búsquedas anteriores y reaplicar sus filtros al instante."
+      },
+      "STATS_COMP": {
+        "TITLE": "Estadísticas y comparador",
+        "BODY": "Consulta estadísticas agregadas de tus resultados y compara pisos lado a lado para encontrar la mejor opción."
+      }
+    }
+  },
+  "LEYENDA_SCORE": {
+    "ARIA_HIDE": "Cerrar leyenda",
+    "ARIA_SHOW": "Mostrar leyenda de score",
+    "TOGGLE_LABEL": "Leyenda",
+    "PANEL_TITLE": "Score del piso",
+    "SALE_INFO": "Relación €/m² — menor es mejor",
+    "RENT_INFO": "Precio total — más barato, mejor score"
+  },
+  "MAP_CONTROLS": {
+    "TRIGGER": "Controles",
+    "SECTION_VIEW": "Vista",
+    "SECTION_CONTEXT": "Contexto",
+    "SECTION_TOOLS": "Herramientas",
+    "SECTION_ACTIONS": "Acciones",
+    "LAYER_CHORO": "Coroplético",
+    "LAYER_HEAT": "Heatmap",
+    "LAYER_PINS": "Chinchetas",
+    "TOOL_RADIUS": "Radio",
+    "TOOL_RADIUS_TITLE": "Filtro radio",
+    "TOOL_ISOCHRONE": "Isócronas",
+    "TOOL_ROUTE": "Ruta",
+    "ACTION_CLEAR": "Limpiar",
+    "ACTION_CENTER": "Centrar"
+  },
+  "MAP_PANELS": {
+    "LOADING_MAP": "Cargando mapa",
+    "RADIUS_HINT": "Haz clic en el mapa para definir el centro",
+    "ISOCHRONE_HINT": "Haz clic en el mapa para calcular isócronas",
+    "MODE_FOOT_TITLE": "A pie",
+    "MODE_BIKE_TITLE": "Bicicleta",
+    "MODE_CAR_TITLE": "Coche",
+    "ISOCHRONE": {
+      "TITLE": "Isócronas",
+      "RANGE_LABEL": "{{n}} min",
+      "SELECT_POINT": "Seleccionar punto",
+      "CANCEL": "Cancelar",
+      "CALCULATING": "Calculando...",
+      "MOVE_POINT_TITLE": "Mover punto",
+      "PROPERTIES_SHORT": "prop.",
+      "CLEAR": "Borrar"
+    },
+    "ROUTE": {
+      "TITLE": "Ruta",
+      "HINT_ORIGIN": "Haz clic en el mapa o sobre un piso para fijar el origen",
+      "HINT_DEST": "Ahora haz clic para el destino",
+      "PLACEHOLDER_ORIGIN": "Clic para origen…",
+      "PLACEHOLDER_DEST": "Clic para destino…",
+      "CALCULATING": "Calculando ruta…",
+      "SWAP_TITLE": "Invertir origen y destino",
+      "CLEAR": "Limpiar",
+      "LABEL_PROPERTY": "Piso",
+      "LABEL_MAP_POINT": "Punto del mapa"
+    },
+    "RADIUS": {
+      "TITLE": "Radio de búsqueda",
+      "PROPERTIES_SHORT": "prop.",
+      "CLEAR": "Borrar"
+    }
+  },
+  "MAPA_HEADER": {
+    "LOGOUT": "Cerrar sesión",
+    "ADMIN": "Admin",
+    "FAVORITES": "Favoritos",
+    "HISTORY": "Historial",
+    "STATS": "Estadísticas",
+    "COMPARATOR": "Comparador",
+    "SEARCH": "Buscador"
+  },
+  "SESSION_EXPIRED": {
+    "TITLE": "Sesión expirada",
+    "BODY": "Tu sesión ha expirado. Vuelve a iniciar sesión para continuar.",
+    "CTA": "Ir al login"
+  },
+  "LOGIN": {
+    "INFO": {
+      "SUBTITLE": "Buscador de pisos en Madrid con mapa interactivo, sistema de filtros, comparador de zonas, y registro de historial y favoritos",
+      "FEATURE_MAP_TITLE": "Mapa interactivo",
+      "FEATURE_MAP_BODY": "Explora las viviendas directamente sobre el mapa, filtra por zona, precio y características.",
+      "FEATURE_USER_TITLE": "Registro de usuario",
+      "FEATURE_USER_BODY": "Guarda tus pisos favoritos y tus búsquedas en tu propio perfil.",
+      "FEATURE_ANALYTICS_TITLE": "Herramientas de análisis",
+      "FEATURE_ANALYTICS_BODY": "Consulta los datos globales de la aplicación, además de comparar zonas concretas."
+    },
+    "MODE_LOGIN": "Iniciar sesión",
+    "MODE_REGISTER": "Crear cuenta",
+    "LABEL_USERNAME": "Usuario",
+    "LABEL_PASSWORD": "Contraseña",
+    "SUBMIT_LOGIN": "Entrar",
+    "SUBMIT_LOGIN_LOADING": "Iniciando sesión…",
+    "SUBMIT_REGISTER": "Registrarse",
+    "SUBMIT_REGISTER_LOADING": "Creando cuenta…",
+    "ERRORS": {
+      "USERNAME_REQUIRED": "El usuario es obligatorio.",
+      "PASSWORD_REQUIRED": "La contraseña es obligatoria.",
+      "USERNAME_MIN": "Mínimo 3 caracteres.",
+      "PASSWORD_MIN": "Mínimo 6 caracteres.",
+      "BAD_CREDENTIALS": "Usuario o contraseña incorrectos.",
+      "USERNAME_TAKEN": "El nombre de usuario ya está en uso.",
+      "REGISTER_FAIL": "Error al registrar. Inténtalo de nuevo."
+    },
+    "NOTICES": {
+      "SESSION_EXPIRED": "Tu sesión ha expirado. Por favor, vuelve a iniciar sesión.",
+      "REGISTER_OK": "Cuenta creada. Ya puedes iniciar sesión."
+    }
+  }
+}

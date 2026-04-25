@@ -1,7 +1,7 @@
 <app-drawer-shell
   [opened]="opened"
   (openedChange)="onOpenedChange($event)"
-  [title]="'Comparador de zonas'"
+  [title]="'DRAWER_COMPARADOR.TITLE' | transloco"
   position="right"
   [width]="'800px'"
   [loading]="loading"
@@ -9,35 +9,36 @@
   <div drawer-content>
     <div class="selectors">
       <div class="group">
-        <label for="comp-zona-a">Zona A</label>
+        <label for="comp-zona-a">{{ 'DRAWER_COMPARADOR.ZONE_A' | transloco }}</label>
         <select id="comp-zona-a" [(ngModel)]="zonaA" (ngModelChange)="onZonaChange()">
-          <option [ngValue]="null">Selecciona...</option>
+          <option [ngValue]="null">{{ 'DRAWER_COMPARADOR.ZONE_PLACEHOLDER' | transloco }}</option>
           <option *ngFor="let z of zonasConDatos" [ngValue]="z">{{ z }}</option>
         </select>
       </div>
 
       <div class="group">
-        <label for="comp-zona-b">Zona B</label>
+        <label for="comp-zona-b">{{ 'DRAWER_COMPARADOR.ZONE_B' | transloco }}</label>
         <select id="comp-zona-b" [(ngModel)]="zonaB" (ngModelChange)="onZonaChange()">
-          <option [ngValue]="null">Selecciona...</option>
+          <option [ngValue]="null">{{ 'DRAWER_COMPARADOR.ZONE_PLACEHOLDER' | transloco }}</option>
           <option *ngFor="let z of zonasConDatos" [ngValue]="z">{{ z }}</option>
         </select>
       </div>
     </div>
 
     <div class="operation-toggle">
-      <label for="comp-operacion">Tipo de operación:</label>
+      <label for="comp-operacion">{{ 'DRAWER_COMPARADOR.OPERATION_TYPE_LABEL' | transloco }}</label>
       <select id="comp-operacion" [(ngModel)]="tipoOperacion" (change)="onOperacionChange()">
-        <option value="sale">🏠 Venta</option>
-        <option value="rent">🔑 Alquiler</option>
+        <option value="sale">{{ 'DRAWER_COMPARADOR.OP_SALE_EMOJI' | transloco }}</option>
+        <option value="rent">{{ 'DRAWER_COMPARADOR.OP_RENT_EMOJI' | transloco }}</option>
       </select>
     </div>
 
     <div *ngIf="zonaA && zonaB" class="comparacion">
       <div class="summary">
         <span class="summary__text">
-          Comparando <strong>{{ zonaA }}</strong> vs <strong>{{ zonaB }}</strong>
-          · {{ tipoOperacion === 'sale' ? 'Venta' : 'Alquiler' }}
+          {{ 'DRAWER_COMPARADOR.COMPARING' | transloco }}
+          <strong>{{ zonaA }}</strong> {{ 'DRAWER_COMPARADOR.VS' | transloco }} <strong>{{ zonaB }}</strong>
+          · {{ (tipoOperacion === 'sale' ? 'COMMON.OPERATION.SALE' : 'COMMON.OPERATION.RENT') | transloco }}
         </span>
         <div class="legend">
           <span class="legend__item"><span class="dot dot--a"></span>{{ zonaA }}</span>
@@ -47,28 +48,28 @@
 
       <div class="chart-grid">
         <div class="chart-item">
-          <h4>Precio medio (€)</h4>
+          <h4>{{ 'DRAWER_COMPARADOR.CHART_PRICE' | transloco }}</h4>
           <div class="chart-canvas">
             <canvas #precioCanvas></canvas>
           </div>
         </div>
 
         <div class="chart-item">
-          <h4>Tamaño medio (m²)</h4>
+          <h4>{{ 'DRAWER_COMPARADOR.CHART_SIZE' | transloco }}</h4>
           <div class="chart-canvas">
             <canvas #tamanoCanvas></canvas>
           </div>
         </div>
 
         <div class="chart-item">
-          <h4>Score medio</h4>
+          <h4>{{ 'DRAWER_COMPARADOR.CHART_SCORE' | transloco }}</h4>
           <div class="chart-canvas">
             <canvas #scoreCanvas></canvas>
           </div>
         </div>
 
         <div class="chart-item">
-          <h4>Número de pisos</h4>
+          <h4>{{ 'DRAWER_COMPARADOR.CHART_COUNT' | transloco }}</h4>
           <div class="chart-canvas">
             <canvas #countCanvas></canvas>
           </div>
@@ -79,29 +80,29 @@
       <table class="comparador-tabla">
         <thead>
           <tr>
-            <th>Métrica</th>
+            <th>{{ 'DRAWER_COMPARADOR.TABLE_METRIC' | transloco }}</th>
             <th>{{ zonaA }}</th>
             <th>{{ zonaB }}</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Precio medio (€)</td>
+            <td>{{ 'DRAWER_COMPARADOR.TABLE_PRICE' | transloco }}</td>
             <td>{{ getDatosZona(zonaA)?.precio_medio?.toLocaleString?.() ?? '—' }}</td>
             <td>{{ getDatosZona(zonaB)?.precio_medio?.toLocaleString?.() ?? '—' }}</td>
           </tr>
           <tr>
-            <td>Tamaño medio (m²)</td>
+            <td>{{ 'DRAWER_COMPARADOR.TABLE_SIZE' | transloco }}</td>
             <td>{{ getDatosZona(zonaA)?.tamano_medio?.toFixed?.(1) ?? '—' }}</td>
             <td>{{ getDatosZona(zonaB)?.tamano_medio?.toFixed?.(1) ?? '—' }}</td>
           </tr>
           <tr>
-            <td>Score medio</td>
+            <td>{{ 'DRAWER_COMPARADOR.TABLE_SCORE' | transloco }}</td>
             <td>{{ getDatosZona(zonaA)?.score_medio?.toFixed?.(1) ?? '—' }}</td>
             <td>{{ getDatosZona(zonaB)?.score_medio?.toFixed?.(1) ?? '—' }}</td>
           </tr>
           <tr>
-            <td>Nº de pisos</td>
+            <td>{{ 'DRAWER_COMPARADOR.TABLE_COUNT' | transloco }}</td>
             <td>{{ getDatosZona(zonaA)?.count ?? '—' }}</td>
             <td>{{ getDatosZona(zonaB)?.count ?? '—' }}</td>
           </tr>
@@ -110,7 +111,7 @@
     </div>
 
     <p *ngIf="!zonaA || !zonaB" class="empty-msg">
-      Selecciona dos zonas para comparar.
+      {{ 'DRAWER_COMPARADOR.EMPTY' | transloco }}
     </p>
   </div>
 </app-drawer-shell>

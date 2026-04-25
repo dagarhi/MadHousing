@@ -28,6 +28,8 @@ export class SnapDragDirective implements OnInit, OnDestroy {
   private startPY   = 0;
   private startTop  = 0;
   private startLeft = 0;
+  private resizeObserver?: ResizeObserver;
+  private resizeRaf = 0;
 
   private readonly boundMove   = this.onMove.bind(this);
   private readonly boundUp     = this.onUp.bind(this);
@@ -59,6 +61,21 @@ export class SnapDragDirective implements OnInit, OnDestroy {
 
     this.el.addEventListener('pointerdown', this.onDown.bind(this));
     window.addEventListener('resize', this.boundResize);
+
+    // Si el contenido del elemento cambia de tamaño (p.ej. Transloco sustituye
+    // el texto al cambiar de idioma), recalculamos la posición para que el
+    // botón no se salga del viewport. Skip durante drag — ahí mandamos nosotros.
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.dragging) return;
+        cancelAnimationFrame(this.resizeRaf);
+        this.resizeRaf = requestAnimationFrame(() => {
+          const zone = this.svc.getCurrentZone(this.snapId, this.defaultZone);
+          this.snapToZone(zone, false);
+        });
+      });
+      this.resizeObserver.observe(this.el);
+    }
   }
 
   private onWindowResize(): void {
@@ -202,6 +219,8 @@ export class SnapDragDirective implements OnInit, OnDestroy {
     window.removeEventListener('pointermove', this.boundMove);
     window.removeEventListener('pointerup',   this.boundUp);
     window.removeEventListener('resize',      this.boundResize);
+    cancelAnimationFrame(this.resizeRaf);
+    this.resizeObserver?.disconnect();
     this.hideOverlay();
     this.svc.unregister(this.snapId);
   }

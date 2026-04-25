@@ -20,11 +20,12 @@ import { IsochroneLayerService } from '../../../../core/services/isochrone-layer
 import { RouteLayerService } from '../../../../core/services/route-layer.service';
 import { PopupPropiedadService } from '../../../../core/services/popup-propiedad.service';
 import { DrawerEntornoComponent, RouteRequest } from '../drawer-entorno/drawer-entorno.component';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-mapa-principal',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, MapControlsComponent, SnapDragDirective, DrawerEntornoComponent],
+  imports: [CommonModule, LucideAngularModule, MapControlsComponent, SnapDragDirective, DrawerEntornoComponent, TranslocoModule],
   templateUrl: './mapa-principal.component.html',
   styleUrls: ['./mapa-principal.component.scss'],
 })
@@ -99,6 +100,7 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
     private isoLayer: IsochroneLayerService,
     private routeLayer: RouteLayerService,
     private popupSvc: PopupPropiedadService,
+    private transloco: TranslocoService,
   ) {
     this.subs.add(
       this.popupSvc.entornoRequested$.subscribe(piso => this.zone.run(() => {
@@ -541,10 +543,12 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
         lnglat = [coords[0], coords[1]];
         const pisoId: string | undefined = f.properties?.id;
         const piso = pisoId ? this.allPisos.find(p => p.propertyCode === pisoId) : null;
-        label = piso?.address ? this.truncate(piso.address, 28) : 'Piso';
+        label = piso?.address
+          ? this.truncate(piso.address, 28)
+          : this.transloco.translate('MAP_PANELS.ROUTE.LABEL_PROPERTY');
       } else {
         lnglat = [e.lngLat.lng, e.lngLat.lat];
-        label = 'Punto del mapa';
+        label = this.transloco.translate('MAP_PANELS.ROUTE.LABEL_MAP_POINT');
       }
 
       if (!this.routeOrigin) {

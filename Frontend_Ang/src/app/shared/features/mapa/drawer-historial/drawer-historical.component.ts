@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DrawerShellComponent } from '../../../components/drawer-shell/drawer-shell.component';
 import { LucideAngularModule } from 'lucide-angular';
+import { TranslocoModule } from '@jsverse/transloco';
 
 import { HistorialService } from '../../../../core/services/historial.service';
 import { HistorialItem } from '../../../../core/models/historial.model';
@@ -10,7 +11,7 @@ import { FiltroBusqueda } from '../../../../core/models/filtros.model';
 @Component({
   selector: 'app-drawer-historial',
   standalone: true,
-  imports: [CommonModule, DrawerShellComponent, LucideAngularModule],
+  imports: [CommonModule, DrawerShellComponent, LucideAngularModule, TranslocoModule],
   templateUrl: './drawer-historial.component.html',
   styleUrls: ['./drawer-historial.component.scss'],
 })

@@ -15,6 +15,7 @@ import { ZonasJerarquicas } from '../../../../core/models/zona.model';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { lastValueFrom } from 'rxjs';
 
 type Rango = [number, number];
@@ -29,7 +30,8 @@ type Rango = [number, number];
     LucideAngularModule,
     MatFormFieldModule,
     MatInputModule,
-    MatIconModule
+    MatIconModule,
+    TranslocoModule
   ],
   templateUrl: './buscador.component.html',
   styleUrls: ['./buscador.component.scss']
@@ -78,6 +80,7 @@ export class BuscadorComponent implements OnChanges {
     private readonly busqueda: BusquedaService,
     private readonly zonasSrv: ZonasService,
     private readonly historialSrv: HistorialService,
+    private readonly transloco: TranslocoService,
   ) { }
 
   async ngOnChanges(changes: SimpleChanges) {
@@ -202,7 +205,7 @@ export class BuscadorComponent implements OnChanges {
   async buscarPisos() {
     const zonaSeleccionada = this.barrio || this.distrito || this.municipio;
     if (!zonaSeleccionada) {
-      alert('Selecciona una zona válida');
+      alert(this.transloco.translate('BUSCADOR.ERRORS.NO_ZONE'));
       return;
     }
 
@@ -231,7 +234,7 @@ export class BuscadorComponent implements OnChanges {
       this.onOpenedChange(false);
     } catch (err) {
       const e = err as Error;
-      alert('Error al buscar pisos: ' + e.message);
+      alert(this.transloco.translate('BUSCADOR.ERRORS.SEARCH_FAIL', { msg: e.message }));
     } finally {
       this.loading = false;
     }
@@ -271,12 +274,12 @@ export class BuscadorComponent implements OnChanges {
 
       this.resultados.emit({ pisos, filtros });
 
-      this.historialSrv.add(filtros, 'Todas las propiedades');
+      this.historialSrv.add(filtros, this.transloco.translate('DRAWER_HISTORIAL.RESUMEN_ALL'));
 
       this.onOpenedChange(false);
     } catch (err) {
       console.error('Error al cargar todos los resultados', err);
-      alert('Error al cargar todos los resultados');
+      alert(this.transloco.translate('BUSCADOR.ERRORS.LOAD_ALL_FAIL'));
     } finally {
       this.loading = false;
     }

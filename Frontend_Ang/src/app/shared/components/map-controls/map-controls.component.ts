@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
+import { TranslocoModule } from '@jsverse/transloco';
 import {
   animate,
   style,
@@ -20,34 +21,34 @@ export type PoiKey = 'transport' | 'health' | 'education' | 'park' | 'commerce' 
 
 interface PoiOption {
   key: PoiKey;
-  label: string;
+  labelKey: string;
   icon: string;
 }
 
 interface LayerOption {
   value: Modo;
-  label: string;
+  labelKey: string;
 }
 
 const LAYERS: LayerOption[] = [
-  { value: 'coropletico', label: 'Coroplético' },
-  { value: 'heat',        label: 'Heatmap'     },
-  { value: 'chinchetas',  label: 'Chinchetas'  },
+  { value: 'coropletico', labelKey: 'MAP_CONTROLS.LAYER_CHORO' },
+  { value: 'heat',        labelKey: 'MAP_CONTROLS.LAYER_HEAT'  },
+  { value: 'chinchetas',  labelKey: 'MAP_CONTROLS.LAYER_PINS'  },
 ];
 
 const POIS: PoiOption[] = [
-  { key: 'transport', label: 'Transporte',  icon: 'train-front' },
-  { key: 'health',    label: 'Sanidad',     icon: 'cross' },
-  { key: 'education', label: 'Educación',   icon: 'graduation-cap' },
-  { key: 'park',      label: 'Parques',     icon: 'trees' },
-  { key: 'commerce',  label: 'Comercio',    icon: 'shopping-cart' },
-  { key: 'bike',      label: 'Carril bici', icon: 'bike' },
+  { key: 'transport', labelKey: 'DRAWER_ENTORNO.CATEGORIES.TRANSPORT', icon: 'train-front' },
+  { key: 'health',    labelKey: 'DRAWER_ENTORNO.CATEGORIES.HEALTH',    icon: 'cross' },
+  { key: 'education', labelKey: 'DRAWER_ENTORNO.CATEGORIES.EDUCATION', icon: 'graduation-cap' },
+  { key: 'park',      labelKey: 'DRAWER_ENTORNO.CATEGORIES.PARK',      icon: 'trees' },
+  { key: 'commerce',  labelKey: 'DRAWER_ENTORNO.CATEGORIES.COMMERCE',  icon: 'shopping-cart' },
+  { key: 'bike',      labelKey: 'DRAWER_ENTORNO.CATEGORIES.BIKE',      icon: 'bike' },
 ];
 
 @Component({
   selector: 'app-map-controls',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, TranslocoModule],
   templateUrl: './map-controls.component.html',
   styleUrls: ['./map-controls.component.scss'],
   animations: [

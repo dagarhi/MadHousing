@@ -1,7 +1,7 @@
 <app-drawer-shell
   [(opened)]="opened"
   (openedChange)="onOpenedChange($event)"
-  [title]="'Mis pisos favoritos'"
+  [title]="'DRAWER_FAVORITOS.TITLE' | transloco"
   position="right"
   [width]="'460px'"
 >
@@ -9,24 +9,24 @@
   <div drawer-content>
     <ng-container *ngIf="(favoritos.favoritos$ | async) as lista">
       <p *ngIf="lista.length === 0" class="empty-msg">
-        No tienes pisos guardados aún.
+        {{ 'DRAWER_FAVORITOS.EMPTY' | transloco }}
       </p>
 
       <div *ngFor="let p of lista" class="favorito-item">
         <div class="info">
-          <h4>{{ p.address || 'Dirección desconocida' }}</h4>
+          <h4>{{ p.address || ('POPUP.UNKNOWN_ADDRESS' | transloco) }}</h4>
           <p class="detalle">
-            {{ p.price ? (p.price | number) + ' €' : 'Sin precio' }} —
-            {{ p.size ? p.size + ' m²' : 'Sin tamaño' }}
+            {{ p.price ? ((p.price | number) + ' €') : ('POPUP.NO_PRICE' | transloco) }} —
+            {{ p.size ? (p.size + ' m²') : ('DRAWER_FAVORITOS.NO_SIZE' | transloco) }}
           </p>
           <button class="go-btn" (click)="irAlFavorito(p)">
             <lucide-icon name="map-pin" [size]="14"></lucide-icon>
-            Ir al piso
+            {{ 'DRAWER_FAVORITOS.GO_TO_PROPERTY' | transloco }}
           </button>
           <textarea
             class="nota-input"
             rows="2"
-            placeholder="Añadir nota..."
+            [placeholder]="'DRAWER_FAVORITOS.NOTE_PLACEHOLDER' | transloco"
             [value]="favoritos.getNota(p.propertyCode)"
             (blur)="guardarNota(p, $event)"
             (keydown.enter)="guardarNotaEnter(p, $event)"
@@ -35,7 +35,7 @@
 
         <button class="remove-btn" (click)="quitarFavorito(p)">
           <lucide-icon name="trash-2" [size]="16"></lucide-icon>
-          Quitar
+          {{ 'DRAWER_FAVORITOS.REMOVE' | transloco }}
         </button>
       </div>
     </ng-container>
@@ -45,7 +45,7 @@
   <div drawer-footer>
     <button class="clear-btn" (click)="borrarTodos()">
       <lucide-icon name="trash"></lucide-icon>
-      Borrar todos
+      {{ 'DRAWER_FAVORITOS.CLEAR_ALL' | transloco }}
     </button>
   </div>
 </app-drawer-shell>

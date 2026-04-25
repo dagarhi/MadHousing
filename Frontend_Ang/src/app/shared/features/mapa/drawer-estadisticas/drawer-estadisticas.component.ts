@@ -7,6 +7,7 @@ import { ThemeService } from '../../../../core/services/theme.service';
 import { LucideAngularModule } from 'lucide-angular';
 import { FormsModule } from '@angular/forms';
 import { NgChartsModule } from 'ng2-charts';
+import { TranslocoModule } from '@jsverse/transloco';
 import { ChartConfiguration } from 'chart.js';
 import { Subscription } from 'rxjs';
 
@@ -17,7 +18,7 @@ const BRAND_RENT = '#7c3aed';
 @Component({
   selector: 'app-drawer-estadisticas',
   standalone: true,
-  imports: [CommonModule, DrawerShellComponent, LucideAngularModule, FormsModule, NgChartsModule],
+  imports: [CommonModule, DrawerShellComponent, LucideAngularModule, FormsModule, NgChartsModule, TranslocoModule],
   templateUrl: './drawer-estadisticas.component.html',
   styleUrls: ['./drawer-estadisticas.component.scss'],
 })

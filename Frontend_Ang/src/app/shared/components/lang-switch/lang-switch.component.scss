@@ -1,0 +1,65 @@
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  min-width: 40px;
+  padding: 0 0.6rem;
+  border-radius: 9999px;
+  border: none;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &__current {
+    display: inline-block;
+    min-width: 1.6em;
+    text-align: center;
+  }
+
+  /* Variante para cabeceras de fondo oscuro/coloreado (mapa). */
+  &--dark {
+    background: var(--header-btn-bg, rgba(0, 0, 0, 0.18));
+    color: #ffffff;
+
+    &:hover {
+      background: var(--header-btn-hover, rgba(0, 0, 0, 0.30));
+    }
+  }
+
+  /* Variante para cabeceras claras (admin). */
+  &--light {
+    background: var(--app-card);
+    color: var(--mat-sys-primary);
+    border: 1px solid var(--app-border);
+
+    &:hover {
+      background: var(--panel-item-hover);
+      border-color: var(--mat-sys-primary);
+    }
+  }
+
+  /* Variante flotante: píldora translúcida sobre el gradiente del login. */
+  &--floating {
+    position: fixed;
+    top: 1rem;
+    right: 4rem;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(6px);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.22);
+      border-color: rgba(255, 255, 255, 0.45);
+    }
+  }
+}

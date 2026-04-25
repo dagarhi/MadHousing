@@ -5,11 +5,11 @@
     <div class="header-left">
       <button mat-button class="logout-btn" (click)="logout()">
         <lucide-icon name="log-out" [size]="18"></lucide-icon>
-        <span>Cerrar sesión</span>
+        <span>{{ 'MAPA_HEADER.LOGOUT' | transloco }}</span>
       </button>
       <button *ngIf="isAdmin" mat-button class="admin-btn" (click)="goToAdmin()">
         <lucide-icon name="shield" [size]="18"></lucide-icon>
-        <span>Admin</span>
+        <span>{{ 'MAPA_HEADER.ADMIN' | transloco }}</span>
       </button>
     </div>
 
@@ -23,33 +23,34 @@
 
     <!-- Derecha: resto de acciones -->
     <div class="header-right">
+      <app-lang-switch></app-lang-switch>
       <button mat-button class="theme-btn" (click)="toggleTheme()"
-        [attr.aria-label]="theme.isDark ? 'Modo claro' : 'Modo oscuro'">
+        [attr.aria-label]="(theme.isDark ? 'COMMON.THEME.LIGHT_MODE' : 'COMMON.THEME.DARK_MODE') | transloco">
         <lucide-icon [name]="theme.isDark ? 'sun' : 'moon'" [size]="18"></lucide-icon>
       </button>
       <button mat-button (click)="cerrarOtros('favoritos')">
         <lucide-icon name="heart" [size]="18"></lucide-icon>
-        Favoritos
+        {{ 'MAPA_HEADER.FAVORITES' | transloco }}
       </button>
 
       <button mat-button (click)="cerrarOtros('historial')">
         <lucide-icon name="history" [size]="18"></lucide-icon>
-        Historial
+        {{ 'MAPA_HEADER.HISTORY' | transloco }}
       </button>
 
       <button mat-button (click)="cerrarOtros('estadisticas')">
         <lucide-icon name="bar-chart-3" [size]="18"></lucide-icon>
-        Estadísticas
+        {{ 'MAPA_HEADER.STATS' | transloco }}
       </button>
 
       <button mat-button (click)="cerrarOtros('comparador')">
         <lucide-icon name="columns-3" [size]="18"></lucide-icon>
-        Comparador
+        {{ 'MAPA_HEADER.COMPARATOR' | transloco }}
       </button>
 
       <button mat-button (click)="cerrarOtros('buscador')">
         <lucide-icon name="search" [size]="18"></lucide-icon>
-        Buscador
+        {{ 'MAPA_HEADER.SEARCH' | transloco }}
       </button>
     </div>
   </header>
