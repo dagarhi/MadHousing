@@ -24,12 +24,16 @@ interface TutorialSlide {
 }
 
 const SLIDES: TutorialSlide[] = [
-  { icon: 'house',        titleKey: 'TUTORIAL.SLIDES.WELCOME.TITLE',      bodyKey: 'TUTORIAL.SLIDES.WELCOME.BODY' },
-  { icon: 'search',       titleKey: 'TUTORIAL.SLIDES.SEARCH.TITLE',       bodyKey: 'TUTORIAL.SLIDES.SEARCH.BODY' },
-  { icon: 'layers',       titleKey: 'TUTORIAL.SLIDES.MAP_MODES.TITLE',    bodyKey: 'TUTORIAL.SLIDES.MAP_MODES.BODY' },
-  { icon: 'sparkles',     titleKey: 'TUTORIAL.SLIDES.SCORE.TITLE',        bodyKey: 'TUTORIAL.SLIDES.SCORE.BODY' },
-  { icon: 'heart',        titleKey: 'TUTORIAL.SLIDES.FAVS_HISTORY.TITLE', bodyKey: 'TUTORIAL.SLIDES.FAVS_HISTORY.BODY' },
-  { icon: 'bar-chart-3',  titleKey: 'TUTORIAL.SLIDES.STATS_COMP.TITLE',   bodyKey: 'TUTORIAL.SLIDES.STATS_COMP.BODY' },
+  { icon: 'house',        titleKey: 'TUTORIAL.SLIDES.WELCOME.TITLE',        bodyKey: 'TUTORIAL.SLIDES.WELCOME.BODY' },
+  { icon: 'search',       titleKey: 'TUTORIAL.SLIDES.SEARCH.TITLE',         bodyKey: 'TUTORIAL.SLIDES.SEARCH.BODY' },
+  { icon: 'layers',       titleKey: 'TUTORIAL.SLIDES.MAP_MODES.TITLE',      bodyKey: 'TUTORIAL.SLIDES.MAP_MODES.BODY' },
+  { icon: 'sparkles',     titleKey: 'TUTORIAL.SLIDES.SCORE.TITLE',          bodyKey: 'TUTORIAL.SLIDES.SCORE.BODY' },
+  { icon: 'map-pin',      titleKey: 'TUTORIAL.SLIDES.ENVIRONMENT.TITLE',    bodyKey: 'TUTORIAL.SLIDES.ENVIRONMENT.BODY' },
+  { icon: 'route',        titleKey: 'TUTORIAL.SLIDES.SPATIAL_TOOLS.TITLE',  bodyKey: 'TUTORIAL.SLIDES.SPATIAL_TOOLS.BODY' },
+  { icon: 'heart',        titleKey: 'TUTORIAL.SLIDES.FAVS_HISTORY.TITLE',   bodyKey: 'TUTORIAL.SLIDES.FAVS_HISTORY.BODY' },
+  { icon: 'bar-chart-3',  titleKey: 'TUTORIAL.SLIDES.STATS_COMP.TITLE',     bodyKey: 'TUTORIAL.SLIDES.STATS_COMP.BODY' },
+  { icon: 'calculator',   titleKey: 'TUTORIAL.SLIDES.MORTGAGE.TITLE',       bodyKey: 'TUTORIAL.SLIDES.MORTGAGE.BODY' },
+  { icon: 'languages',    titleKey: 'TUTORIAL.SLIDES.PREFERENCES.TITLE',    bodyKey: 'TUTORIAL.SLIDES.PREFERENCES.BODY' },
 ];
 
 @Component({
@@ -54,7 +58,6 @@ export class MapHelpComponent implements AfterViewInit {
 
   showInfoButton = false;
   slideIndex = 0;
-  fading = false;
   readonly slides = SLIDES;
 
   constructor(private dialog: MatDialog) {}
@@ -96,12 +99,9 @@ export class MapHelpComponent implements AfterViewInit {
   }
 
   goTo(index: number): void {
-    if (index === this.slideIndex || this.fading) return;
-    this.fading = true;
-    setTimeout(() => {
-      this.slideIndex = index;
-      this.fading = false;
-    }, 140);
+    if (index === this.slideIndex) return;
+    if (index < 0 || index >= this.slides.length) return;
+    this.slideIndex = index;
   }
 
   prev(): void { if (!this.isFirst) this.goTo(this.slideIndex - 1); }

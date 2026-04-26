@@ -222,3 +222,6 @@ Backend/backups/
 
 # Memoria del TFG (se gestiona por separado en Overleaf)
 Memoria/
+
+# Configuración local de Claude Code (personal, no compartir)
+.claude/
