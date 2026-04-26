@@ -71,6 +71,7 @@ import {
   GraduationCap,
   Cross,
   ShoppingCart,
+  Languages,
 } from 'lucide-angular';
 import { Legend } from 'chart.js';
 
@@ -150,6 +151,7 @@ bootstrapApplication(AppComponent, {
         GraduationCap,
         Cross,
         ShoppingCart,
+        Languages,
       })
     ),
   ],

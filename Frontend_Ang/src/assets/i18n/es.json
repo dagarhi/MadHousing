@@ -185,24 +185,40 @@
         "BODY": "Tu herramienta para explorar el mercado inmobiliario de Madrid. Visualiza pisos, analiza zonas y toma decisiones más informadas."
       },
       "SEARCH": {
-        "TITLE": "Busca pisos",
-        "BODY": "Usa el Buscador en la barra superior para filtrar por precio, tamaño, habitaciones o zona. Los resultados aparecen directamente en el mapa."
+        "TITLE": "Busca pisos con filtros",
+        "BODY": "Usa el Buscador de la barra superior para filtrar por precio, tamaño, habitaciones, planta y muchos más criterios. Los resultados aparecen directamente sobre el mapa."
       },
       "MAP_MODES": {
         "TITLE": "Tres modos de mapa",
         "BODY": "Alterna entre el mapa de calor (densidad de pisos), el coroplético (valor medio por zona) y las chinchetas (ubicación exacta de cada piso)."
       },
       "SCORE": {
-        "TITLE": "Score de cada piso",
-        "BODY": "Cada propiedad tiene un score calculado automáticamente. Cuanto más alto, mejor relación calidad-precio según la zona y las características del piso."
+        "TITLE": "Score multinivel",
+        "BODY": "Cada piso tiene un score que combina tres niveles: intrínseco (precio y tamaño), contextual (cercanía a servicios urbanos) y final (la combinación ponderada de los anteriores). Cuanto más alto, mejor."
+      },
+      "ENVIRONMENT": {
+        "TITLE": "Analiza el entorno",
+        "BODY": "Activa las capas de puntos de interés: transporte, sanidad, educación, parques, comercio y carriles bici. Descubre qué tiene cada zona a tu alrededor antes de elegir."
+      },
+      "SPATIAL_TOOLS": {
+        "TITLE": "Herramientas espaciales",
+        "BODY": "Dibuja isócronas (a pie, en bici o en coche), traza rutas entre dos puntos y filtra por radio para ver solo los pisos a una distancia concreta de un sitio."
       },
       "FAVS_HISTORY": {
         "TITLE": "Favoritos e historial",
-        "BODY": "Guarda los pisos que más te interesan en Favoritos. En Historial puedes recuperar búsquedas anteriores y reaplicar sus filtros al instante."
+        "BODY": "Guarda los pisos que más te interesen en Favoritos, con notas personales. En Historial puedes recuperar búsquedas anteriores y reaplicarlas al instante."
       },
       "STATS_COMP": {
         "TITLE": "Estadísticas y comparador",
-        "BODY": "Consulta estadísticas agregadas de tus resultados y compara pisos lado a lado para encontrar la mejor opción."
+        "BODY": "Consulta estadísticas agregadas del mercado y compara dos o más zonas lado a lado para encontrar la que mejor encaje contigo."
+      },
+      "MORTGAGE": {
+        "TITLE": "Calculadora de hipoteca",
+        "BODY": "En las propiedades en venta, calcula al vuelo la cuota mensual a partir del precio, la entrada, el plazo y el tipo de interés. Sin salir del mapa."
+      },
+      "PREFERENCES": {
+        "TITLE": "Idioma y tema",
+        "BODY": "Cambia entre español e inglés y entre tema claro y oscuro desde la barra superior. La aplicación recuerda tus preferencias para la próxima visita."
       }
     }
   },
@@ -212,7 +228,8 @@
     "TOGGLE_LABEL": "Leyenda",
     "PANEL_TITLE": "Score del piso",
     "SALE_INFO": "Relación €/m² — menor es mejor",
-    "RENT_INFO": "Precio total — más barato, mejor score"
+    "RENT_INFO": "Precio total — más barato, mejor score",
+    "MULTINIVEL_NOTE": "El score combina precio y tamaño con la cercanía a transporte, sanidad, educación, parques, comercio y carriles bici."
   },
   "MAP_CONTROLS": {
     "TRIGGER": "Controles",

@@ -335,9 +335,6 @@ canvas:focus {
   align-items: center;
   text-align: center;
   min-height: 200px;
-  transition: opacity 0.14s ease;
-
-  &.fading { opacity: 0; }
 }
 
 .tutorial__icon-wrap {
@@ -408,6 +405,8 @@ canvas:focus {
   gap: 0.45rem;
 }
 
+// Visual: círculo de 7x7 (original). Hitbox: 19x19 mediante un pseudo-
+// elemento invisible que extiende el área clickeable sin afectar el render.
 .dot {
   width: 7px;
   height: 7px;
@@ -416,7 +415,15 @@ canvas:focus {
   background: #d1d5db;
   cursor: pointer;
   padding: 0;
+  position: relative;
   transition: background 0.2s, transform 0.2s;
+
+  // Extiende el área clickeable 6px en cada dirección.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+  }
 
   &.dot--active {
     background: #7c3aed;
@@ -428,10 +435,14 @@ canvas:focus {
   }
 }
 
+// Altura mínima fija para evitar que el footer "salte" al cambiar entre
+// btn-skip (pequeño, sin fondo) y btn-start (grande, con fondo morado).
 .tutorial__footer {
   display: flex;
+  align-items: center;
   justify-content: center;
   margin-top: 1.25rem;
+  min-height: 44px;
 }
 
 .btn-start {

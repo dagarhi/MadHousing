@@ -185,24 +185,40 @@
         "BODY": "Your tool to explore Madrid's real estate market. Visualize properties, analyze areas and make better-informed decisions."
       },
       "SEARCH": {
-        "TITLE": "Search properties",
-        "BODY": "Use the Search panel in the top bar to filter by price, size, rooms or area. Results show up directly on the map."
+        "TITLE": "Search with filters",
+        "BODY": "Use the Search panel in the top bar to filter by price, size, rooms, floor and many more criteria. Results show up directly on the map."
       },
       "MAP_MODES": {
         "TITLE": "Three map modes",
         "BODY": "Switch between the heat map (property density), the choropleth (average value per area) and the pins (exact location of each property)."
       },
       "SCORE": {
-        "TITLE": "Property score",
-        "BODY": "Each property has an automatically computed score. Higher means a better quality-price ratio for the area and the property's features."
+        "TITLE": "Multilevel score",
+        "BODY": "Every property has a score that combines three levels: intrinsic (price and size), contextual (proximity to urban services) and final (the weighted blend of the previous two). The higher, the better."
+      },
+      "ENVIRONMENT": {
+        "TITLE": "Analyze the surroundings",
+        "BODY": "Toggle the points-of-interest layers: transport, healthcare, education, parks, retail and bike lanes. Discover what's around each area before choosing."
+      },
+      "SPATIAL_TOOLS": {
+        "TITLE": "Spatial tools",
+        "BODY": "Draw isochrones (walking, cycling or driving), trace routes between two points and apply a radius filter to see only properties within a given distance from a place."
       },
       "FAVS_HISTORY": {
         "TITLE": "Favorites and history",
-        "BODY": "Save the properties you're interested in to Favorites. In History you can recover past searches and reapply their filters instantly."
+        "BODY": "Save the properties you care about to Favorites with personal notes. In History you can recover past searches and reapply their filters instantly."
       },
       "STATS_COMP": {
         "TITLE": "Statistics and comparator",
-        "BODY": "Browse aggregate statistics for your results and compare properties side by side to find the best option."
+        "BODY": "Browse aggregate market statistics and compare two or more areas side by side to find the one that fits you best."
+      },
+      "MORTGAGE": {
+        "TITLE": "Mortgage calculator",
+        "BODY": "On properties for sale, compute the monthly payment from the price, down payment, term and interest rate — without leaving the map."
+      },
+      "PREFERENCES": {
+        "TITLE": "Language and theme",
+        "BODY": "Switch between Spanish and English, and between light and dark theme, from the top bar. The app remembers your preferences for next time."
       }
     }
   },
@@ -212,7 +228,8 @@
     "TOGGLE_LABEL": "Legend",
     "PANEL_TITLE": "Property score",
     "SALE_INFO": "€/m² ratio — lower is better",
-    "RENT_INFO": "Total price — cheaper means better score"
+    "RENT_INFO": "Total price — cheaper means better score",
+    "MULTINIVEL_NOTE": "The score combines price and size with proximity to transport, healthcare, education, parks, retail and bike lanes."
   },
   "MAP_CONTROLS": {
     "TRIGGER": "Controls",
