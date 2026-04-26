@@ -219,3 +219,6 @@ Backend/venv/
 .vscode/pisos_local_backup.db
 pisos_local_backup.db
 Backend/backups/
+
+# Memoria del TFG (se gestiona por separado en Overleaf)
+Memoria/

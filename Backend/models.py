@@ -18,6 +18,10 @@ class Propiedad(Base):
     rooms = Column(Integer)
     bathrooms = Column(Integer)
     floor = Column(String(20))
+    # Versión numérica de `floor` para filtrar por planta mínima en /buscar.
+    # `floor` cruda incluye códigos no numéricos ('bj', 'en', 'st') que se
+    # mapean a NULL → no aparecen al filtrar por floor_num >= N.
+    floor_num = Column(Integer, nullable=True, index=True)
     address = Column(String(255))
     district = Column(String(100), index=True)
     neighborhood = Column(String(100))
@@ -53,6 +57,7 @@ class Propiedad(Base):
             "rooms": self.rooms,
             "bathrooms": self.bathrooms,
             "floor": self.floor,
+            "floor_num": self.floor_num,
             "address": self.address,
             "district": self.district,
             "neighborhood": self.neighborhood,
