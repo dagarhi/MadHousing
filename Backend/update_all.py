@@ -184,6 +184,23 @@ def build_tasks(state: dict) -> list:
 
 # ── DB helpers ────────────────────────────────────────────────────────────────
 
+_FLOOR_DIGITS_RE = None
+def parse_floor_num(floor_raw) -> int | None:
+    """Convierte el `floor` de Idealista a entero. Devuelve None para códigos
+    no numéricos ('bj', 'en', 'st') o entrada vacía. Acepta '3', ' 3 ', '3º'."""
+    global _FLOOR_DIGITS_RE
+    if floor_raw is None:
+        return None
+    s = str(floor_raw).strip()
+    if not s:
+        return None
+    if _FLOOR_DIGITS_RE is None:
+        import re
+        _FLOOR_DIGITS_RE = re.compile(r"^-?\d+")
+    m = _FLOOR_DIGITS_RE.match(s)
+    return int(m.group(0)) if m else None
+
+
 def normalise_city(city_val: str, district_val: str, neigh_val: str) -> str:
     if city_val.lower() != "madrid":
         return city_val
@@ -212,6 +229,7 @@ def upsert_properties(db, elements: list, operation: str) -> dict:
             "rooms":        e.get("rooms", 0),
             "bathrooms":    e.get("bathrooms", 0),
             "floor":        e.get("floor", ""),
+            "floor_num":    parse_floor_num(e.get("floor")),
             "address":      e.get("address", ""),
             "district":     district_val,
             "neighborhood": neigh_val,

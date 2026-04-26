@@ -1,14 +1,15 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 from database import get_db, init_db, SessionLocal
-from models import Propiedad, POI, User, Favorite, SearchHistory
+from models import Propiedad, User, Favorite, SearchHistory
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from jose import jwt, JWTError
 from passlib.context import CryptContext
@@ -52,8 +53,10 @@ class TokenResponse(BaseModel):
     role: str
 
 class RegisterRequest(BaseModel):
-    username: str
-    password: str
+    # Validación server-side de longitud — el frontend ya valida pero un
+    # cliente malicioso puede saltársela y registrar con password vacío.
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=6, max_length=128)
 
 class UpdateUserRequest(BaseModel):
     role: Optional[str] = None
@@ -80,16 +83,35 @@ class SearchHistoryOut(BaseModel):
     query: dict
 
 security = HTTPBearer(auto_error=False)
-app = FastAPI(title="Buscador de Pisos API", version="5.0.0")
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Reemplaza al deprecated @app.on_event('startup')."""
+    init_db()
+    seed_admin()
+    print("✅ Base de datos inicializada correctamente")
+    yield
+    # No hay teardown explícito — Cloud Run gestiona el cierre.
+
+
+app = FastAPI(title="Buscador de Pisos API", version="5.0.0", lifespan=lifespan)
 
 # --- CORS Configuration ---
+# Origins explícitos: localhost dev + URL de prod del frontend.
+# Regex añadida para deploy previews de Netlify (deploy-preview-N--site.netlify.app
+# y branch-deploys como nombre-rama--site.netlify.app).
+_explicit_origins = [
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+    *([os.getenv("FRONTEND_URL")] if os.getenv("FRONTEND_URL") else []),
+]
+_netlify_preview_regex = r"https://[a-z0-9-]+--madhousing\.netlify\.app"
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:4200",
-        "http://127.0.0.1:4200",
-        *([os.getenv("FRONTEND_URL")] if os.getenv("FRONTEND_URL") else []),
-    ],
+    allow_origins=_explicit_origins,
+    allow_origin_regex=_netlify_preview_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -150,12 +172,6 @@ def seed_admin():
     finally:
         db.close()
 
-@app.on_event("startup")
-def on_startup():
-    init_db()
-    seed_admin()
-    print("✅ Base de datos inicializada correctamente")
-
 # --- Authentication ---
 
 @app.post("/auth/login", response_model=TokenResponse)
@@ -165,10 +181,11 @@ def login(
 ):
     user = db.query(User).filter(User.username == credentials.username.strip()).first()
     if not user:
-        raise HTTPException(status_code=400, detail="Usuario o contraseña incorrectos")
+        # 401 Unauthorized — credencial inválida; 400 sería para payload mal formado.
+        raise HTTPException(status_code=401, detail="Usuario o contraseña incorrectos")
 
     if not verify_password(credentials.password, user.password_hash):
-        raise HTTPException(status_code=400, detail="Usuario o contraseña incorrectos")
+        raise HTTPException(status_code=401, detail="Usuario o contraseña incorrectos")
 
     access_token = create_access_token(
         data={"sub": user.username, "user_id": user.id, "role": user.role}
@@ -272,7 +289,10 @@ def buscar_propiedades(
     max_price: Optional[float] = Query(None),
     min_size: Optional[float] = Query(None),
     max_size: Optional[float] = Query(None),
+    min_score: Optional[float] = Query(None, ge=0, le=100, description="Umbral mínimo de score_intrinseco"),
+    max_score: Optional[float] = Query(None, ge=0, le=100, description="Umbral máximo de score_intrinseco"),
     rooms: Optional[int] = Query(None),
+    floor: Optional[int] = Query(None, ge=0, description="Planta mínima (numérica). Pisos sin planta numérica no aparecen al usar este filtro."),
     hasLift: Optional[bool] = Query(None),
     context_min: Optional[float] = Query(None, ge=0, le=100, description="Umbral mínimo de score_contexto"),
     final_min: Optional[float] = Query(None, ge=0, le=100, description="Umbral mínimo de score_final"),
@@ -301,8 +321,14 @@ def buscar_propiedades(
         query = query.filter(Propiedad.size >= min_size)
     if max_size is not None:
         query = query.filter(Propiedad.size <= max_size)
+    if min_score is not None:
+        query = query.filter(Propiedad.score_intrinseco >= min_score)
+    if max_score is not None:
+        query = query.filter(Propiedad.score_intrinseco <= max_score)
     if rooms is not None:
         query = query.filter(Propiedad.rooms >= rooms)
+    if floor is not None:
+        query = query.filter(Propiedad.floor_num >= floor)
     if hasLift is not None:
         query = query.filter(Propiedad.hasLift == hasLift)
     if context_min is not None:
@@ -395,8 +421,15 @@ def buscar_todo(
     page: int = Query(1, ge=1),
     per_page: int = Query(2000, le=5000),
     db: Session = Depends(db_from_request),
+    current_user: User = Depends(get_current_user),
 ):
-    """Devuelve todas las propiedades, opcionalmente filtradas por tipo de operación."""
+    """Devuelve todas las propiedades, opcionalmente filtradas por tipo de operación.
+
+    Requiere autenticación: el endpoint puede devolver hasta 5000 filas y se
+    expone fácilmente a abuso si fuera público (sin rate limit el atacante
+    puede saturar Cloud Run o exfiltrar el dataset entero).
+    """
+    del current_user  # solo se usa para forzar auth via Depends
     query = db.query(Propiedad)
     if operation:
         query = query.filter(Propiedad.operation == operation)

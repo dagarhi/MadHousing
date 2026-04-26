@@ -1,0 +1,13 @@
+Method,Name,Error,Occurrences
+GET,/favoritos,HTTPError('500 Server Error: Internal Server Error for url: /favoritos'),36
+GET,/pois [transport],HTTPError('500 Server Error: Internal Server Error for url: /pois [transport]'),45
+GET,/buscar-todo [rent],HTTPError('500 Server Error: Internal Server Error for url: /buscar-todo [rent]'),40
+GET,/buscar [distrito],HTTPError('500 Server Error: Internal Server Error for url: /buscar [distrito]'),23
+GET,/buscar [Madrid rent],HTTPError('500 Server Error: Internal Server Error for url: /buscar [Madrid rent]'),89
+GET,/historial,HTTPError('500 Server Error: Internal Server Error for url: /historial'),14
+GET,/pois [health],HTTPError('500 Server Error: Internal Server Error for url: /pois [health]'),29
+GET,/estadisticas-globales,HTTPError('500 Server Error: Internal Server Error for url: /estadisticas-globales'),20
+GET,/buscar [Madrid sale],HTTPError('500 Server Error: Internal Server Error for url: /buscar [Madrid sale]'),48
+GET,/pois/nearby [Sol],HTTPError('500 Server Error: Internal Server Error for url: /pois/nearby [Sol]'),29
+GET,/buscar [con filtros],HTTPError('500 Server Error: Internal Server Error for url: /buscar [con filtros]'),35
+GET,/zonas-jerarquicas,HTTPError('500 Server Error: Internal Server Error for url: /zonas-jerarquicas'),9
