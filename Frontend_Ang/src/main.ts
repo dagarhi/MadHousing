@@ -72,6 +72,7 @@ import {
   Cross,
   ShoppingCart,
   Languages,
+  Users,
 } from 'lucide-angular';
 import { Legend } from 'chart.js';
 
@@ -152,6 +153,7 @@ bootstrapApplication(AppComponent, {
         Cross,
         ShoppingCart,
         Languages,
+        Users,
       })
     ),
   ],

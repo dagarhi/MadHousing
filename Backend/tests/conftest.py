@@ -159,6 +159,27 @@ def regular_user(db) -> User:
 
 
 @pytest.fixture
+def user_factory(db):
+    """Crea usuarios ad-hoc para tests que necesitan más de uno.
+
+    Uso:
+        u = user_factory(username="alice")
+        u = user_factory(username="bob", role="ADMIN")
+    """
+    def _create(username: str, role: str = "USER", password: str | None = None) -> User:
+        u = User(
+            username=username,
+            password_hash=get_password_hash(password or USER_PASSWORD),
+            role=role,
+        )
+        db.add(u)
+        db.commit()
+        db.refresh(u)
+        return u
+    return _create
+
+
+@pytest.fixture
 def admin_token(admin_user) -> str:
     return create_access_token({
         "sub": admin_user.username,

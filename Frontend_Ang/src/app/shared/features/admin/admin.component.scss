@@ -199,3 +199,199 @@
   color: #ef4444;
   font-weight: 500;
 }
+
+// ── Tarjetas de estadísticas ──────────────────────────────────────────────────
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  background: var(--app-card);
+  border: 1px solid var(--app-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
+  &__icon {
+    flex-shrink: 0;
+    color: var(--mat-sys-primary);
+    width: 28px;
+    height: 28px;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  &__value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--mat-sys-on-surface);
+  }
+
+  &__label {
+    font-size: 0.8rem;
+    color: var(--mat-sys-on-surface-variant);
+    font-weight: 500;
+  }
+
+  &__sub {
+    font-size: 0.7rem;
+    color: var(--mat-sys-on-surface-variant);
+    opacity: 0.85;
+    margin-top: 0.15rem;
+  }
+}
+
+// ── Tabla con scroll vertical ─────────────────────────────────────────────────
+// Antes la tabla podía crecer sin límite si había muchos usuarios. Ahora se
+// limita a un alto razonable y se desplaza verticalmente con la cabecera fija.
+.user-table-wrap {
+  max-height: 60vh;
+  overflow-y: auto;
+  border: 1px solid var(--app-border);
+  border-radius: 0.5rem;
+  background: var(--app-card);
+
+  .user-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--app-card);
+  }
+}
+
+// ── Multi-selección ──────────────────────────────────────────────────────────
+.col-check {
+  width: 36px;
+  text-align: center;
+}
+
+.row-check {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--mat-sys-primary);
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+}
+
+.row-selected {
+  background: color-mix(in oklab, var(--mat-sys-primary) 10%, transparent);
+}
+
+.row-self {
+  opacity: 0.85;
+}
+
+// ── Barra de acciones masivas ────────────────────────────────────────────────
+.admin-bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  margin-bottom: 0.85rem;
+  background: color-mix(in oklab, var(--mat-sys-primary) 8%, transparent);
+  border: 1px solid color-mix(in oklab, var(--mat-sys-primary) 25%, transparent);
+  border-radius: 0.5rem;
+
+  .bulk-count {
+    flex: 1;
+    font-size: 0.85rem;
+    color: var(--mat-sys-on-surface);
+    font-weight: 500;
+  }
+}
+
+.btn-bulk {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+  &--secondary {
+    background: var(--app-card);
+    color: var(--mat-sys-on-surface);
+    border-color: var(--app-border);
+
+    &:hover {
+      background: var(--panel-item-hover);
+    }
+  }
+
+  &--danger {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+
+    &:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+  }
+}
+
+// ── Modal de confirmación masiva ─────────────────────────────────────────────
+.bulk-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease;
+}
+
+.bulk-modal {
+  background: var(--app-card);
+  color: var(--mat-sys-on-surface);
+  border-radius: 0.75rem;
+  padding: 1.5rem 1.5rem 1.25rem;
+  max-width: 420px;
+  width: calc(100% - 2rem);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+
+  h2 {
+    margin: 0 0 0.6rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0 0 1.25rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

@@ -64,11 +64,29 @@
       "LOAD": "Failed to load users.",
       "ROLE_CHANGE": "Failed to change role.",
       "DELETE": "Failed to delete user.",
+      "BULK_DELETE": "Failed to delete the selected users.",
       "FORBIDDEN": "Admin access only.",
       "SELF_ROLE": "You cannot change your own role.",
       "INVALID_ROLE": "Invalid role. Allowed values: USER, ADMIN.",
       "SELF_DELETE": "You cannot delete your own account.",
       "USER_NOT_FOUND": "User not found."
+    },
+    "STATS": {
+      "USERS": "Accounts",
+      "USERS_BREAKDOWN": "{{admins}} admin · {{regular}} regular",
+      "FAVORITES": "Favorites",
+      "SEARCHES": "Searches",
+      "PROPERTIES": "Properties"
+    },
+    "BULK": {
+      "SELECTED": "{{count}} selected",
+      "CLEAR": "Clear",
+      "DELETE_SELECTED": "Delete selected",
+      "TOGGLE_ALL": "Select all",
+      "TOGGLE_ROW": "Select {{user}}",
+      "CONFIRM_TITLE": "Confirm bulk deletion",
+      "CONFIRM_BODY": "You are about to permanently delete {{count}} account(s). This action cannot be undone.",
+      "CONFIRM_BUTTON": "Yes, delete"
     }
   },
   "DRAWER_FAVORITOS": {
