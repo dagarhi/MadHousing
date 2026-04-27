@@ -64,11 +64,29 @@
       "LOAD": "Error al cargar usuarios.",
       "ROLE_CHANGE": "Error al cambiar el rol.",
       "DELETE": "Error al eliminar el usuario.",
+      "BULK_DELETE": "Error al eliminar los usuarios seleccionados.",
       "FORBIDDEN": "Acceso restringido a administradores.",
       "SELF_ROLE": "No puedes modificar tu propio rol.",
       "INVALID_ROLE": "Rol inválido. Valores permitidos: USER, ADMIN.",
       "SELF_DELETE": "No puedes eliminar tu propia cuenta.",
       "USER_NOT_FOUND": "Usuario no encontrado."
+    },
+    "STATS": {
+      "USERS": "Cuentas",
+      "USERS_BREAKDOWN": "{{admins}} admin · {{regular}} regular",
+      "FAVORITES": "Favoritos",
+      "SEARCHES": "Búsquedas",
+      "PROPERTIES": "Viviendas"
+    },
+    "BULK": {
+      "SELECTED": "{{count}} seleccionado(s)",
+      "CLEAR": "Limpiar",
+      "DELETE_SELECTED": "Eliminar seleccionados",
+      "TOGGLE_ALL": "Seleccionar todos",
+      "TOGGLE_ROW": "Seleccionar {{user}}",
+      "CONFIRM_TITLE": "Confirmar borrado masivo",
+      "CONFIRM_BODY": "Vas a eliminar {{count}} cuenta(s) de forma permanente. Esta acción no se puede deshacer.",
+      "CONFIRM_BUTTON": "Sí, eliminar"
     }
   },
   "DRAWER_FAVORITOS": {

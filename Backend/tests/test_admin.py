@@ -117,3 +117,97 @@ class TestDeleteUser:
     def test_regular_user_forbidden(self, client, regular_user, admin_user, user_headers):
         resp = client.delete(f"/admin/users/{admin_user.id}", headers=user_headers)
         assert resp.status_code == 403
+
+
+class TestBulkDelete:
+    def test_admin_can_bulk_delete(self, client, admin_user, admin_headers, db, user_factory):
+        u1 = user_factory(username="bulk1", role="USER")
+        u2 = user_factory(username="bulk2", role="USER")
+        u3 = user_factory(username="bulk3", role="USER")
+
+        resp = client.post(
+            "/admin/users/bulk-delete",
+            json={"ids": [u1.id, u2.id, u3.id]},
+            headers=admin_headers,
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert sorted(body["deleted"]) == sorted([u1.id, u2.id, u3.id])
+        assert body["not_found"] == []
+        assert body["rejected"] == []
+
+        # Verificar en BBDD
+        for uid in [u1.id, u2.id, u3.id]:
+            assert db.query(User).filter(User.id == uid).first() is None
+
+    def test_bulk_delete_skips_own_account(self, client, admin_user, admin_headers, user_factory):
+        u1 = user_factory(username="bulk_a", role="USER")
+
+        resp = client.post(
+            "/admin/users/bulk-delete",
+            json={"ids": [u1.id, admin_user.id]},
+            headers=admin_headers,
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["deleted"] == [u1.id]
+        assert body["rejected"] == [admin_user.id]
+
+    def test_bulk_delete_reports_not_found(self, client, admin_user, admin_headers, user_factory):
+        u1 = user_factory(username="bulk_x", role="USER")
+
+        resp = client.post(
+            "/admin/users/bulk-delete",
+            json={"ids": [u1.id, 9999]},
+            headers=admin_headers,
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["deleted"] == [u1.id]
+        assert body["not_found"] == [9999]
+
+    def test_bulk_delete_empty_list_returns_400(self, client, admin_user, admin_headers):
+        resp = client.post(
+            "/admin/users/bulk-delete",
+            json={"ids": []},
+            headers=admin_headers,
+        )
+        assert resp.status_code == 400
+
+    def test_bulk_delete_regular_user_forbidden(self, client, regular_user, user_headers, user_factory):
+        u1 = user_factory(username="bulk_z", role="USER")
+        resp = client.post(
+            "/admin/users/bulk-delete",
+            json={"ids": [u1.id]},
+            headers=user_headers,
+        )
+        assert resp.status_code == 403
+
+
+class TestStats:
+    def test_admin_can_view_stats(self, client, admin_user, regular_user, admin_headers, db, propiedad_factory):
+        # seed: 1 propiedad para que el contador no sea 0
+        propiedad_factory({"code": "p_admin_1", "city": "Madrid"})
+
+        resp = client.get("/admin/stats", headers=admin_headers)
+        assert resp.status_code == 200
+        body = resp.json()
+
+        # Estructura esperada
+        for key in ("total_users", "total_admins", "total_regular",
+                    "total_favorites", "total_searches", "total_properties"):
+            assert key in body
+
+        # Coherencia: hay 1 admin (admin_user) y 1 regular (regular_user)
+        assert body["total_users"]   == 2
+        assert body["total_admins"]  == 1
+        assert body["total_regular"] == 1
+        assert body["total_properties"] >= 1
+
+    def test_stats_regular_user_forbidden(self, client, regular_user, user_headers):
+        resp = client.get("/admin/stats", headers=user_headers)
+        assert resp.status_code == 403
+
+    def test_stats_unauthenticated_returns_401(self, client):
+        resp = client.get("/admin/stats")
+        assert resp.status_code == 401

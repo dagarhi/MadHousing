@@ -61,6 +61,9 @@ class RegisterRequest(BaseModel):
 class UpdateUserRequest(BaseModel):
     role: Optional[str] = None
 
+class BulkDeleteRequest(BaseModel):
+    ids: List[int]
+
 class FavoriteCreate(BaseModel):
     property_code: str
 
@@ -272,6 +275,66 @@ def eliminar_usuario(
     db.delete(user)
     db.commit()
     return
+
+
+@app.post("/admin/users/bulk-delete")
+def eliminar_usuarios_masivo(
+    body: BulkDeleteRequest,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(db_from_request),
+):
+    """Borra varios usuarios en una sola petición.
+
+    Devuelve un resumen con los IDs efectivamente borrados, los que no se han
+    encontrado y los que se han rechazado por motivos de seguridad (p. ej.
+    intentar borrar la propia cuenta del admin que invoca el endpoint).
+    """
+    if not body.ids:
+        raise HTTPException(status_code=400, detail="La lista de IDs no puede estar vacía")
+
+    deleted: list[int] = []
+    not_found: list[int] = []
+    rejected: list[int] = []
+
+    for uid in body.ids:
+        if uid == current_user.id:
+            rejected.append(uid)
+            continue
+        user = db.query(User).filter(User.id == uid).first()
+        if not user:
+            not_found.append(uid)
+            continue
+        db.delete(user)
+        deleted.append(uid)
+
+    db.commit()
+    return {"deleted": deleted, "not_found": not_found, "rejected": rejected}
+
+
+@app.get("/admin/stats")
+def estadisticas_admin(
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(db_from_request),
+):
+    """Métricas agregadas de uso para el panel de administración.
+
+    Devuelve contadores totales sobre las tablas principales del sistema.
+    Pensado para alimentar las cards de estadísticas del panel admin.
+    """
+    total_users     = db.query(User).count()
+    total_admins    = db.query(User).filter(User.role == "ADMIN").count()
+    total_favorites = db.query(Favorite).count()
+    total_searches  = db.query(SearchHistory).count()
+    total_props     = db.query(Propiedad).count()
+
+    return {
+        "total_users":      total_users,
+        "total_admins":     total_admins,
+        "total_regular":    total_users - total_admins,
+        "total_favorites":  total_favorites,
+        "total_searches":   total_searches,
+        "total_properties": total_props,
+    }
 
 # --- Property Endpoints ---
 

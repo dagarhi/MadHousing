@@ -18,59 +18,157 @@
 
   <main class="admin-content">
 
+    <!-- ── Mensaje de error global ─────────────────────────────────────── -->
     <div *ngIf="errorKey" class="admin-error">
       {{ errorKey | transloco }}
       <button (click)="errorKey = null">✕</button>
     </div>
 
+    <!-- ── Tarjetas de métricas (stats) ────────────────────────────────── -->
+    <section *ngIf="stats" class="admin-stats">
+      <div class="stat-card">
+        <lucide-icon name="users" class="stat-card__icon"></lucide-icon>
+        <div class="stat-card__body">
+          <div class="stat-card__value">{{ stats.total_users }}</div>
+          <div class="stat-card__label">{{ 'ADMIN.STATS.USERS' | transloco }}</div>
+          <div class="stat-card__sub">
+            {{ 'ADMIN.STATS.USERS_BREAKDOWN' | transloco:{ admins: stats.total_admins, regular: stats.total_regular } }}
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <lucide-icon name="heart" class="stat-card__icon"></lucide-icon>
+        <div class="stat-card__body">
+          <div class="stat-card__value">{{ stats.total_favorites }}</div>
+          <div class="stat-card__label">{{ 'ADMIN.STATS.FAVORITES' | transloco }}</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <lucide-icon name="history" class="stat-card__icon"></lucide-icon>
+        <div class="stat-card__body">
+          <div class="stat-card__value">{{ stats.total_searches }}</div>
+          <div class="stat-card__label">{{ 'ADMIN.STATS.SEARCHES' | transloco }}</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <lucide-icon name="house" class="stat-card__icon"></lucide-icon>
+        <div class="stat-card__body">
+          <div class="stat-card__value">{{ stats.total_properties }}</div>
+          <div class="stat-card__label">{{ 'ADMIN.STATS.PROPERTIES' | transloco }}</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Estado de carga ─────────────────────────────────────────────── -->
     <div *ngIf="cargando" class="admin-estado">{{ 'ADMIN.LOADING' | transloco }}</div>
 
-    <table *ngIf="!cargando" class="user-table">
-      <thead>
-        <tr>
-          <th>{{ 'ADMIN.TABLE.ID' | transloco }}</th>
-          <th>{{ 'ADMIN.TABLE.USERNAME' | transloco }}</th>
-          <th>{{ 'ADMIN.TABLE.ROLE' | transloco }}</th>
-          <th>{{ 'ADMIN.TABLE.CREATED_AT' | transloco }}</th>
-          <th>{{ 'ADMIN.TABLE.ACTIONS' | transloco }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let user of users">
-          <td class="col-id">{{ user.id }}</td>
-          <td class="col-username">{{ user.username }}</td>
-          <td class="col-role">
-            <span [class]="'role-badge role-badge--' + user.role.toLowerCase()">{{ user.role }}</span>
-          </td>
-          <td class="col-date">{{ user.created_at | date:'dd/MM/yyyy' }}</td>
-          <td class="col-actions">
-            <ng-container *ngIf="confirmDeleteId !== user.id; else confirmDelete">
-              <button class="btn-action btn-role" (click)="cambiarRol(user)"
-                [title]="'ADMIN.ACTIONS.CHANGE_ROLE_TO' | transloco:{ role: (user.role === 'ADMIN' ? 'USER' : 'ADMIN') }">
-                <lucide-icon name="shield"></lucide-icon>
-              </button>
-              <button class="btn-action btn-delete" (click)="confirmarEliminar(user.id)"
-                [title]="'ADMIN.ACTIONS.DELETE' | transloco">
-                <lucide-icon name="trash-2"></lucide-icon>
-              </button>
-            </ng-container>
-            <ng-template #confirmDelete>
-              <span class="confirm-text">{{ 'ADMIN.ACTIONS.CONFIRM_DELETE' | transloco }}</span>
-              <button class="btn-action btn-delete" (click)="eliminarUsuario(user.id)">
-                {{ 'ADMIN.ACTIONS.YES' | transloco }}
-              </button>
-              <button class="btn-action" (click)="cancelarEliminar()">
-                {{ 'ADMIN.ACTIONS.NO' | transloco }}
-              </button>
-            </ng-template>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <!-- ── Barra de acciones masivas (visible si hay selección) ────────── -->
+    <div *ngIf="!cargando && seleccionados.size > 0" class="admin-bulk-bar">
+      <span class="bulk-count">
+        {{ 'ADMIN.BULK.SELECTED' | transloco:{ count: seleccionados.size } }}
+      </span>
+      <button class="btn-bulk btn-bulk--secondary" (click)="limpiarSeleccion()">
+        {{ 'ADMIN.BULK.CLEAR' | transloco }}
+      </button>
+      <button class="btn-bulk btn-bulk--danger" (click)="pedirConfirmacionMasiva()">
+        <lucide-icon name="trash-2" [size]="14"></lucide-icon>
+        {{ 'ADMIN.BULK.DELETE_SELECTED' | transloco }}
+      </button>
+    </div>
+
+    <!-- ── Tabla de usuarios con scroll vertical ───────────────────────── -->
+    <div *ngIf="!cargando" class="user-table-wrap">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th class="col-check">
+              <input
+                type="checkbox"
+                class="row-check"
+                [checked]="todosSeleccionados"
+                [indeterminate]="algunosSeleccionados"
+                (change)="toggleTodos()"
+                [attr.aria-label]="'ADMIN.BULK.TOGGLE_ALL' | transloco"
+              />
+            </th>
+            <th>{{ 'ADMIN.TABLE.ID' | transloco }}</th>
+            <th>{{ 'ADMIN.TABLE.USERNAME' | transloco }}</th>
+            <th>{{ 'ADMIN.TABLE.ROLE' | transloco }}</th>
+            <th>{{ 'ADMIN.TABLE.CREATED_AT' | transloco }}</th>
+            <th>{{ 'ADMIN.TABLE.ACTIONS' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users"
+              [class.row-selected]="estaSeleccionado(user.id)"
+              [class.row-self]="user.id === currentUserId">
+            <td class="col-check">
+              <input
+                type="checkbox"
+                class="row-check"
+                [checked]="estaSeleccionado(user.id)"
+                [disabled]="user.id === currentUserId"
+                (change)="toggleSeleccion(user)"
+                [attr.aria-label]="'ADMIN.BULK.TOGGLE_ROW' | transloco:{ user: user.username }"
+              />
+            </td>
+            <td class="col-id">{{ user.id }}</td>
+            <td class="col-username">{{ user.username }}</td>
+            <td class="col-role">
+              <span [class]="'role-badge role-badge--' + user.role.toLowerCase()">{{ user.role }}</span>
+            </td>
+            <td class="col-date">{{ user.created_at | date:'dd/MM/yyyy' }}</td>
+            <td class="col-actions">
+              <ng-container *ngIf="confirmDeleteId !== user.id; else confirmDelete">
+                <button class="btn-action btn-role" (click)="cambiarRol(user)"
+                  [title]="'ADMIN.ACTIONS.CHANGE_ROLE_TO' | transloco:{ role: (user.role === 'ADMIN' ? 'USER' : 'ADMIN') }">
+                  <lucide-icon name="shield"></lucide-icon>
+                </button>
+                <button class="btn-action btn-delete" (click)="confirmarEliminar(user.id)"
+                  [title]="'ADMIN.ACTIONS.DELETE' | transloco">
+                  <lucide-icon name="trash-2"></lucide-icon>
+                </button>
+              </ng-container>
+              <ng-template #confirmDelete>
+                <span class="confirm-text">{{ 'ADMIN.ACTIONS.CONFIRM_DELETE' | transloco }}</span>
+                <button class="btn-action btn-delete" (click)="eliminarUsuario(user.id)">
+                  {{ 'ADMIN.ACTIONS.YES' | transloco }}
+                </button>
+                <button class="btn-action" (click)="cancelarEliminar()">
+                  {{ 'ADMIN.ACTIONS.NO' | transloco }}
+                </button>
+              </ng-template>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <p *ngIf="!cargando && users.length === 0" class="admin-estado">
       {{ 'ADMIN.EMPTY' | transloco }}
     </p>
+
+    <!-- ── Modal de confirmación de borrado masivo ─────────────────────── -->
+    <div *ngIf="confirmBulkDelete" class="bulk-modal-backdrop" (click)="cancelarConfirmacionMasiva()">
+      <div class="bulk-modal" (click)="$event.stopPropagation()">
+        <h2>{{ 'ADMIN.BULK.CONFIRM_TITLE' | transloco }}</h2>
+        <p>
+          {{ 'ADMIN.BULK.CONFIRM_BODY' | transloco:{ count: seleccionados.size } }}
+        </p>
+        <div class="bulk-modal__actions">
+          <button class="btn-bulk btn-bulk--secondary" (click)="cancelarConfirmacionMasiva()">
+            {{ 'ADMIN.ACTIONS.NO' | transloco }}
+          </button>
+          <button class="btn-bulk btn-bulk--danger" (click)="ejecutarBorradoMasivo()">
+            <lucide-icon name="trash-2" [size]="14"></lucide-icon>
+            {{ 'ADMIN.BULK.CONFIRM_BUTTON' | transloco }}
+          </button>
+        </div>
+      </div>
+    </div>
 
   </main>
 </div>
