@@ -34,14 +34,7 @@
             ]
           },
           "configurations": {
-            "production": {
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.ts"
-                }
-              ]
-            },
+            "production": {},
             "development": {
               "fileReplacements": [
                 {
@@ -51,7 +44,7 @@
               ]
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "production"
         },
         "serve": {
           "builder": "@ngx-env/builder:dev-server",

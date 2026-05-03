@@ -35,7 +35,6 @@ export class DrawerHistorialComponent {
   }
 
   eliminar(item: HistorialItem) {
-    console.log('[Drawer] eliminar', item.id);
     this.historial.eliminarById(item.id);
   }
 

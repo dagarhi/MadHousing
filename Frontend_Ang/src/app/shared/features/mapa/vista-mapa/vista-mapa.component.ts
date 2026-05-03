@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MapaPrincipalComponent } from '../mapa-principal/mapa-principal.component';
 import { DrawerFavoritosComponent } from '../drawer-favoritos/drawer-favoritos.component';
-import { DrawerHistorialComponent } from '../drawer-historial/drawer-historical.component';
+import { DrawerHistorialComponent } from '../drawer-historial/drawer-historial.component';
 import { DrawerEstadisticasComponent } from '../drawer-estadisticas/drawer-estadisticas.component';
 import { DrawerComparadorComponent } from '../drawer-comparador/drawer-comparador.component';
 import { BuscadorComponent } from '../buscador/buscador.component';

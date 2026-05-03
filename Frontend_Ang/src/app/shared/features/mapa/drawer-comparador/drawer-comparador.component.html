@@ -88,23 +88,23 @@
         <tbody>
           <tr>
             <td>{{ 'DRAWER_COMPARADOR.TABLE_PRICE' | transloco }}</td>
-            <td>{{ getDatosZona(zonaA)?.precio_medio?.toLocaleString?.() ?? '—' }}</td>
-            <td>{{ getDatosZona(zonaB)?.precio_medio?.toLocaleString?.() ?? '—' }}</td>
+            <td>{{ getDatosZona(zonaA).precio_medio?.toLocaleString?.() ?? '—' }}</td>
+            <td>{{ getDatosZona(zonaB).precio_medio?.toLocaleString?.() ?? '—' }}</td>
           </tr>
           <tr>
             <td>{{ 'DRAWER_COMPARADOR.TABLE_SIZE' | transloco }}</td>
-            <td>{{ getDatosZona(zonaA)?.tamano_medio?.toFixed?.(1) ?? '—' }}</td>
-            <td>{{ getDatosZona(zonaB)?.tamano_medio?.toFixed?.(1) ?? '—' }}</td>
+            <td>{{ getDatosZona(zonaA).tamano_medio?.toFixed?.(1) ?? '—' }}</td>
+            <td>{{ getDatosZona(zonaB).tamano_medio?.toFixed?.(1) ?? '—' }}</td>
           </tr>
           <tr>
             <td>{{ 'DRAWER_COMPARADOR.TABLE_SCORE' | transloco }}</td>
-            <td>{{ getDatosZona(zonaA)?.score_medio?.toFixed?.(1) ?? '—' }}</td>
-            <td>{{ getDatosZona(zonaB)?.score_medio?.toFixed?.(1) ?? '—' }}</td>
+            <td>{{ getDatosZona(zonaA).score_medio?.toFixed?.(1) ?? '—' }}</td>
+            <td>{{ getDatosZona(zonaB).score_medio?.toFixed?.(1) ?? '—' }}</td>
           </tr>
           <tr>
             <td>{{ 'DRAWER_COMPARADOR.TABLE_COUNT' | transloco }}</td>
-            <td>{{ getDatosZona(zonaA)?.count ?? '—' }}</td>
-            <td>{{ getDatosZona(zonaB)?.count ?? '—' }}</td>
+            <td>{{ getDatosZona(zonaA).count ?? '—' }}</td>
+            <td>{{ getDatosZona(zonaB).count ?? '—' }}</td>
           </tr>
         </tbody>
       </table>

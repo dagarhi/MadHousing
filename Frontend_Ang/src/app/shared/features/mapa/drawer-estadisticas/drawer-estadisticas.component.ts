@@ -7,9 +7,11 @@ import { ThemeService } from '../../../../core/services/theme.service';
 import { LucideAngularModule } from 'lucide-angular';
 import { FormsModule } from '@angular/forms';
 import { NgChartsModule } from 'ng2-charts';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ChartConfiguration } from 'chart.js';
-import { Subscription } from 'rxjs';
+import { firstValueFrom, Subscription } from 'rxjs';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { notifyError } from '../../../../core/utils/notify-error';
 
 // Paleta de marca para los datasets (aceptos magenta/violeta)
 const BRAND_SALE = '#c000a5';
@@ -39,6 +41,8 @@ export class DrawerEstadisticasComponent implements OnChanges, OnInit, OnDestroy
   constructor(
     private estadisticas: EstadisticasService,
     private theme: ThemeService,
+    private snack: MatSnackBar,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit() {
@@ -63,11 +67,12 @@ export class DrawerEstadisticasComponent implements OnChanges, OnInit, OnDestroy
     this.loading = true;
     this.stats = null;
     try {
-      const data = await this.estadisticas.obtenerGlobales().toPromise();
-      this.stats = data as EstadisticasGlobales;
+      const data = await firstValueFrom(this.estadisticas.obtenerGlobales());
+      this.stats = data;
       this.actualizarGrafico();
     } catch (err) {
       console.error('Error cargando estadísticas', err);
+      notifyError(this.snack, this.transloco, err, 'DRAWER_ESTADISTICAS.ERRORS.LOAD');
     } finally {
       this.loading = false;
     }

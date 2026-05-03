@@ -99,7 +99,13 @@
     "NOTE_PLACEHOLDER": "Add a note...",
     "PIN_NOT_DRAWN": "This property is not on the map. Draw it and center the view?",
     "DRAW_ACTION": "Draw",
-    "PIN_FAILED": "Could not draw the pin (missing location)."
+    "PIN_FAILED": "Could not draw the pin (missing location).",
+    "ERRORS": {
+      "SAVE_NOTE": "Couldn't save the note.",
+      "CREATE": "Couldn't add the favorite.",
+      "DELETE": "Couldn't remove the favorite.",
+      "DELETE_ALL": "Couldn't remove all favorites."
+    }
   },
   "DRAWER_HISTORIAL": {
     "TITLE": "Search history",
@@ -110,7 +116,11 @@
     "RESUMEN_DEFAULT": "Search",
     "RESUMEN_ALL": "All properties",
     "RESUMEN_ROOMS": "{{n}}+ rm",
-    "RESUMEN_FLOOR": "floor ≥ {{n}}"
+    "RESUMEN_FLOOR": "floor ≥ {{n}}",
+    "ERRORS": {
+      "DELETE": "Couldn't remove the history entry.",
+      "DELETE_ALL": "Couldn't clear the history."
+    }
   },
   "BUSCADOR": {
     "TITLE": "Search filters",
@@ -143,7 +153,10 @@
     "METRIC": "Metric",
     "METRIC_PRICE": "Average price (€)",
     "METRIC_SIZE": "Average size (m²)",
-    "METRIC_SCORE": "Average score"
+    "METRIC_SCORE": "Average score",
+    "ERRORS": {
+      "LOAD": "Couldn't load statistics."
+    }
   },
   "DRAWER_COMPARADOR": {
     "TITLE": "Area comparator",
@@ -164,7 +177,10 @@
     "TABLE_SIZE": "Average size (m²)",
     "TABLE_SCORE": "Average score",
     "TABLE_COUNT": "Property count",
-    "EMPTY": "Select two areas to compare."
+    "EMPTY": "Select two areas to compare.",
+    "ERRORS": {
+      "LOAD": "Couldn't load comparison statistics."
+    }
   },
   "DRAWER_ENTORNO": {
     "ARIA_PANEL": "Property surroundings",
@@ -186,6 +202,9 @@
       "PARK": "Parks",
       "COMMERCE": "Shopping",
       "BIKE": "Bike lane"
+    },
+    "ERRORS": {
+      "LOAD": "Couldn't load nearby info."
     }
   },
   "TUTORIAL": {
@@ -298,6 +317,10 @@
       "TITLE": "Search radius",
       "PROPERTIES_SHORT": "props.",
       "CLEAR": "Clear"
+    },
+    "ERRORS": {
+      "ISOCHRONE_FAIL": "Couldn't compute the isochrone.",
+      "ROUTE_FAIL": "Couldn't compute the route."
     }
   },
   "MAPA_HEADER": {

@@ -2,9 +2,12 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, distinctUntilChanged, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { TranslocoService } from '@jsverse/transloco';
 import { Propiedad } from '../models/propiedad.model';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
+import { notifyError } from '../utils/notify-error';
 
 interface FavoriteDto {
   id: number;
@@ -29,6 +32,8 @@ export class FavoritosService {
   constructor(
     private http: HttpClient,
     private auth: AuthService,
+    private snack: MatSnackBar,
+    private transloco: TranslocoService,
   ) {
     // Resetea y recarga al cambiar de usuario para no cachear favoritos
     // de la sesión anterior cuando entra otro usuario.
@@ -95,7 +100,10 @@ export class FavoritosService {
           );
           this.favoritosSubject.next(nuevos);
         },
-        error: (err) => console.error('[FavoritosService] Error deleting favorite', err),
+        error: (err) => {
+          console.error('[FavoritosService] Error deleting favorite', err);
+          notifyError(this.snack, this.transloco, err, 'DRAWER_FAVORITOS.ERRORS.DELETE');
+        },
       });
       return;
     }
@@ -117,7 +125,10 @@ export class FavoritosService {
             this.favoritosSubject.next([...actuales, prop]);
           }
         },
-        error: (err) => console.error('[FavoritosService] Error creating favorite', err),
+        error: (err) => {
+          console.error('[FavoritosService] Error creating favorite', err);
+          notifyError(this.snack, this.transloco, err, 'DRAWER_FAVORITOS.ERRORS.CREATE');
+        },
       });
   }
 
@@ -151,16 +162,23 @@ export class FavoritosService {
     this.notasPorProperty.clear();
     this.favoritosSubject.next([]);
 
+    let bulkFailed = false;
     const deletes = ids.map((id) =>
       this.http.delete(`${this.baseUrl}/${id}`).pipe(
         catchError((err) => {
           console.error('[FavoritosService] Error deleting favorite (bulk)', err);
+          bulkFailed = true;
           return of(null);
         }),
       ),
     );
 
-    forkJoin(deletes).subscribe(() => this.cargarDesdeServidor());
+    forkJoin(deletes).subscribe(() => {
+      this.cargarDesdeServidor();
+      if (bulkFailed) {
+        notifyError(this.snack, this.transloco, null, 'DRAWER_FAVORITOS.ERRORS.DELETE_ALL');
+      }
+    });
   }
 
   reloadFromServer(): void {

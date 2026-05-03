@@ -2,11 +2,13 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, distinctUntilChanged, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { HistorialItem } from '../models/historial.model';
 import { FiltroBusqueda } from '../models/filtros.model';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import { TranslocoService } from '@jsverse/transloco';
+import { notifyError } from '../utils/notify-error';
 
 interface SearchHistoryDto {
   id: number;
@@ -26,6 +28,7 @@ export class HistorialService {
     private http: HttpClient,
     private auth: AuthService,
     private transloco: TranslocoService,
+    private snack: MatSnackBar,
   ) {
     // El servicio es singleton; reaccionamos a cambios de sesión para que
     // el historial de un usuario no se quede cacheado al entrar otro.
@@ -81,7 +84,10 @@ export class HistorialService {
         const nuevo = this.currentHistorial.filter((h) => h.id !== id);
         this.historialSubject.next(nuevo);
       },
-      error: (err) => console.error('[HistorialService] Error deleting history', err),
+      error: (err) => {
+        console.error('[HistorialService] Error deleting history', err);
+        notifyError(this.snack, this.transloco, err, 'DRAWER_HISTORIAL.ERRORS.DELETE');
+      },
     });
   }
 
@@ -94,6 +100,7 @@ export class HistorialService {
     // quedar como "borrados" en el cliente pero persistentes en BBDD).
     this.historialSubject.next([]);
 
+    let bulkFailed = false;
     const deletes = actual
       .map((item) => Number(item.id))
       .filter((n) => Number.isFinite(n))
@@ -101,6 +108,7 @@ export class HistorialService {
         this.http.delete(`${this.baseUrl}/${id}`).pipe(
           catchError((err) => {
             console.error('[HistorialService] Error deleting history (bulk)', err);
+            bulkFailed = true;
             return of(null);
           }),
         ),
@@ -108,7 +116,12 @@ export class HistorialService {
 
     if (deletes.length === 0) return;
 
-    forkJoin(deletes).subscribe(() => this.cargarDesdeServidor());
+    forkJoin(deletes).subscribe(() => {
+      this.cargarDesdeServidor();
+      if (bulkFailed) {
+        notifyError(this.snack, this.transloco, null, 'DRAWER_HISTORIAL.ERRORS.DELETE_ALL');
+      }
+    });
   }
 
   // --- Helpers ---

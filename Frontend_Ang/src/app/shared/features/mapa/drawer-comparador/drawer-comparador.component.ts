@@ -15,12 +15,14 @@ import { FormsModule } from '@angular/forms';
 
 import { DrawerShellComponent } from '../../../components/drawer-shell/drawer-shell.component';
 import { LucideAngularModule } from 'lucide-angular';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { EstadisticasGlobales, EstadisticaZona } from '../../../../core/models/estadistica.model';
 import { EstadisticasService } from '../../../../core/services/estadisticas.service';
 import { ThemeService } from '../../../../core/services/theme.service';
 import { firstValueFrom, Subscription } from 'rxjs';
+import { notifyError } from '../../../../core/utils/notify-error';
 
 import {
   Chart,
@@ -98,6 +100,8 @@ export class DrawerComparadorComponent
   constructor(
     private estadisticas: EstadisticasService,
     private theme: ThemeService,
+    private snack: MatSnackBar,
+    private transloco: TranslocoService,
   ) {}
 
   // ───────────────────── ciclos de vida ─────────────────────
@@ -223,6 +227,7 @@ export class DrawerComparadorComponent
       setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
     } catch (err) {
       console.error('Error cargando estadísticas', err);
+      notifyError(this.snack, this.transloco, err, 'DRAWER_COMPARADOR.ERRORS.LOAD');
     } finally {
       this.loading = false;
     }

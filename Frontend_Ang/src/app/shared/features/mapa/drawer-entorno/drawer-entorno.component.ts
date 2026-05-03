@@ -11,6 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subscription } from 'rxjs';
 
 import { Propiedad } from '../../../../core/models/propiedad.model';
@@ -21,6 +22,7 @@ import {
   NearbyPoi,
 } from '../../../../core/services/poi.service';
 import { RouteProfile } from '../../../../core/services/route.service';
+import { notifyError } from '../../../../core/utils/notify-error';
 
 interface CategoryView {
   key: PoiCategory;
@@ -63,6 +65,7 @@ export class DrawerEntornoComponent implements OnChanges, OnDestroy {
 
   private readonly pois = inject(PoiService);
   private readonly transloco = inject(TranslocoService);
+  private readonly snack = inject(MatSnackBar);
   private sub?: Subscription;
 
   collapsed = false;            // colapsa todo el drawer al handle
@@ -104,6 +107,7 @@ export class DrawerEntornoComponent implements OnChanges, OnDestroy {
       error: err => {
         this.loading = false;
         console.error('[drawer-entorno] getNearby error', err);
+        notifyError(this.snack, this.transloco, err, 'DRAWER_ENTORNO.ERRORS.LOAD');
       },
     });
   }

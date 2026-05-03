@@ -248,7 +248,6 @@ export class MapLayerManager {
     this.data = [];
     this.mapSvc.cerrarPopup?.();
     this.mapSvc.limpiarMarkers?.();
-    this.mapSvc.clearChoropleth?.();
 
     for (const layer of this.layers) layer.clear();
 
