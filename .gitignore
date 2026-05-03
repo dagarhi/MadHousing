@@ -225,3 +225,7 @@ Memoria/
 
 # Configuración local de Claude Code (personal, no compartir)
 .claude/
+
+# Documentos internos de auditoría (no forman parte del proyecto entregable)
+AUDITORIA.md
+REVISION_MEMORIA.md

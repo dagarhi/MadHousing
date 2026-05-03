@@ -7,9 +7,8 @@ import { MapService } from '../../../../core/services/map.service';
 import { MapControlsComponent, PoiKey } from '../../../components/map-controls/map-controls.component';
 import { SnapDragDirective } from '../../../directives/snap-drag.directive';
 import { ThemeService } from '../../../../core/services/theme.service';
-import { HttpClient } from '@angular/common/http';
 import { circle, booleanPointInPolygon } from '@turf/turf';
-import type { FeatureCollection, Feature, Polygon, MultiPolygon } from 'geojson';
+import type { FeatureCollection, Feature, Polygon } from 'geojson';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { IsochroneService, IsochroneProfile } from '../../../../core/services/isochrone.service';
@@ -19,6 +18,9 @@ import { RadiusLayerService } from '../../../../core/services/radius-layer.servi
 import { IsochroneLayerService } from '../../../../core/services/isochrone-layer.service';
 import { RouteLayerService } from '../../../../core/services/route-layer.service';
 import { PopupPropiedadService } from '../../../../core/services/popup-propiedad.service';
+import { GeojsonService } from '../../../../core/services/geojson.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { notifyError } from '../../../../core/utils/notify-error';
 import { DrawerEntornoComponent, RouteRequest } from '../drawer-entorno/drawer-entorno.component';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 
@@ -89,7 +91,7 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
 
   constructor(
     readonly manager: MapLayerManager,
-    private http: HttpClient,
+    private geojson: GeojsonService,
     private theme: ThemeService,
     private mapSvc: MapService,
     private zone: NgZone,
@@ -101,6 +103,7 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
     private routeLayer: RouteLayerService,
     private popupSvc: PopupPropiedadService,
     private transloco: TranslocoService,
+    private snack: MatSnackBar,
   ) {
     this.subs.add(
       this.popupSvc.entornoRequested$.subscribe(piso => this.zone.run(() => {
@@ -156,7 +159,7 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
     await this.manager.init(this.mapContainer.nativeElement, initialStyle);
     this.ready = true;
 
-    this.http.get<FeatureCollection<Polygon | MultiPolygon>>('assets/municipios_cam.geojson')
+    this.geojson.getMunicipiosCAM()
       .subscribe(geo => {
         this.manager.setChoroplethPolygons(geo, 'CODIGOINE');
         this.manager.setData(this.pisos);
@@ -441,6 +444,7 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
         this.zone.run(() => {
           console.error('[Isochrone] ORS error', err);
           this.isochroneLoading = false;
+          notifyError(this.snack, this.transloco, err, 'MAP_PANELS.ERRORS.ISOCHRONE_FAIL');
         });
       },
     });
@@ -603,6 +607,7 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
       error: (err) => this.zone.run(() => {
         console.error('[Route] ORS error', err);
         this.routeLoading = false;
+        notifyError(this.snack, this.transloco, err, 'MAP_PANELS.ERRORS.ROUTE_FAIL');
       }),
     });
   }

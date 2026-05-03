@@ -66,13 +66,9 @@ class TestValoracionIntrinseca:
         assert valoracion_intrinseca(piso) == 10.0
 
     def test_unknown_operation_does_not_crash(self):
-        # La función usa UMBRALES de rent como fallback pero el cálculo
-        # toma la rama "else" (price/size). El comportamiento exacto es
-        # discutible (code smell), pero al menos no debe crashear y debe
-        # devolver un score dentro del rango válido.
+        # Garantía reforzada (A-8): operación desconocida -> SCORE_MIN exacto.
         piso = {"price": 1000, "size": 70, "operation": "swap"}
-        score = valoracion_intrinseca(piso)
-        assert SCORE_MIN <= score <= SCORE_MAX
+        assert valoracion_intrinseca(piso) == SCORE_MIN
 
     def test_score_always_in_bounds(self):
         # Cualquier entrada razonable → score ∈ [SCORE_MIN, SCORE_MAX]

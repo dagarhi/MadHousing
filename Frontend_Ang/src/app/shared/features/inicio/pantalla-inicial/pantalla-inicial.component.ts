@@ -84,7 +84,16 @@ export class PantallaInicialComponent implements OnInit {
     this.auth.login(username, password).subscribe({
       next: () => {
         this.cargando = false;
-        this.router.navigate(['/mapa']);
+        // Honrar returnUrl si el authGuard redirigió aquí.
+        // Defensas: solo rutas internas que NO sean /inicio (evita bucle)
+        // y NO sean protocol-relative ("//evil.com" sería redirect externo).
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        const safe =
+          !!returnUrl &&
+          returnUrl.startsWith('/') &&
+          !returnUrl.startsWith('//') &&
+          !returnUrl.startsWith('/inicio');
+        this.router.navigateByUrl(safe ? returnUrl! : '/mapa');
       },
       error: (err) => {
         console.error('Error en login', err);

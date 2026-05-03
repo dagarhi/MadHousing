@@ -74,7 +74,6 @@ import {
   Languages,
   Users,
 } from 'lucide-angular';
-import { Legend } from 'chart.js';
 
 bootstrapApplication(AppComponent, {
   providers: [

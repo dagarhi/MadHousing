@@ -7,6 +7,7 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { Propiedad } from '../../../../core/models/propiedad.model';
 import { PinsLayerService } from '../../../../core/services/pins-layer.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { notifyError } from '../../../../core/utils/notify-error';
 
 @Component({
   selector: 'app-drawer-favoritos',
@@ -51,7 +52,10 @@ export class DrawerFavoritosComponent {
     const nota = (event.target as HTMLTextAreaElement).value;
     if (!piso.propertyCode) return;
     this.favoritos.updateNota(String(piso.propertyCode), nota).subscribe({
-      error: (err) => console.error('[DrawerFavoritos] Error guardando nota', err),
+      error: (err) => {
+        console.error('[DrawerFavoritos] Error guardando nota', err);
+        notifyError(this.snack, this.transloco, err, 'DRAWER_FAVORITOS.ERRORS.SAVE_NOTE');
+      },
     });
   }
 

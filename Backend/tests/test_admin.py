@@ -166,13 +166,23 @@ class TestBulkDelete:
         assert body["deleted"] == [u1.id]
         assert body["not_found"] == [9999]
 
-    def test_bulk_delete_empty_list_returns_400(self, client, admin_user, admin_headers):
+    def test_bulk_delete_empty_list_returns_422(self, client, admin_user, admin_headers):
         resp = client.post(
             "/admin/users/bulk-delete",
             json={"ids": []},
             headers=admin_headers,
         )
-        assert resp.status_code == 400
+        # Validación Pydantic Field(min_length=1) → 422 Unprocessable Entity.
+        assert resp.status_code == 422
+
+    def test_bulk_delete_too_many_ids_returns_422(self, client, admin_user, admin_headers):
+        # Tope superior: max_length=500 evita DoS por payload masivo.
+        resp = client.post(
+            "/admin/users/bulk-delete",
+            json={"ids": list(range(1, 502))},  # 501 IDs
+            headers=admin_headers,
+        )
+        assert resp.status_code == 422
 
     def test_bulk_delete_regular_user_forbidden(self, client, regular_user, user_headers, user_factory):
         u1 = user_factory(username="bulk_z", role="USER")

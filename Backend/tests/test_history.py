@@ -61,6 +61,12 @@ class TestCrearHistorial:
         assert resp.status_code == 201
         assert resp.json()["query"] == {}
 
+    def test_crea_con_query_demasiado_largo_devuelve_422(self, client, user_headers):
+        # Payload cuyo JSON serializado supera 2000 chars.
+        big = {"texto_grande": "x" * 2100}
+        resp = client.post("/historial", json={"query": big}, headers=user_headers)
+        assert resp.status_code == 422
+
 
 class TestEliminarHistorial:
     def test_borra_el_propio(self, client, regular_user, user_headers, db):

@@ -11,12 +11,15 @@ import { HistorialService } from '../../../../core/services/historial.service';
 import { FiltroBusqueda } from '../../../../core/models/filtros.model';
 import { Propiedad } from '../../../../core/models/propiedad.model';
 import { ZonasJerarquicas } from '../../../../core/models/zona.model';
+import { Stats } from '../../../../core/models/stats.model';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { lastValueFrom } from 'rxjs';
+import { notifyError } from '../../../../core/utils/notify-error';
 
 type Rango = [number, number];
 
@@ -69,18 +72,19 @@ export class BuscadorComponent implements OnChanges {
   loadingZonas = true;
   noData = false;
 
-  private readonly DEFAULT_STATS = {
+  private readonly DEFAULT_STATS: Stats = {
     price: { min: 0, max: 1_000_000 },
     size: { min: 0, max: 500 },
     score: { min: 0, max: 100 },
   };
-  stats = { ...this.DEFAULT_STATS };
+  stats: Stats | null = { ...this.DEFAULT_STATS };
 
   constructor(
     private readonly busqueda: BusquedaService,
     private readonly zonasSrv: ZonasService,
     private readonly historialSrv: HistorialService,
     private readonly transloco: TranslocoService,
+    private readonly snack: MatSnackBar,
   ) { }
 
   async ngOnChanges(changes: SimpleChanges) {
@@ -155,7 +159,7 @@ export class BuscadorComponent implements OnChanges {
   async cargarStatsZona() {
     const zonaSeleccionada = this.barrio || this.distrito || this.municipio;
     if (!zonaSeleccionada) {
-      this.stats = null as any;
+      this.stats = null;
       this.noData = false;
       return;
     }
@@ -168,19 +172,20 @@ export class BuscadorComponent implements OnChanges {
         barrio: this.barrio || undefined,
         operation: this.operation,
       }));
-      const s = res?.stats || {};
-      this.stats = s;
-
-      if (s.price && s.size && s.score) {
+      const s = res?.stats;
+      if (s?.price && s?.size && s?.score) {
+        this.stats = s as Stats;
         this.priceRange = [s.price.min, s.price.max];
         this.sizeRange = [s.size.min, s.size.max];
         this.scoreRange = [s.score.min, s.score.max];
         this.noData = false;
       } else {
+        this.stats = null;
         this.noData = true;
       }
     } catch (err) {
       console.error('Error cargando stats:', err);
+      this.stats = null;
       this.noData = true;
     } finally {
       this.loading = false;
@@ -188,7 +193,7 @@ export class BuscadorComponent implements OnChanges {
   }
 
   onRangeInput(kind: 'price' | 'size' | 'score', idx: 0 | 1, raw: any) {
-    const bounds = (this.stats as any)?.[kind] ?? { min: 0, max: Number.MAX_SAFE_INTEGER };
+    const bounds = this.stats?.[kind] ?? { min: 0, max: Number.MAX_SAFE_INTEGER };
     const clamp = (v: number) => Math.max(bounds.min, Math.min(bounds.max, v));
     const num = Number(raw ?? 0);
 
@@ -205,7 +210,11 @@ export class BuscadorComponent implements OnChanges {
   async buscarPisos() {
     const zonaSeleccionada = this.barrio || this.distrito || this.municipio;
     if (!zonaSeleccionada) {
-      alert(this.transloco.translate('BUSCADOR.ERRORS.NO_ZONE'));
+      this.snack.open(
+        this.transloco.translate('BUSCADOR.ERRORS.NO_ZONE'),
+        'OK',
+        { duration: 4000 },
+      );
       return;
     }
 
@@ -234,7 +243,11 @@ export class BuscadorComponent implements OnChanges {
       this.onOpenedChange(false);
     } catch (err) {
       const e = err as Error;
-      alert(this.transloco.translate('BUSCADOR.ERRORS.SEARCH_FAIL', { msg: e.message }));
+      this.snack.open(
+        this.transloco.translate('BUSCADOR.ERRORS.SEARCH_FAIL', { msg: e.message }),
+        'OK',
+        { duration: 4000 },
+      );
     } finally {
       this.loading = false;
     }
@@ -279,7 +292,7 @@ export class BuscadorComponent implements OnChanges {
       this.onOpenedChange(false);
     } catch (err) {
       console.error('Error al cargar todos los resultados', err);
-      alert(this.transloco.translate('BUSCADOR.ERRORS.LOAD_ALL_FAIL'));
+      notifyError(this.snack, this.transloco, err, 'BUSCADOR.ERRORS.LOAD_ALL_FAIL');
     } finally {
       this.loading = false;
     }

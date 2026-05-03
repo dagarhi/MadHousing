@@ -68,6 +68,20 @@ class TestActualizarFavorito:
         assert resp.status_code == 200
         assert resp.json()["nota"] == "Visita prevista el sábado"
 
+    def test_actualizar_nota_demasiado_larga_devuelve_422(
+        self, client, user_headers, propiedad_factory,
+    ):
+        propiedad_factory({"code": "p1", "operation": "rent"})
+        created = client.post(
+            "/favoritos", json={"property_code": "p1"}, headers=user_headers,
+        ).json()
+        resp = client.patch(
+            f"/favoritos/{created['id']}",
+            json={"nota": "x" * 2001},  # 2001 chars > max_length=2000
+            headers=user_headers,
+        )
+        assert resp.status_code == 422
+
     def test_no_puede_modificar_favorito_ajeno(
         self, client, user_headers, admin_user, propiedad_factory, db
     ):

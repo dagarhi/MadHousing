@@ -26,11 +26,38 @@ class TestRegister:
 
     def test_register_strips_username_whitespace(self, client):
         resp = client.post("/auth/register", json={
-            "username": "  espacios  ",
+            "username": "  Espacios  ",
             "password": "password_seguro_123",
         })
         assert resp.status_code == 201
+        # Tras strip + lower: "  Espacios  " -> "espacios".
         assert resp.json()["username"] == "espacios"
+
+    def test_register_then_login_case_insensitive(self, client):
+        # Registrar con mayúsculas; el login debe aceptar cualquier capitalización.
+        client.post("/auth/register", json={
+            "username": "Alice",
+            "password": "password_seguro_123",
+        })
+        for variant in ("alice", "ALICE", "AlIcE"):
+            resp = client.post("/auth/login", json={
+                "username": variant,
+                "password": "password_seguro_123",
+            })
+            assert resp.status_code == 200, f"login failed for {variant!r}"
+            assert resp.json()["username"] == "alice"
+
+    def test_register_duplicate_case_insensitive_returns_400(self, client):
+        client.post("/auth/register", json={
+            "username": "Alice",
+            "password": "password_seguro_123",
+        })
+        resp = client.post("/auth/register", json={
+            "username": "alice",  # mismo usuario, distinta capitalización
+            "password": "otra_password_123",
+        })
+        assert resp.status_code == 400
+        assert "ya está en uso" in resp.json()["detail"]
 
     def test_register_duplicate_returns_400(self, client, regular_user):
         resp = client.post("/auth/register", json={

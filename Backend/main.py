@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from jose import jwt, JWTError
 from passlib.context import CryptContext
@@ -62,7 +62,10 @@ class UpdateUserRequest(BaseModel):
     role: Optional[str] = None
 
 class BulkDeleteRequest(BaseModel):
-    ids: List[int]
+    # Pydantic v2: para listas, los validadores de longitud son
+    # `min_length` / `max_length` (los antiguos `min_items` / `max_items`
+    # están deprecated en v2).
+    ids: List[int] = Field(..., min_length=1, max_length=500)
 
 class FavoriteCreate(BaseModel):
     property_code: str
@@ -75,10 +78,20 @@ class FavoriteOut(BaseModel):
     propiedad: dict
 
 class FavoriteUpdate(BaseModel):
-    nota: str
+    nota: str = Field(..., max_length=2000)
 
 class SearchHistoryCreate(BaseModel):
     query: dict
+
+    @field_validator('query')
+    @classmethod
+    def _validate_query_size(cls, v: dict) -> dict:
+        # El payload se persiste con json.dumps; limitamos su tamaño
+        # serializado a 2000 caracteres para acotar el uso de espacio
+        # y descartar payloads patológicos (DoS leve).
+        if len(json.dumps(v)) > 2000:
+            raise ValueError("query excede 2000 caracteres serializado en JSON")
+        return v
 
 class SearchHistoryOut(BaseModel):
     id: int
@@ -159,6 +172,9 @@ def seed_admin():
         print("⚠️  ADMIN_USERNAME o ADMIN_PASSWORD no configurados — cuenta admin no creada")
         return
 
+    # Normalización coherente con register/login (case-insensitive).
+    admin_username = admin_username.lower().strip()
+
     db = SessionLocal()
     try:
         existing = db.query(User).filter(User.username == admin_username).first()
@@ -182,7 +198,9 @@ def login(
     credentials: LoginRequest,
     db: Session = Depends(db_from_request),
 ):
-    user = db.query(User).filter(User.username == credentials.username.strip()).first()
+    # Normalización case-insensitive: Alice y alice son el mismo usuario.
+    username = credentials.username.lower().strip()
+    user = db.query(User).filter(User.username == username).first()
     if not user:
         # 401 Unauthorized — credencial inválida; 400 sería para payload mal formado.
         raise HTTPException(status_code=401, detail="Usuario o contraseña incorrectos")
@@ -217,10 +235,12 @@ def require_admin(current_user: User = Depends(get_current_user)):
 
 @app.post("/auth/register", status_code=201)
 def register(body: RegisterRequest, db: Session = Depends(db_from_request)):
-    if db.query(User).filter(User.username == body.username.strip()).first():
+    # Normalización case-insensitive: Alice y alice son el mismo usuario.
+    username = body.username.lower().strip()
+    if db.query(User).filter(User.username == username).first():
         raise HTTPException(status_code=400, detail="El nombre de usuario ya está en uso")
     user = User(
-        username=body.username.strip(),
+        username=username,
         password_hash=get_password_hash(body.password),
         role="USER",
     )
@@ -289,25 +309,25 @@ def eliminar_usuarios_masivo(
     encontrado y los que se han rechazado por motivos de seguridad (p. ej.
     intentar borrar la propia cuenta del admin que invoca el endpoint).
     """
-    if not body.ids:
-        raise HTTPException(status_code=400, detail="La lista de IDs no puede estar vacía")
+    # Filtrar la propia cuenta del admin antes de tocar la BBDD.
+    rejected = [uid for uid in body.ids if uid == current_user.id]
+    target_ids = [uid for uid in body.ids if uid != current_user.id]
 
-    deleted: list[int] = []
-    not_found: list[int] = []
-    rejected: list[int] = []
+    # Una sola SELECT para saber qué IDs existen.
+    existing = (
+        {uid for (uid,) in db.query(User.id).filter(User.id.in_(target_ids)).all()}
+        if target_ids else set()
+    )
+    deleted = sorted(existing)
+    not_found = [uid for uid in target_ids if uid not in existing]
 
-    for uid in body.ids:
-        if uid == current_user.id:
-            rejected.append(uid)
-            continue
-        user = db.query(User).filter(User.id == uid).first()
-        if not user:
-            not_found.append(uid)
-            continue
-        db.delete(user)
-        deleted.append(uid)
+    # Una sola DELETE para los IDs encontrados. Dejamos el default
+    # `synchronize_session='auto'` para que SQLAlchemy mantenga la
+    # consistencia de las instancias activas en la sesión.
+    if deleted:
+        db.query(User).filter(User.id.in_(deleted)).delete()
+        db.commit()
 
-    db.commit()
     return {"deleted": deleted, "not_found": not_found, "rejected": rejected}
 
 

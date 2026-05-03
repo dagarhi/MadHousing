@@ -99,7 +99,13 @@
     "NOTE_PLACEHOLDER": "Añadir nota...",
     "PIN_NOT_DRAWN": "Este piso no está dibujado. ¿Quieres dibujarlo y centrar el mapa?",
     "DRAW_ACTION": "Dibujar",
-    "PIN_FAILED": "No se pudo dibujar el pin (falta localización)."
+    "PIN_FAILED": "No se pudo dibujar el pin (falta localización).",
+    "ERRORS": {
+      "SAVE_NOTE": "No se ha podido guardar la nota.",
+      "CREATE": "No se ha podido añadir el favorito.",
+      "DELETE": "No se ha podido eliminar el favorito.",
+      "DELETE_ALL": "No se han podido eliminar todos los favoritos."
+    }
   },
   "DRAWER_HISTORIAL": {
     "TITLE": "Historial de búsquedas",
@@ -110,7 +116,11 @@
     "RESUMEN_DEFAULT": "Búsqueda",
     "RESUMEN_ALL": "Todas las propiedades",
     "RESUMEN_ROOMS": "{{n}}+ hab",
-    "RESUMEN_FLOOR": "planta ≥ {{n}}"
+    "RESUMEN_FLOOR": "planta ≥ {{n}}",
+    "ERRORS": {
+      "DELETE": "No se ha podido eliminar la entrada del historial.",
+      "DELETE_ALL": "No se ha podido eliminar todo el historial."
+    }
   },
   "BUSCADOR": {
     "TITLE": "Filtros de búsqueda",
@@ -143,7 +153,10 @@
     "METRIC": "Métrica",
     "METRIC_PRICE": "Precio medio (€)",
     "METRIC_SIZE": "Tamaño medio (m²)",
-    "METRIC_SCORE": "Score medio"
+    "METRIC_SCORE": "Score medio",
+    "ERRORS": {
+      "LOAD": "No se han podido cargar las estadísticas."
+    }
   },
   "DRAWER_COMPARADOR": {
     "TITLE": "Comparador de zonas",
@@ -164,7 +177,10 @@
     "TABLE_SIZE": "Tamaño medio (m²)",
     "TABLE_SCORE": "Score medio",
     "TABLE_COUNT": "Nº de pisos",
-    "EMPTY": "Selecciona dos zonas para comparar."
+    "EMPTY": "Selecciona dos zonas para comparar.",
+    "ERRORS": {
+      "LOAD": "No se han podido cargar las estadísticas para comparar."
+    }
   },
   "DRAWER_ENTORNO": {
     "ARIA_PANEL": "Entorno del piso",
@@ -186,6 +202,9 @@
       "PARK": "Parques",
       "COMMERCE": "Comercio",
       "BIKE": "Carril bici"
+    },
+    "ERRORS": {
+      "LOAD": "No se ha podido cargar el entorno."
     }
   },
   "TUTORIAL": {
@@ -298,6 +317,10 @@
       "TITLE": "Radio de búsqueda",
       "PROPERTIES_SHORT": "prop.",
       "CLEAR": "Borrar"
+    },
+    "ERRORS": {
+      "ISOCHRONE_FAIL": "No se ha podido calcular la isócrona.",
+      "ROUTE_FAIL": "No se ha podido calcular la ruta."
     }
   },
   "MAPA_HEADER": {

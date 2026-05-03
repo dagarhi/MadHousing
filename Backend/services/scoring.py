@@ -28,15 +28,20 @@ W_CONTEXTO   = 0.6
 def valoracion_intrinseca(piso):
     """
     Calculates a score (10–95) based on price/size ratio, adapted for Madrid.
+    Returns SCORE_MIN for unknown operations to avoid mixing magnitudes
+    (rent thresholds applied to a sale price/m², for example).
     """
     price = piso.get('price', 0)
     size = piso.get('size', 0)
     operation = piso.get('operation', 'rent').lower()
 
+    if operation not in ("rent", "sale"):
+        return SCORE_MIN
+
     if price <= 0:
         return 10.0
 
-    u = UMBRALES.get(operation, UMBRALES["rent"])
+    u = UMBRALES[operation]
 
     if operation == "rent":
         precio_base = price

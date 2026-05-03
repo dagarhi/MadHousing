@@ -29,7 +29,7 @@ const STORAGE_KEY = 'tfg_auth_user';
 export class AuthService {
   private readonly apiUrl = environment.apiBaseUrl;
   private sessionExpiredOpen = false;
-  private expirationTimer: any = null;
+  private expirationTimer: ReturnType<typeof setTimeout> | null = null;
 
   private currentUserSubject = new BehaviorSubject<AuthUser | null>(null);
   currentUser$ = this.currentUserSubject.asObservable();
