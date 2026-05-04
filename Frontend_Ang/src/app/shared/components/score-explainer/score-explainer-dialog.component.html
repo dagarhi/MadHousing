@@ -1,0 +1,75 @@
+<div class="score-explainer">
+  <header class="score-explainer__header">
+    <h2 class="score-explainer__title">{{ 'POPUP.SCORE_HELP.TITLE' | transloco }}</h2>
+    <button type="button" class="score-explainer__close" (click)="cerrar()"
+      [attr.aria-label]="'POPUP.SCORE_HELP.CLOSE' | transloco">
+      <lucide-icon name="x" [size]="16"></lucide-icon>
+    </button>
+  </header>
+
+  <div class="score-explainer__final">
+    <span class="score-explainer__final-label">{{ 'POPUP.SCORE_LABEL' | transloco }}</span>
+    <span class="score-explainer__final-value">
+      <ng-container *ngIf="final !== null; else naFinal">
+        {{ final | number:'1.0-0' }}/100
+      </ng-container>
+      <ng-template #naFinal>{{ 'POPUP.SCORE_HELP.NOT_AVAILABLE' | transloco }}</ng-template>
+    </span>
+  </div>
+
+  <div class="score-explainer__breakdown">
+    <div class="score-explainer__row">
+      <span class="score-explainer__row-label">
+        {{ 'POPUP.SCORE_HELP.INTRINSEC_LABEL' | transloco }}
+      </span>
+      <span class="score-explainer__row-value">
+        <ng-container *ngIf="intrinseco !== null; else naIntr">
+          {{ intrinseco | number:'1.0-0' }}/100
+        </ng-container>
+        <ng-template #naIntr>{{ 'POPUP.SCORE_HELP.NOT_AVAILABLE' | transloco }}</ng-template>
+      </span>
+    </div>
+    <div class="score-explainer__row score-explainer__row--sub">
+      <span>{{ 'POPUP.SCORE_HELP.WEIGHT_LABEL' | transloco }}</span>
+      <span>{{ W_INTRINSECO * 100 | number:'1.0-0' }} %</span>
+    </div>
+    <div class="score-explainer__row score-explainer__row--sub" *ngIf="contribIntrinseca !== null">
+      <span>{{ 'POPUP.SCORE_HELP.CONTRIBUTION_LABEL' | transloco }}</span>
+      <span>{{ contribIntrinseca | number:'1.1-1' }}</span>
+    </div>
+
+    <hr class="score-explainer__divider">
+
+    <div class="score-explainer__row">
+      <span class="score-explainer__row-label">
+        {{ 'POPUP.SCORE_HELP.CONTEXTUAL_LABEL' | transloco }}
+      </span>
+      <span class="score-explainer__row-value">
+        <ng-container *ngIf="contexto !== null; else naCtx">
+          {{ contexto | number:'1.0-0' }}/100
+        </ng-container>
+        <ng-template #naCtx>{{ 'POPUP.SCORE_HELP.NOT_AVAILABLE' | transloco }}</ng-template>
+      </span>
+    </div>
+    <div class="score-explainer__row score-explainer__row--sub">
+      <span>{{ 'POPUP.SCORE_HELP.WEIGHT_LABEL' | transloco }}</span>
+      <span>{{ W_CONTEXTO * 100 | number:'1.0-0' }} %</span>
+    </div>
+    <div class="score-explainer__row score-explainer__row--sub" *ngIf="contribContextual !== null">
+      <span>{{ 'POPUP.SCORE_HELP.CONTRIBUTION_LABEL' | transloco }}</span>
+      <span>{{ contribContextual | number:'1.1-1' }}</span>
+    </div>
+
+    <hr class="score-explainer__divider" *ngIf="totalCalculado !== null">
+
+    <div class="score-explainer__row score-explainer__row--total" *ngIf="totalCalculado !== null">
+      <span>{{ 'POPUP.SCORE_HELP.TOTAL_LABEL' | transloco }}</span>
+      <span>{{ totalCalculado | number:'1.1-1' }}</span>
+    </div>
+  </div>
+
+  <div class="score-explainer__descriptions">
+    <p>{{ 'POPUP.SCORE_HELP.INTRINSEC_DESC' | transloco }}</p>
+    <p>{{ 'POPUP.SCORE_HELP.CONTEXTUAL_DESC' | transloco }}</p>
+  </div>
+</div>

@@ -31,6 +31,19 @@
     "VIEW_SURROUNDINGS": "Ver entorno",
     "VIEW_SURROUNDINGS_ARIA": "Ver POIs cercanos",
     "VIEW_LISTING": "Ver anuncio",
+    "SCORE_HELP": {
+      "BUTTON_LABEL": "Cómo se calcula el score",
+      "TITLE": "¿Cómo se calcula el score?",
+      "INTRINSEC_LABEL": "Componente intrínseco (precio/tamaño)",
+      "CONTEXTUAL_LABEL": "Componente contextual (entorno)",
+      "WEIGHT_LABEL": "Peso en el cálculo",
+      "CONTRIBUTION_LABEL": "Contribución al score final",
+      "TOTAL_LABEL": "Total",
+      "INTRINSEC_DESC": "El componente intrínseco evalúa la relación precio/tamaño según los umbrales de mercado de la Comunidad de Madrid.",
+      "CONTEXTUAL_DESC": "El componente contextual evalúa la calidad del entorno urbano (transporte, sanidad, educación, parques, comercio y bici) en función de la distancia a los puntos de interés cercanos.",
+      "NOT_AVAILABLE": "No disponible",
+      "CLOSE": "Cerrar"
+    },
     "MORTGAGE": {
       "TITLE": "Calculadora de hipoteca",
       "DOWN_PAYMENT": "Entrada (%)",
@@ -227,7 +240,7 @@
       },
       "MAP_MODES": {
         "TITLE": "Tres modos de mapa",
-        "BODY": "Alterna entre el mapa de calor (densidad de pisos), el coroplético (valor medio por zona) y las chinchetas (ubicación exacta de cada piso)."
+        "BODY": "Alterna entre el mapa de calor (densidad de pisos), el coroplético (valor medio por zona) y los marcadores (ubicación exacta de cada piso)."
       },
       "SCORE": {
         "TITLE": "Score multinivel",
@@ -276,7 +289,7 @@
     "SECTION_ACTIONS": "Acciones",
     "LAYER_CHORO": "Coroplético",
     "LAYER_HEAT": "Heatmap",
-    "LAYER_PINS": "Chinchetas",
+    "LAYER_PINS": "Marcadores",
     "TOOL_RADIUS": "Radio",
     "TOOL_RADIUS_TITLE": "Filtro radio",
     "TOOL_ISOCHRONE": "Isócronas",

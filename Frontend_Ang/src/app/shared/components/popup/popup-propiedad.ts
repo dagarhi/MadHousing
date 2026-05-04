@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, OnDestroy, HostBinding } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -11,6 +12,10 @@ import { MapService } from '../../../core/services/map.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { PopupPropiedadService } from '../../../core/services/popup-propiedad.service';
 import { PALETTE_RDYLGN, BACKEND_SCORE_DOMAIN, interpolatePalette } from '../../../core/styles/score-colors';
+import {
+  ScoreExplainerDialogComponent,
+  ScoreExplainerData,
+} from '../score-explainer/score-explainer-dialog.component';
 
 @Component({
   selector: 'app-popup-propiedad',
@@ -38,6 +43,7 @@ export class PopupPropiedadComponent implements OnInit, OnDestroy {
     private mapSvc: MapService,
     private themeSvc: ThemeService,
     private popupSvc: PopupPropiedadService,
+    private dialog: MatDialog,
   ) { }
 
   ngOnInit(): void {
@@ -137,5 +143,23 @@ export class PopupPropiedadComponent implements OnInit, OnDestroy {
   onVerEntorno(): void {
     if (!this.piso) return;
     this.popupSvc.requestEntorno(this.piso);
+  }
+
+  onOpenScoreHelp(): void {
+    if (!this.piso) return;
+    const data: ScoreExplainerData = {
+      scoreIntrinseco: this.asNum(this.piso.score_intrinseco) ?? null,
+      scoreContexto: this.asNum(this.piso.score_contexto) ?? null,
+      scoreFinal:
+        this.asNum(this.piso.score_final) ??
+        this.asNum(this.piso.score) ??
+        null,
+    };
+    this.dialog.open(ScoreExplainerDialogComponent, {
+      data,
+      autoFocus: true,
+      restoreFocus: true,
+      panelClass: 'score-explainer-dialog-panel',
+    });
   }
 }

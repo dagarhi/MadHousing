@@ -45,9 +45,15 @@
   <div class="score" *ngIf="displayScore !== null">
     <div class="score__header">
       <span class="score__label">{{ 'POPUP.SCORE_LABEL' | transloco }}</span>
-      <span class="score__value" [style.color]="scoreBgColor">
-        {{ displayScore | number:'1.0-0' }}/100
-      </span>
+      <div class="score__value-row">
+        <span class="score__value" [style.color]="scoreBgColor">
+          {{ displayScore | number:'1.0-0' }}/100
+        </span>
+        <button type="button" class="score__help-btn" (click)="onOpenScoreHelp()"
+          [attr.aria-label]="'POPUP.SCORE_HELP.BUTTON_LABEL' | transloco">
+          <lucide-icon name="help-circle" [size]="14"></lucide-icon>
+        </button>
+      </div>
     </div>
     <div class="score__track">
       <div class="score__fill"

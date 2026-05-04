@@ -18,14 +18,17 @@ import { MapLayer } from './map-layer.interface';
 import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 import { BehaviorSubject } from 'rxjs';
 
-export type Modo = 'coropletico' | 'heat' | 'chinchetas';
+export type Modo = 'coropletico' | 'heat' | 'marcadores';
 type ChoroAggMode = 'count' | 'avgPrice' | 'avgUnitPrice' | 'avgScore' | 'avgContexto' | 'avgFinal';
 type ChoroOp = 'venta' | 'alquiler' | 'all';
+
+const STORAGE_KEY_MAP_MODE = 'madhousing.mapMode';
+const VALID_MODES: readonly Modo[] = ['coropletico', 'heat', 'marcadores'];
 
 @Injectable({ providedIn: 'root' })
 export class MapLayerManager {
   private map?: maplibregl.Map;
-  private mode: Modo = 'heat';
+  private mode: Modo = loadModeFromStorage();
   private data: Propiedad[] = [];
 
   private choroIdField: string = 'CODIGOINE';
@@ -178,7 +181,13 @@ export class MapLayerManager {
   setMode(m: Modo) {
     if (this.mode === m) return;
     this.mode = m;
+    saveModeToStorage(m);
     this.render();
+  }
+
+  /** Public read-only accessor used by the UI to sync after `init()`. */
+  getMode(): Modo {
+    return this.mode;
   }
 
   setData(pisos: Propiedad[]) {
@@ -221,7 +230,7 @@ export class MapLayerManager {
         });
         break;
       }
-      case 'chinchetas': {
+      case 'marcadores': {
         if (!hasData) { this.pins.clear(); return; }
         this.pins.setVisible(true);
         this.pins.render(this.data, { showPopupOnClick: true, colorByOperation: true });
@@ -275,4 +284,23 @@ export class MapLayerManager {
   private detachAll() {
     for (const layer of this.layers) layer.detach();
   }
+}
+
+// localStorage helpers. Wrapped in try/catch because the manager is
+// instantiated at bootstrap and `localStorage` may not exist in SSR or
+// when the browser blocks storage (private mode, quota exceeded).
+function loadModeFromStorage(): Modo {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_MAP_MODE);
+    if (raw && (VALID_MODES as readonly string[]).includes(raw)) {
+      return raw as Modo;
+    }
+  } catch { /* no-op */ }
+  return 'heat';
+}
+
+function saveModeToStorage(m: Modo): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_MAP_MODE, m);
+  } catch { /* no-op */ }
 }
