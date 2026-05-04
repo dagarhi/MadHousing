@@ -21,7 +21,7 @@ registerLocaleData(localeEs);
 registerLocaleData(localeEn);
 
 // 👇 Lucide
-import { BrushCleaning, EyeOff, LucideAngularModule, ArrowLeft } from 'lucide-angular';
+import { BrushCleaning, EyeOff, HelpCircle, LucideAngularModule, ArrowLeft } from 'lucide-angular';
 import {
   Heart,
   HeartOff,
@@ -132,6 +132,7 @@ bootstrapApplication(AppComponent, {
         House,
         Compass,
         Info,
+        HelpCircle,
         Shield,
         ArrowLeft,
         ExternalLink,

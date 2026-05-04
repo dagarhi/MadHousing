@@ -33,7 +33,7 @@ interface LayerOption {
 const LAYERS: LayerOption[] = [
   { value: 'coropletico', labelKey: 'MAP_CONTROLS.LAYER_CHORO' },
   { value: 'heat',        labelKey: 'MAP_CONTROLS.LAYER_HEAT'  },
-  { value: 'chinchetas',  labelKey: 'MAP_CONTROLS.LAYER_PINS'  },
+  { value: 'marcadores',  labelKey: 'MAP_CONTROLS.LAYER_PINS'  },
 ];
 
 const POIS: PoiOption[] = [

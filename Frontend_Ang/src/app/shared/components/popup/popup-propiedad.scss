@@ -161,9 +161,40 @@
     letter-spacing: 0.05em;
   }
 
+  &__value-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
   &__value {
     font-size: 0.78rem;
     font-weight: 700;
+  }
+
+  &__help-btn {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    border-radius: 999px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+    color: var(--panel-text-faint);
+    transition: background 0.15s ease, color 0.15s ease;
+
+    lucide-icon { flex-shrink: 0; }
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(15, 23, 42, 0.08);
+      color: var(--panel-text);
+      outline: none;
+    }
   }
 
   &__track {

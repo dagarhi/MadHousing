@@ -159,6 +159,11 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
     await this.manager.init(this.mapContainer.nativeElement, initialStyle);
     this.ready = true;
 
+    // Sync UI state with the persisted mode loaded by the manager from
+    // localStorage (otherwise the radio in <app-map-controls> would always
+    // show the @Input default 'heat' instead of the actual active mode).
+    this.modo = this.manager.getMode();
+
     this.geojson.getMunicipiosCAM()
       .subscribe(geo => {
         this.manager.setChoroplethPolygons(geo, 'CODIGOINE');

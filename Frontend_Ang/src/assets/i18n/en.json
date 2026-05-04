@@ -31,6 +31,19 @@
     "VIEW_SURROUNDINGS": "View surroundings",
     "VIEW_SURROUNDINGS_ARIA": "View nearby POIs",
     "VIEW_LISTING": "View listing",
+    "SCORE_HELP": {
+      "BUTTON_LABEL": "How the score is calculated",
+      "TITLE": "How is the score calculated?",
+      "INTRINSEC_LABEL": "Intrinsic component (price/size)",
+      "CONTEXTUAL_LABEL": "Contextual component (surroundings)",
+      "WEIGHT_LABEL": "Weight in the calculation",
+      "CONTRIBUTION_LABEL": "Contribution to final score",
+      "TOTAL_LABEL": "Total",
+      "INTRINSEC_DESC": "The intrinsic component evaluates the price/size ratio against market thresholds for the Madrid region.",
+      "CONTEXTUAL_DESC": "The contextual component evaluates the quality of the urban surroundings (transport, healthcare, education, parks, commerce and bike sharing) based on the distance to nearby points of interest.",
+      "NOT_AVAILABLE": "Not available",
+      "CLOSE": "Close"
+    },
     "MORTGAGE": {
       "TITLE": "Mortgage calculator",
       "DOWN_PAYMENT": "Down payment (%)",
@@ -227,7 +240,7 @@
       },
       "MAP_MODES": {
         "TITLE": "Three map modes",
-        "BODY": "Switch between the heat map (property density), the choropleth (average value per area) and the pins (exact location of each property)."
+        "BODY": "Switch between the heat map (property density), the choropleth (average value per area) and the markers (exact location of each property)."
       },
       "SCORE": {
         "TITLE": "Multilevel score",
@@ -276,7 +289,7 @@
     "SECTION_ACTIONS": "Actions",
     "LAYER_CHORO": "Choropleth",
     "LAYER_HEAT": "Heatmap",
-    "LAYER_PINS": "Pins",
+    "LAYER_PINS": "Markers",
     "TOOL_RADIUS": "Radius",
     "TOOL_RADIUS_TITLE": "Radius filter",
     "TOOL_ISOCHRONE": "Isochrones",

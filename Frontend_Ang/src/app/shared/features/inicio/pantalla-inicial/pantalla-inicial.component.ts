@@ -84,6 +84,9 @@ export class PantallaInicialComponent implements OnInit {
     this.auth.login(username, password).subscribe({
       next: () => {
         this.cargando = false;
+        // Tras login, dispara el preload de datos (la primera invocación
+        // en ngOnInit() solo precargó tiles porque aún no había token).
+        this.preload.preload();
         // Honrar returnUrl si el authGuard redirigió aquí.
         // Defensas: solo rutas internas que NO sean /inicio (evita bucle)
         // y NO sean protocol-relative ("//evil.com" sería redirect externo).

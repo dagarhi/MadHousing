@@ -2,26 +2,39 @@ import { Injectable } from '@angular/core';
 import maplibregl from 'maplibre-gl';
 import { environment } from '../../../environments/environment';
 import { BusquedaService } from './busqueda.service';
+import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class MapPreloadService {
-  private done = false;
+  private tilesDone = false;
+  private dataDone = false;
 
-  constructor(private busqueda: BusquedaService) {}
+  constructor(
+    private busqueda: BusquedaService,
+    private auth: AuthService,
+  ) {}
 
   /**
    * Lanzar desde PantallaInicialComponent.ngOnInit() para que los tiles
    * del mapa y los datos de propiedades estén en caché cuando el usuario
-   * navegue a /mapa. Se ejecuta una sola vez por sesión.
+   * navegue a /mapa.
+   *
+   * Tiles: se precargan siempre (la API key de MapTiler es pública).
+   * Datos: requieren auth (Bug 5 — /buscar-todo no es anónimo). Solo
+   * se precargan si hay token. Llamar de nuevo tras login exitoso para
+   * que el preload de datos surta efecto sin volver a precargar tiles.
    */
   preload(): void {
-    if (this.done) return;
-    this.done = true;
-
     // Espera 400 ms para no competir con el renderizado del login
     setTimeout(() => {
-      this.preloadTiles();
-      this.preloadData();
+      if (!this.tilesDone) {
+        this.tilesDone = true;
+        this.preloadTiles();
+      }
+      if (!this.dataDone && this.auth.getToken()) {
+        this.dataDone = true;
+        this.preloadData();
+      }
     }, 400);
   }
 
