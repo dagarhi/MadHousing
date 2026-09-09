@@ -50,14 +50,12 @@ class MadHousingUser(HttpUser):
         self.username = f"loadtest_{suffix}"
         self.password = f"loadtest_password_{suffix}_xyz"
 
-        # Registro (puede fallar si ya existe; lo ignoramos)
         self.client.post(
             "/auth/register",
             json={"username": self.username, "password": self.password},
             name="[setup] /auth/register",
         )
 
-        # Login
         resp = self.client.post(
             "/auth/login",
             json={"username": self.username, "password": self.password},

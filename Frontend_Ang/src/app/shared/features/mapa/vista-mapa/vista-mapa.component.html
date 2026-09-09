@@ -1,7 +1,6 @@
 <div class="vista-mapa">
   <!-- 🔹 Barra superior -->
   <header class="header">
-    <!-- Izquierda: logout + admin -->
     <div class="header-left">
       <button mat-button class="logout-btn" (click)="logout()">
         <lucide-icon name="log-out" [size]="18"></lucide-icon>
@@ -13,7 +12,6 @@
       </button>
     </div>
 
-    <!-- Centro: logo + nombre -->
     <div class="header-center">
       <img src="assets/icons/madhousing_header.svg" alt="MadHousing" class="header-logo">
       <span class="header-brand">
@@ -21,7 +19,6 @@
       </span>
     </div>
 
-    <!-- Derecha: resto de acciones -->
     <div class="header-right">
       <app-lang-switch></app-lang-switch>
       <button mat-button class="theme-btn" (click)="toggleTheme()"

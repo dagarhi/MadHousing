@@ -55,7 +55,6 @@ def valoracion_intrinseca(piso):
     elif precio_base >= u["max"]:
         score = SCORE_MIN
     else:
-        # Inverse interpolation
         ratio = (u["max"] - precio_base) / (u["max"] - u["min"])
         score = SCORE_MIN + (SCORE_MAX - SCORE_MIN) * ratio
 
@@ -89,11 +88,6 @@ def es_duplicado(db, piso_data):
 
 
 # ── Context scoring ─────────────────────────────────────────────────────────
-#
-# subscore_by_distance: curva lineal a tramos (0-300m=100, decae a 0 en 2km).
-# compute_distances_for_point: 1 query agregada a PostGIS por piso (GIST index).
-# compute_score_contexto: combina las 6 distancias con los pesos de arriba.
-# compute_score_final: mezcla score_intrinseco + score_contexto.
 
 def subscore_by_distance(meters):
     """Map a distance in meters to a 0-100 subscore. Closer is better."""

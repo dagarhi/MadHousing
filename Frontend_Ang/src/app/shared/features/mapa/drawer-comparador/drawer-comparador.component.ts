@@ -31,7 +31,6 @@ import {
   registerables,
 } from 'chart.js';
 
-// registrar componentes de Chart.js
 Chart.register(...registerables);
 
 type ChartDataSimple = ChartConfiguration['data'];
@@ -68,13 +67,11 @@ export class DrawerComparadorComponent
   zonaB: string | null = null;
   zonasConDatos: string[] = [];
 
-  // canvases
   @ViewChild('precioCanvas') precioCanvas?: ElementRef<HTMLCanvasElement>;
   @ViewChild('tamanoCanvas') tamanoCanvas?: ElementRef<HTMLCanvasElement>;
   @ViewChild('scoreCanvas') scoreCanvas?: ElementRef<HTMLCanvasElement>;
   @ViewChild('countCanvas') countCanvas?: ElementRef<HTMLCanvasElement>;
 
-  // instancias Chart.js
   private precioChart?: Chart;
   private tamanoChart?: Chart;
   private scoreChart?: Chart;
@@ -84,7 +81,6 @@ export class DrawerComparadorComponent
 
   private themeSub?: Subscription;
 
-  // datos preparados (como antes)
   chartData: {
     precio_medio: ChartDataSimple;
     tamano_medio: ChartDataSimple;
@@ -112,7 +108,6 @@ export class DrawerComparadorComponent
 
     this.themeSub = this.theme.dark$.subscribe((dark) => {
       this.chartOptions = this.buildChartOptions(dark);
-      // Reasignar options en cada chart y volver a pintar
       for (const c of [this.precioChart, this.tamanoChart, this.scoreChart, this.countChart]) {
         if (c) {
           c.options = this.chartOptions as any;
@@ -382,7 +377,7 @@ export class DrawerComparadorComponent
       return undefined;
     }
 
-    const options = this.chartOptions ?? {}; // 🔹 aquí forzamos a que nunca sea undefined
+    const options = this.chartOptions ?? {};
 
     if (!current) {
       return new Chart(ctx, {
@@ -414,7 +409,6 @@ export class DrawerComparadorComponent
   }
 
   onZonaChange() {
-    // Si aún falta una zona o no hay datos, no hacemos nada
     if (!this.zonaA || !this.zonaB || !this.stats) return;
 
     // Esperamos al siguiente "tick" para que Angular meta los <canvas> en el DOM

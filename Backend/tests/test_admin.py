@@ -73,7 +73,7 @@ class TestUpdateRole:
     def test_invalid_role_returns_400(self, client, admin_user, regular_user, admin_headers):
         resp = client.patch(
             f"/admin/users/{regular_user.id}",
-            json={"role": "SUPERADMIN"},  # rol no permitido
+            json={"role": "SUPERADMIN"},
             headers=admin_headers,
         )
         assert resp.status_code == 400

@@ -43,7 +43,6 @@ class _MockGeometry(_sa.types.TypeDecorator):  # noqa: N801 (snake_case OK)
     cache_ok = True
 
     def __init__(self, *_args, **_kwargs):
-        # Ignora geometry_type/srid/spatial_index/etc.
         super().__init__()
 
 

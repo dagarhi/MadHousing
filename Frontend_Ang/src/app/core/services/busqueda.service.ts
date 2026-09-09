@@ -10,7 +10,7 @@ interface SearchResponse {
   total: number;
 }
 
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutos
+const CACHE_TTL_MS = 10 * 60 * 1000;
 
 @Injectable({ providedIn: 'root' })
 export class BusquedaService {

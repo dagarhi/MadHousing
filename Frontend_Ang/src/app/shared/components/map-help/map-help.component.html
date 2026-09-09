@@ -14,7 +14,6 @@
 <ng-template #helpDialog>
   <div class="tutorial">
 
-    <!-- Cabecera fija -->
     <div class="tutorial__header">
       <span class="tutorial__counter">
         {{ 'TUTORIAL.COUNTER' | transloco:{ current: slideIndex + 1, total: slides.length } }}
@@ -24,7 +23,6 @@
       </button>
     </div>
 
-    <!-- Contenido de la slide -->
     <div class="tutorial__body">
       <div class="tutorial__icon-wrap">
         <lucide-icon [name]="current.icon" [size]="36"></lucide-icon>
@@ -33,7 +31,6 @@
       <p class="tutorial__desc">{{ current.bodyKey | transloco }}</p>
     </div>
 
-    <!-- Navegación -->
     <div class="tutorial__nav">
       <button class="nav-btn" (click)="prev()" [disabled]="isFirst"
         [attr.aria-label]="'TUTORIAL.ARIA_PREV' | transloco">
@@ -56,7 +53,6 @@
       </button>
     </div>
 
-    <!-- Acción final -->
     <div class="tutorial__footer">
       <button
         *ngIf="isLast"

@@ -5,7 +5,6 @@
   position="right"
   [width]="'460px'"
 >
-  <!-- Contenido -->
   <div drawer-content>
     <ng-container *ngIf="(favoritos.favoritos$ | async) as lista">
       <p *ngIf="lista.length === 0" class="empty-msg">
@@ -41,7 +40,6 @@
     </ng-container>
   </div>
 
-  <!-- Footer -->
   <div drawer-footer>
     <button class="clear-btn" (click)="borrarTodos()">
       <lucide-icon name="trash"></lucide-icon>
