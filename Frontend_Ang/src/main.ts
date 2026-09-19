@@ -20,7 +20,6 @@ import { LanguageService } from './app/core/services/language.service';
 registerLocaleData(localeEs);
 registerLocaleData(localeEn);
 
-// 👇 Lucide
 import { BrushCleaning, EyeOff, HelpCircle, LucideAngularModule, ArrowLeft } from 'lucide-angular';
 import {
   Heart,

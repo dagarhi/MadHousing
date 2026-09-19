@@ -90,7 +90,6 @@ export class FavoritosService {
     }
 
     if (this.idsPorProperty.has(propertyCode)) {
-      // DELETE
       const favId = this.idsPorProperty.get(propertyCode)!;
       this.http.delete(`${this.baseUrl}/${favId}`).subscribe({
         next: () => {
@@ -108,7 +107,6 @@ export class FavoritosService {
       return;
     }
 
-    // CREATE
     this.http
       .post<FavoriteDto>(this.baseUrl, { property_code: propertyCode })
       .subscribe({

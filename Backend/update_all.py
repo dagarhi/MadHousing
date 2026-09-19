@@ -15,14 +15,13 @@ from services.scoring import (
 )
 
 ZONAS = [
-    # ── High-interest zones (2 ops, wide radius) ──────────────────────────────
     # ── High-interest zones: 7 pages × 2 ops = 14 calls each ────────────────────
     {
         "name":       "madrid",
         "active":     True,
         "center":     "40.4168,-3.7038",
         "distance_m": 10000,
-        "pages":      7,           # 7 pages × 2 ops = 14 calls
+        "pages":      7,
         "operations": ["rent", "sale"],
     },
     {
@@ -30,7 +29,7 @@ ZONAS = [
         "active":     True,
         "center":     "40.3459,-3.8249",
         "distance_m": 5000,
-        "pages":      7,           # 7 pages × 2 ops = 14 calls
+        "pages":      7,
         "operations": ["rent", "sale"],
     },
     # ── Madrid districts: 6 pages × 2 ops = 12 calls each (6 × 12 = 72) ────────
@@ -39,7 +38,7 @@ ZONAS = [
         "active":     True,
         "center":     "40.3895,-3.6570",
         "distance_m": 4000,
-        "pages":      6,           # 6 pages × 2 ops = 12 calls
+        "pages":      6,
         "operations": ["rent", "sale"],
     },
     {
@@ -249,7 +248,6 @@ def upsert_properties(db, elements: list, operation: str) -> dict:
         payload["score_intrinseco"]    = valoracion_intrinseca(payload)
         payload["fecha_actualizacion"] = datetime.now(timezone.utc)
 
-        # Spatial: geom + distancias + score_contexto + score_final
         payload["geom"] = WKTElement(f"POINT({lon} {lat})", srid=4326)
         distancias = compute_distances_for_point(db, lat, lon)
         payload.update(distancias)

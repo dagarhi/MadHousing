@@ -31,7 +31,6 @@
     <!-- Columna derecha: tarjeta de login / registro -->
     <section class="inicio__card">
 
-      <!-- Toggle login / registro -->
       <div class="modo-toggle">
         <button [class.activo]="!modoRegistro" (click)="modoRegistro && toggleModo()">
           {{ 'LOGIN.MODE_LOGIN' | transloco }}

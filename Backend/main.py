@@ -309,11 +309,9 @@ def eliminar_usuarios_masivo(
     encontrado y los que se han rechazado por motivos de seguridad (p. ej.
     intentar borrar la propia cuenta del admin que invoca el endpoint).
     """
-    # Filtrar la propia cuenta del admin antes de tocar la BBDD.
     rejected = [uid for uid in body.ids if uid == current_user.id]
     target_ids = [uid for uid in body.ids if uid != current_user.id]
 
-    # Una sola SELECT para saber qué IDs existen.
     existing = (
         {uid for (uid,) in db.query(User.id).filter(User.id.in_(target_ids)).all()}
         if target_ids else set()
@@ -419,7 +417,6 @@ def buscar_propiedades(
     if final_min is not None:
         query = query.filter(Propiedad.score_final >= final_min)
 
-    # Count + aggregated stats in a single DB query
     agg = query.with_entities(
         func.count(Propiedad.propertyCode),
         func.min(Propiedad.price),

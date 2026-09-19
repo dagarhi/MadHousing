@@ -154,7 +154,6 @@ export class SnapDragDirective implements OnInit, OnDestroy {
     // Intercambiar si la zona de destino está ocupada
     this.svc.swapIfNeeded(this.snapId, targetZone, fromZone);
 
-    // Mover este botón a la zona de destino
     this.snapToZone(targetZone, true);
     this.svc.setZone(this.snapId, targetZone);
   }
@@ -193,7 +192,6 @@ export class SnapDragDirective implements OnInit, OnDestroy {
       dot.style.width       = `${elW}px`;
       dot.style.height      = `${elH}px`;
 
-      // Marcar zonas ya ocupadas con estilo diferente
       const occupant = this.svc.findOccupant(zone.id, this.snapId);
       if (occupant) dot.classList.add('snap-zone-ghost--occupied');
 

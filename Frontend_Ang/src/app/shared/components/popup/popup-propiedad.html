@@ -1,11 +1,9 @@
 <div class="popup" [class.dark]="isDark">
 
-  <!-- Close -->
   <button class="btn-close" (click)="onClosePopup()" [attr.aria-label]="'COMMON.CLOSE' | transloco">
     <lucide-icon name="x" [size]="14"></lucide-icon>
   </button>
 
-  <!-- Address -->
   <div class="address">
     <p class="address__street">{{ piso.address || ('POPUP.UNKNOWN_ADDRESS' | transloco) }}</p>
     <p class="address__zone" *ngIf="piso.neighborhood || piso.district || piso.city">
@@ -19,7 +17,6 @@
 
   <div class="divider"></div>
 
-  <!-- Price + badge -->
   <div class="price-row">
     <div class="price-block">
       <span class="price__amount">
@@ -34,14 +31,12 @@
     </span>
   </div>
 
-  <!-- Meta: size + rooms -->
   <div class="meta" *ngIf="piso.size || piso.rooms">
     <span *ngIf="piso.size">{{ piso.size }} m²</span>
     <span *ngIf="piso.size && piso.rooms" class="meta__sep">·</span>
     <span *ngIf="piso.rooms">{{ piso.rooms }} {{ 'POPUP.ROOMS_SHORT' | transloco }}</span>
   </div>
 
-  <!-- Score bar -->
   <div class="score" *ngIf="displayScore !== null">
     <div class="score__header">
       <span class="score__label">{{ 'POPUP.SCORE_LABEL' | transloco }}</span>
@@ -63,7 +58,6 @@
     </div>
   </div>
 
-  <!-- Calculadora de hipoteca -->
   <div class="calc-section" *ngIf="piso.operation === 'sale'">
     <button class="calc-toggle" (click)="calcAbierta = !calcAbierta">
       <lucide-icon name="calculator" [size]="13"></lucide-icon>
@@ -102,7 +96,6 @@
     </div>
   </div>
 
-  <!-- Footer: acciones apiladas verticalmente -->
   <div class="footer">
     <button class="footer-action footer-action--fav" (click)="onToggleFavorito()"
       [class.is-active]="isFav"

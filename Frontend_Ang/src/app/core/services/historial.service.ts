@@ -66,7 +66,6 @@ export class HistorialService {
       next: (dto) => {
         const item = this.dtoToItem(dto, resumen);
 
-        // Deduplicate by hash
         const hash = item.hash;
         const dedup = this.currentHistorial.filter((h) => h.hash !== hash);
         const nuevo = [item, ...dedup].slice(0, this.MAX);

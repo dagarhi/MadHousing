@@ -249,6 +249,7 @@ export class PinsLayerService implements OnDestroy, MapLayer {
     p: Propiedad,
     options?: { fly?: boolean; zoom?: number; openPopup?: boolean },
   ): boolean {
+    this.attach();
     if (!this.map) return false;
 
     const id = p.propertyCode;
@@ -266,6 +267,7 @@ export class PinsLayerService implements OnDestroy, MapLayer {
 
     this.dataById.set(id, { propiedad: p, coord });
     this.rebuildSourceFromData();
+    this.setVisible(this.visible);
 
     if (options?.fly) {
       this.focusOn(id, options.zoom, options.openPopup ?? false);

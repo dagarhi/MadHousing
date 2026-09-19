@@ -6,7 +6,6 @@ import { environment } from '../../../environments/environment';
 import { MatDialog } from '@angular/material/dialog'; 
 import { SessionExpiredDialogComponent } from '../guards/session-expired-dialog';
 
-/* Interfaces for Auth */
 interface LoginResponse {
   access_token: string;
   token_type: string;

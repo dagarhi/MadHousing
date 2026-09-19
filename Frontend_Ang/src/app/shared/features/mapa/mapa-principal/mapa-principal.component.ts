@@ -300,7 +300,6 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
       const lat: number = e.lngLat.lat;
       this.radiusCenter = [lng, lat];
 
-      // Stop drawing mode
       this.radiusMode = false;
       const map = this.mapSvc.getMap();
       if (map) {
@@ -384,7 +383,6 @@ export class MapaPrincipalComponent implements AfterViewInit, OnChanges, OnDestr
       this.exitIsochroneMode();
       return;
     }
-    // Disable radius mode if active
     if (this.radiusMode) this.toggleRadiusMode();
 
     this.isochroneMode = true;

@@ -28,7 +28,6 @@
       </select>
     </div>
 
-    <!-- Tipo de operación -->
     <div class="select-group">
       <label for="sel-operation">{{ 'BUSCADOR.OPERATION_TYPE' | transloco }}</label>
       <select id="sel-operation" [(ngModel)]="operation" (change)="cargarZonas(); cargarStatsZona()">
@@ -137,7 +136,6 @@
 
 
 
-    <!-- Avanzado -->
     <section class="filter-card filter-card--avanzado"
       *ngIf="stats && !noData && (municipio || distrito || barrio)">
       <h3 class="card-title">
@@ -165,7 +163,6 @@
     </section>
   </div>
 
-  <!-- Footer -->
   <div drawer-footer>
     <div class="footer-actions">
       <button class="secondary" (click)="limpiarFiltros()">{{ 'BUSCADOR.CLEAR_FILTERS' | transloco }}</button>

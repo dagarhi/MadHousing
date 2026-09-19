@@ -56,7 +56,6 @@ export function generateStops(domain: ScoreDomain, palette = PALETTE_RDYLGN, ste
   return arr;
 }
 
-/** p-quantile */
 export function quantile(sorted: number[], q: number) {
   if (!sorted.length) return NaN;
   const pos = (sorted.length - 1) * q;

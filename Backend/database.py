@@ -32,7 +32,6 @@ def init_db():
     print("✅ Tablas creadas o verificadas correctamente")
 
 def get_db():
-    """Devuelve una sesión de base de datos."""
     db = SessionLocal()
     try:
         yield db

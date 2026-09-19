@@ -231,16 +231,12 @@ def relevant_extra(tags: dict) -> dict | None:
 # subtipo dentro de un radio razonable antes de insertar en BBDD.
 
 DEDUP_RADIUS_M: dict[str, float] = {
-    # Sanidad
     "hospital":    60,
     "clinic":      30,
     "pharmacy":    20,
-    # Transporte
     "metro":       35,
     "cercanias":   35,
-    # Educación
     "school":      60,
-    # Comercio
     "supermarket": 25,
 }
 
